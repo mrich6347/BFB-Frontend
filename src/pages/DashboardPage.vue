@@ -19,9 +19,6 @@ import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'vue-router'
 import { ref, onMounted } from 'vue'
 import type { User } from '@supabase/supabase-js'
-import { useTheme } from '@/composables/common/useTheme'
-useTheme()
-
 const router = useRouter()
 const user = ref<User | null>(null)
 const loading = ref(true)

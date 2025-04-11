@@ -15,7 +15,7 @@
         <!-- Content -->
         <div class="relative z-10 flex justify-between items-start">
           <h2 class="text-2xl font-bold">BFB</h2>
-          <a href="/" class="text-sm bg-white/20 dark:bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg hover:bg-white/30 dark:hover:bg-black/40 transition-colors">&larr; Back to website</a>
+          <a @click="router.push('/')" class="text-sm bg-white/20 dark:bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg hover:bg-white/30 dark:hover:bg-black/40 transition-colors">&larr; Back to website</a>
         </div>
 
         <div class="relative z-10 mt-auto max-w-md space-y-4">
@@ -109,9 +109,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import { AuthError } from '@supabase/supabase-js'
-import { useTheme } from '@/composables/common/useTheme'
-
-useTheme()
 
 const router = useRouter()
 const route = useRoute()

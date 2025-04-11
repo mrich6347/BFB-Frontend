@@ -92,9 +92,6 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import { AuthError } from '@supabase/supabase-js'
-import { useTheme } from '@/composables/common/useTheme'
-
-useTheme()
 
 const router = useRouter()
 const email = ref('')

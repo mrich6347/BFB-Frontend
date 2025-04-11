@@ -23,9 +23,4 @@
 </template>
 
 <script setup lang="ts">
-import { useTheme } from '@/composables/common/useTheme'
-useTheme()
-
-
-
 </script> 

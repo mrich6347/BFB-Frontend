@@ -3,8 +3,8 @@ import LandingPage from '../pages/LandingPage.vue'
 import LoginPage from '../pages/LoginPage.vue'
 import SignUpPage from '../pages/SignUpPage.vue'
 import DashboardPage from '../pages/DashboardPage.vue'
-import NotFoundPage from '../pages/NotFoundPage.vue'
-import BannedPage from '../pages/BannedPage.vue'
+import NotFoundPage from '../pages/util-pages/NotFoundPage.vue'
+import BannedPage from '../pages/util-pages/BannedPage.vue'
 import { supabase } from '../lib/supabaseClient'
 
 const routes = [

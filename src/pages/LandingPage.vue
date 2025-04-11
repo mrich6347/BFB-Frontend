@@ -115,8 +115,6 @@
 import ThemeToggle from '@/components/common/ThemeToggle.vue'
 import { PlusIcon, PencilIcon, HeadphonesIcon } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
-import { useTheme } from '@/composables/common/useTheme'
-useTheme()
 
 const router = useRouter()
 
