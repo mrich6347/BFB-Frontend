@@ -17,6 +17,14 @@ export const useBudgetStore = defineStore('budget', {
       } finally {
         this.isLoading = false
       }
+    },
+    async createBudget(budget: Budget) {
+      try {
+        const newBudget = await BudgetService.createBudget(budget)
+        this.budgets.push(newBudget)
+      } catch (error) {
+        console.error('Error creating budget:', error)
+      }
     }
   }
 })

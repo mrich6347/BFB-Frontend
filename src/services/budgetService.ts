@@ -12,6 +12,11 @@ export class BudgetService {
     return response.data
   }
 
+  static async createBudget(budget: Budget): Promise<Budget> {
+    const response = await api.post<Budget>(this.BASE_PATH, budget)
+    return response.data
+  }
+
 }
 
 export default BudgetService
