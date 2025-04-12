@@ -62,7 +62,7 @@
             <div 
               v-for="budget in budgetStore.budgets" 
               :key="budget.id"
-              @click="router.push(`/budget/${budget.id}`)"
+              @click="goToBudget(budget.id)"
               class="group rounded-xl border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
             >
               <div class="flex items-start justify-between">
@@ -112,5 +112,10 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+const goToBudget = (budgetId: string) => {
+  router.push(`/budget/${budgetId}`)
+}
+
 </script>
 

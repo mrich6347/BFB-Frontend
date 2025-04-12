@@ -4,8 +4,8 @@
     @click="toggleTheme"
     aria-label="Toggle theme"
   >
-    <SunIcon v-if="isDark" class="text-foreground" size="20" aria-hidden="true" />
-    <MoonIcon v-else class="text-foreground" size="20" aria-hidden="true" />
+    <SunIcon v-if="isDark" class="text-foreground" :size=20 aria-hidden="true" />
+    <MoonIcon v-else class="text-foreground" :size=20 aria-hidden="true" />
   </button>
 </template>
 

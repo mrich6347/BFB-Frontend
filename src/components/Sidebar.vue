@@ -63,14 +63,12 @@ import ThemeToggle from './common/ThemeToggle.vue'
 import { 
   BarChart2Icon,
   PieChartIcon,
-  BuildingIcon,
   PlusIcon 
 } from 'lucide-vue-next'
 
 const mainNavItems = [
   { name: 'Budget', to: '/budget', icon: BarChart2Icon },
-  { name: 'Reflect', to: '/reflect', icon: PieChartIcon },
-  { name: 'All Accounts', to: '/accounts', icon: BuildingIcon },
+  { name: 'Reports', to: '/reports', icon: PieChartIcon },
 ]
 
 const accountSections = ref([

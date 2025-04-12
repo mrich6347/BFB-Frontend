@@ -6,3 +6,5 @@ alwaysApply: true
 - The Project uses tailwindsv4. Use tailwinds v4 to always support dark mode and light mode in everything we create.
 
 - Youd dont need to search for a the config files every time, just assume we already support dark classes via tailwinds.
+
+- ICONS: For anytime we use icons let use them from the package we have 'lucide-vue-next'
