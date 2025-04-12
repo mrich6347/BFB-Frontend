@@ -68,7 +68,7 @@
                 <div class="space-y-1">
                   <h4 class="text-lg font-semibold text-card-foreground">{{ budget.name }}</h4>
                   <p class="text-sm text-muted-foreground">
-                    Last updated: {{ new Date(budget.updated_at).toLocaleDateString() }}
+                    Last Used On: {{ new Date(budget.updated_at).toLocaleDateString() }}
                   </p>
                 </div>
                 <button class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full p-2 hover:bg-accent">
