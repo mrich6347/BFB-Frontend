@@ -1,12 +1,12 @@
 <template>
-  <div class="min-h-screen bg-background dark:bg-background">
+  <div class="min-h-screen bg-background">
     <!-- Top Navigation Bar -->
-    <div class="border-b border-border dark:border-border">
+    <div class="border-b border-border">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center gap-4">
             <ThemeToggle />
-            <h1 class="text-2xl font-bold text-foreground dark:text-foreground">BFB</h1>
+            <h1 class="text-2xl font-bold text-foreground">BFB</h1>
           </div>
           <button 
             @click="authService.logout()" 
@@ -27,7 +27,7 @@
       <div v-if="loading" class="flex justify-center items-center min-h-[400px]">
         <div class="flex flex-col items-center gap-4">
           <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          <p class="text-muted-foreground dark:text-muted-foreground">Loading your budgets...</p>
+          <p class="text-muted-foreground">Loading your budgets...</p>
         </div>
       </div>
 
@@ -36,7 +36,7 @@
         <!-- Budgets List -->
         <div class="space-y-6">
           <div class="flex items-center justify-between">
-            <h3 class="text-xl font-semibold text-foreground dark:text-foreground">Your Budgets</h3>
+            <h3 class="text-xl font-semibold text-foreground">Your Budgets</h3>
             <button 
               @click="showCreateModal = true"
               class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2"
@@ -48,13 +48,13 @@
             </button>
           </div>
 
-          <div v-if="budgetStore.budgets.length === 0" class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border dark:border-border p-8 text-center">
+          <div v-if="budgetStore.budgets.length === 0" class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center">
             <div class="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-muted-foreground mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
-              <h3 class="text-lg font-semibold text-foreground dark:text-foreground">No budgets created</h3>
-              <p class="text-sm text-muted-foreground dark:text-muted-foreground mt-2">You haven't created any budgets yet. Start by creating your first budget.</p>
+              <h3 class="text-lg font-semibold text-foreground">No budgets created</h3>
+              <p class="text-sm text-muted-foreground mt-2">You haven't created any budgets yet. Start by creating your first budget.</p>
             </div>
           </div>
 
@@ -62,16 +62,16 @@
             <div 
               v-for="budget in budgetStore.budgets" 
               :key="budget.id"
-              class="group rounded-xl border bg-card dark:bg-card p-6 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+              class="group rounded-xl border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
             >
               <div class="flex items-start justify-between">
                 <div class="space-y-1">
-                  <h4 class="text-lg font-semibold text-card-foreground dark:text-card-foreground">{{ budget.name }}</h4>
-                  <p class="text-sm text-muted-foreground dark:text-muted-foreground">
+                  <h4 class="text-lg font-semibold text-card-foreground">{{ budget.name }}</h4>
+                  <p class="text-sm text-muted-foreground">
                     Last updated: {{ new Date(budget.updated_at).toLocaleDateString() }}
                   </p>
                 </div>
-                <button class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full p-2 hover:bg-accent dark:hover:bg-accent">
+                <button class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full p-2 hover:bg-accent">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                   </svg>
