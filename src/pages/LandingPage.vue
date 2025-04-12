@@ -137,7 +137,6 @@ onMounted(async () => {
   user.value = authUser
 })
 
-// Placeholder functions for button clicks
 const handleLogin = () => {
   router.push('/login')
 }
@@ -146,7 +145,3 @@ const handleSignUp = () => {
   router.push('/signup')
 }
 </script>
-
-<style scoped>
-/* Additional styles can be added here if needed */
-</style>

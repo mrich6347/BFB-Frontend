@@ -109,7 +109,6 @@ const handleSignUp = async () => {
     return
   }
 
-  console.log('Attempting sign up with:', email.value)
   try {
     const { data, error } = await supabase.auth.signUp({
       email: email.value,
@@ -117,7 +116,6 @@ const handleSignUp = async () => {
     })
     if (error) throw error
 
-    console.log('Sign up attempt response:', data)
 
     if (data.user && data.user.identities && data.user.identities.length === 0) {
       successMessage.value = 'Sign up successful! Please check your email to confirm your account.'
@@ -136,7 +134,6 @@ const handleSignUp = async () => {
     confirmPassword.value = ''
 
   } catch (error) {
-    console.error('Sign up failed:', error)
     if (error instanceof AuthError) {
       errorMessage.value = `Sign up failed: ${error.message}`
     } else if (error instanceof Error) {
@@ -147,7 +144,3 @@ const handleSignUp = async () => {
   }
 }
 </script>
-
-<style scoped>
-/* Add any additional styles if needed */
-</style> 
