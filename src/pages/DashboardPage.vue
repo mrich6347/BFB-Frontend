@@ -62,6 +62,7 @@
             <div 
               v-for="budget in budgetStore.budgets" 
               :key="budget.id"
+              @click="router.push(`/budget/${budget.id}`)"
               class="group rounded-xl border bg-card p-6 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
             >
               <div class="flex items-start justify-between">
@@ -97,10 +98,12 @@ import { useBudgetStore } from '@/stores/budgetStore'
 import { authService } from '@/services/common/authService'
 import ThemeToggle from '@/components/common/ThemeToggle.vue'
 import CreateBudgetModal from '@/components/budget/CreateBudgetModal.vue'
+import { useRouter } from 'vue-router'
 
 const loading = ref(true)
 const showCreateModal = ref(false)
 const budgetStore = useBudgetStore()
+const router = useRouter()
 
 onMounted(async () => {
   try {

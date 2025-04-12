@@ -49,8 +49,8 @@
             required
             class="w-full px-3 py-2 border rounded-md bg-background dark:bg-background border-input dark:border-input"
           >
-            <option value="BEFORE">Before</option>
-            <option value="AFTER">After</option>
+            <option value="BEFORE">$123.45</option>
+            <option value="AFTER">123.45$</option>
           </select>
         </div>
 
