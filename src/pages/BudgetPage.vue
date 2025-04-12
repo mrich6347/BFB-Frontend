@@ -15,12 +15,17 @@ import { onMounted } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import { useBudgetStore } from '@/stores/budgetStore'
 import { Loader } from 'lucide-vue-next'
+import { MainDataService } from '@/services/common/mainDataService'
 
 const router = useRoute()
 const budgetStore = useBudgetStore()
 
 onMounted(async () => {
-  const budgetId = router.params.id as string
-  await budgetStore.fetchCurrentBudget(budgetId)
+  budgetStore.setIsLoading(true)
+  const mainData = await MainDataService.getMainData(router.params.id as string)
+  if (mainData.budget) {
+    budgetStore.setCurrentBudget(mainData.budget)
+    budgetStore.setIsLoading(false)
+  }
 })
 </script>

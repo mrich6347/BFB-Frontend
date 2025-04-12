@@ -1,6 +1,6 @@
+import type { CreateBudgetRequest } from '../types/DTO/budgetDTO'
 import api from './common/api'
 import type { Budget } from '@/types/models/budget'
-import type { CreateBudgetRequest } from '@/types/api/budgets/createBudget/createBudget'
 
 export class BudgetService {
   private static readonly BASE_PATH = '/budgets'
