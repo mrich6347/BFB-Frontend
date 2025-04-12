@@ -39,7 +39,7 @@
               />
               <span>{{ section.title }}</span>
             </div>
-            <span>{{ formatTotal(section.total) }}</span>
+            <span>{{ formatCurrency(section.total) }}</span>
           </button>
           <div v-if="expandedSections[section.title as SectionTitle]" class="mb-4">
             <router-link
@@ -52,7 +52,7 @@
               <span :class="[
                 'flex-shrink-0 tabular-nums',
                 account.balance < 0 ? 'text-red-500' : 'text-gray-700 dark:text-gray-200'
-              ]">{{ formatAmount(account.balance) }}</span>
+              ]">{{ formatCurrency(account.balance) }}</span>
             </router-link>
           </div>
         </template>
@@ -132,13 +132,5 @@ const expandedSections = ref<Record<SectionTitle, boolean>>({
 
 const toggleSection = (sectionTitle: SectionTitle) => {
   expandedSections.value[sectionTitle] = !expandedSections.value[sectionTitle]
-}
-
-const formatAmount = (amount: number): string => {
-  return formatCurrency(amount)
-}
-
-const formatTotal = (total: number): string => {
-  return formatAmount(total)
 }
 </script>
