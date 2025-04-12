@@ -37,7 +37,10 @@
         <div class="space-y-6">
           <div class="flex items-center justify-between">
             <h3 class="text-xl font-semibold text-foreground dark:text-foreground">Your Budgets</h3>
-            <button class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2">
+            <button 
+              @click="showCreateModal = true"
+              class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
@@ -79,6 +82,12 @@
         </div>
       </div>
     </div>
+
+    <!-- Create Budget Modal -->
+    <CreateBudgetModal
+      :is-open="showCreateModal"
+      @close="showCreateModal = false"
+    />
   </div>
 </template>
 
@@ -87,8 +96,10 @@ import { ref, onMounted } from 'vue'
 import { useBudgetStore } from '@/stores/budgetStore'
 import { authService } from '@/services/common/authService'
 import ThemeToggle from '@/components/common/ThemeToggle.vue'
+import CreateBudgetModal from '@/components/budget/CreateBudgetModal.vue'
 
 const loading = ref(true)
+const showCreateModal = ref(false)
 const budgetStore = useBudgetStore()
 
 onMounted(async () => {

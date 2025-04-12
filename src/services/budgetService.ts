@@ -1,5 +1,6 @@
 import api from './common/api'
 import type { Budget } from '@/types/models/budget'
+import type { CreateBudgetRequest } from '@/types/api/budgets/createBudget/createBudget'
 
 export class BudgetService {
   private static readonly BASE_PATH = '/budgets'
@@ -12,11 +13,10 @@ export class BudgetService {
     return response.data
   }
 
-  static async createBudget(budget: Budget): Promise<Budget> {
-    const response = await api.post<Budget>(this.BASE_PATH, budget)
+  static async createBudget(request: CreateBudgetRequest): Promise<Budget> {
+    const response = await api.post<Budget>(this.BASE_PATH, request)
     return response.data
   }
-
 }
 
 export default BudgetService

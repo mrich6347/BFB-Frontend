@@ -6,11 +6,3 @@ export interface CreateBudgetRequest {
   currency_placement: CurrencyPlacement
   number_format: string
 }
-
-export interface CreateBudgetResponse {
-  id: string
-  name: string
-  currency: string
-  currency_placement: CurrencyPlacement
-  number_format: string
-}
