@@ -35,7 +35,7 @@
               :to="'/account/' + account.id"
               class="flex items-center justify-between px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
             >
-              <span class="text-gray-700 dark:text-gray-200">{{ account.name }}</span>
+              <span class="text-gray-700 dark:text-gray-200 truncate">{{ account.name }}</span>
               <span :class="[
                 account.balance < 0 ? 'text-red-500' : 'text-gray-700 dark:text-gray-200'
               ]">{{ formatAmount(account.balance) }}</span>
@@ -85,7 +85,7 @@ const accountSections = ref([
     title: 'CREDIT',
     total: -208.18,
     accounts: [
-      { id: 4, name: 'Citi Double Cash', balance: -175.95 },
+      { id: 4, name: 'Citi Double Cash Citi Double Cash', balance: -1234425.95 },
       { id: 5, name: 'Apple Pay CC', balance: 0.00 },
       { id: 6, name: 'Prime CC', balance: -32.23 },
     ]
