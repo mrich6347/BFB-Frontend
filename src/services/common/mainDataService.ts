@@ -1,4 +1,4 @@
-import type { MainDataResponse } from "../../types/DTO/mainDataDTO"
+import type { MainDataResponse } from "../../types/DTO/mainData.dto"
 import api from "./api"
 
 export class MainDataService {

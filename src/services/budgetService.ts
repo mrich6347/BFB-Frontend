@@ -1,4 +1,4 @@
-import type { CreateBudgetRequest } from '../types/DTO/budgetDTO'
+import type { CreateBudgetRequest } from '../types/DTO/budget.dto'
 import api from './common/api'
 import type { Budget } from '@/types/models/budget'
 

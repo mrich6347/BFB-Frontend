@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import type { Budget } from '@/types/models/budget'
 import BudgetService from '@/services/budgetService'
-import type { CreateBudgetRequest } from '@/types/DTO/budgetDTO'
+import type { CreateBudgetRequest } from '@/types/DTO/budget.dto'
 export const useBudgetStore = defineStore('budgetStore', {
     state: () => ({
         budgets: [] as Budget[],

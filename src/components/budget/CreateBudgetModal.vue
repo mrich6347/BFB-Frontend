@@ -94,7 +94,7 @@
 import { ref, reactive } from 'vue'
 import { useBudgetStore } from '@/stores/budgetStore'
 import { CurrencyPlacement } from '@/types/models/budget'
-import type { CreateBudgetRequest } from '@/types/DTO/budgetDTO'
+import type { CreateBudgetRequest } from '@/types/DTO/budget.dto'
 defineProps<{
   isOpen: boolean
 }>()
