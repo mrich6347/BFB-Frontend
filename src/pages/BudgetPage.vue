@@ -10,22 +10,32 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { onMounted } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import { useBudgetStore } from '@/stores/budgetStore'
 import { Loader } from 'lucide-vue-next'
 import { MainDataService } from '@/services/common/mainDataService'
 
-const router = useRoute()
+const route = useRoute()
+const router = useRouter()
 const budgetStore = useBudgetStore()
 
 onMounted(async () => {
   budgetStore.setIsLoading(true)
-  const mainData = await MainDataService.getMainData(router.params.id as string)
-  if (mainData.budget) {
-    budgetStore.setCurrentBudget(mainData.budget)
+
+  try { 
+    const mainData = await MainDataService.getMainData(route.params.id as string)
+    if (mainData.budget) {
+      budgetStore.setCurrentBudget(mainData.budget)
+    }
+  } catch (error) {
     budgetStore.setIsLoading(false)
+    console.error("Error fetching main data:", error)
+    router.push('/dashboard')
   }
+
+  budgetStore.setIsLoading(false)
+
 })
 </script>
