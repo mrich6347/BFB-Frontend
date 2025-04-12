@@ -44,53 +44,53 @@
 
 /* --- Aurora Light Theme --- */
 :root {
-  --radius: 0.75rem; /* Slightly larger radius for a modern feel */
+  --radius: 0.75rem;
 
-  /* Base - Airy, slightly cool off-white */
-  --background: oklch(0.98 0.005 250);
-  --foreground: oklch(0.18 0.01 250);
+  /* Base - Pure white for modern contrast */
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.2 0.03 280);
 
-  /* Surfaces - Clean white */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.01 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.01 250);
+  /* Surfaces - Subtle purple tint */
+  --card: oklch(0.98 0.01 280);
+  --card-foreground: oklch(0.2 0.03 280);
+  --popover: oklch(0.98 0.01 280);
+  --popover-foreground: oklch(0.2 0.03 280);
 
-  /* Primary - Clear Blue */
-  --primary: oklch(0.55 0.18 255);
-  --primary-foreground: oklch(0.99 0.01 255);
+  /* Primary - Vibrant Purple */
+  --primary: oklch(0.55 0.25 280);
+  --primary-foreground: oklch(0.98 0.01 280);
 
-  /* Secondary - Muted Blue */
-  --secondary: oklch(0.92 0.03 255);
-  --secondary-foreground: oklch(0.4 0.05 255);
+  /* Secondary - Soft but Modern */
+  --secondary: oklch(0.96 0.02 280);
+  --secondary-foreground: oklch(0.45 0.12 280);
 
-  /* Muted - Subtle Grays */
-  --muted: oklch(0.95 0.005 250);
-  --muted-foreground: oklch(0.5 0.01 250);
+  /* Muted */
+  --muted: oklch(0.96 0.01 280);
+  --muted-foreground: oklch(0.45 0.08 280);
 
-  /* Accent - Fresh Green */
-  --accent: oklch(0.9 0.08 145);
-  --accent-foreground: oklch(0.3 0.12 145);
+  /* Accent - Electric Purple */
+  --accent: oklch(0.65 0.28 285);
+  --accent-foreground: oklch(0.98 0.01 280);
 
-  /* Destructive - Controlled Red */
-  --destructive: oklch(0.65 0.18 20);
-  --destructive-foreground: oklch(0.99 0.01 20);
+  /* Destructive */
+  --destructive: oklch(0.65 0.25 20);
+  --destructive-foreground: oklch(0.98 0.01 20);
 
-  /* Borders & Inputs - Subtle Definition */
-  --border: oklch(0.9 0.01 250);
-  --input: oklch(0.88 0.01 250);
-  --ring: oklch(0.55 0.18 255 / 0.3);
+  /* Borders & Inputs */
+  --border: oklch(0.9 0.02 280);
+  --input: oklch(0.85 0.02 280);
+  --ring: oklch(0.55 0.25 280 / 0.5);
 
-  /* Charts - Harmonious Palette */
-  --chart-1: oklch(0.55 0.18 255); /* Primary Blue */
-  --chart-2: oklch(0.75 0.15 145); /* Accent Green */
-  --chart-3: oklch(0.7 0.18 320); /* Magenta */
-  --chart-4: oklch(0.7 0.15 50);  /* Orange */
-  --chart-5: oklch(0.75 0.18 80);  /* Amber */
+  /* Charts - Modern Purple Palette */
+  --chart-1: oklch(0.55 0.25 280);    /* Vibrant Purple */
+  --chart-2: oklch(0.65 0.28 285);    /* Electric Purple */
+  --chart-3: oklch(0.6 0.22 260);     /* Cool Purple */
+  --chart-4: oklch(0.7 0.2 300);      /* Warm Purple */
+  --chart-5: oklch(0.75 0.18 270);    /* Soft Purple */
 
-  /* Sidebar - Consistent with Card */
-  --sidebar: var(--card);
-  --sidebar-foreground: var(--card-foreground);
+  /* Sidebar */
+  --sidebar: oklch(0.99 0 0);
+  --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: var(--accent);
@@ -101,50 +101,50 @@
 
 /* --- Aurora Dark Theme --- */
 .dark {
-  /* Base - Deep, slightly desaturated cool blue */
-  --background: oklch(0.15 0.02 250);
-  --foreground: oklch(0.92 0.01 250);
+  /* Base - Deep, rich background */
+  --background: oklch(0.15 0.06 280);
+  --foreground: oklch(0.98 0.01 280);
 
-  /* Surfaces - Elevated dark slate */
-  --card: oklch(0.18 0.025 250);
-  --card-foreground: oklch(0.92 0.01 250);
-  --popover: oklch(0.17 0.025 250);
-  --popover-foreground: oklch(0.92 0.01 250);
+  /* Surfaces - Modern gradient feel */
+  --card: oklch(0.22 0.08 280);
+  --card-foreground: oklch(0.98 0.01 280);
+  --popover: oklch(0.21 0.08 280);
+  --popover-foreground: oklch(0.98 0.01 280);
 
-  /* Primary - Brighter Blue */
-  --primary: oklch(0.7 0.2 255);
-  --primary-foreground: oklch(0.1 0.03 255);
+  /* Primary - Electric Purple */
+  --primary: oklch(0.75 0.28 285);
+  --primary-foreground: oklch(0.12 0.03 280);
 
-  /* Secondary - Subtle Blue */
-  --secondary: oklch(0.25 0.04 255);
-  --secondary-foreground: oklch(0.85 0.02 255);
+  /* Secondary - Rich Purple */
+  --secondary: oklch(0.3 0.1 280);
+  --secondary-foreground: oklch(0.85 0.05 280);
 
-  /* Muted - Dark Grays */
-  --muted: oklch(0.22 0.02 250);
-  --muted-foreground: oklch(0.6 0.015 250);
+  /* Muted - Sophisticated Purple Grays */
+  --muted: oklch(0.25 0.05 280);
+  --muted-foreground: oklch(0.75 0.03 280);
 
-  /* Accent - Bright Green */
-  --accent: oklch(0.8 0.15 145);
-  --accent-foreground: oklch(0.08 0.06 145);
+  /* Accent - Bright Electric Purple */
+  --accent: oklch(0.85 0.28 285);
+  --accent-foreground: oklch(0.12 0.03 280);
 
-  /* Destructive - Visible Red */
-  --destructive: oklch(0.68 0.2 20);
-  --destructive-foreground: oklch(0.98 0.02 20);
+  /* Destructive */
+  --destructive: oklch(0.7 0.25 20);
+  --destructive-foreground: oklch(0.98 0.01 20);
 
-  /* Borders & Inputs - Clear Definition */
-  --border: oklch(0.25 0.03 250);
-  --input: oklch(0.28 0.03 250);
-  --ring: oklch(0.7 0.2 255 / 0.3);
+  /* Borders & Inputs - Glowing effect */
+  --border: oklch(0.3 0.08 280);
+  --input: oklch(0.28 0.08 280);
+  --ring: oklch(0.75 0.28 285 / 0.5);
 
-  /* Charts - Vibrant Palette */
-  --chart-1: oklch(0.7 0.2 255);  /* Primary Blue */
-  --chart-2: oklch(0.8 0.15 145);  /* Accent Green */
-  --chart-3: oklch(0.75 0.2 320);  /* Magenta */
-  --chart-4: oklch(0.75 0.18 50);   /* Orange */
-  --chart-5: oklch(0.8 0.2 80);   /* Amber */
+  /* Charts - Electric Purple Palette */
+  --chart-1: oklch(0.75 0.28 285);    /* Electric Purple */
+  --chart-2: oklch(0.8 0.25 300);     /* Bright Magenta */
+  --chart-3: oklch(0.7 0.25 260);     /* Electric Blue-Purple */
+  --chart-4: oklch(0.85 0.22 285);    /* Light Electric Purple */
+  --chart-5: oklch(0.65 0.25 270);    /* Deep Electric Purple */
 
-  /* Sidebar - Slightly darker than background */
-  --sidebar: oklch(0.13 0.02 250);
+  /* Sidebar - Darker for depth */
+  --sidebar: oklch(0.13 0.06 280);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
