@@ -102,7 +102,6 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'created'): void
 }>()
 
 const budgetStore = useBudgetStore()
@@ -123,7 +122,6 @@ const handleSubmit = async () => {
   try {
     isLoading.value = true
     await budgetStore.createBudget(form)
-    emit('created')
     close()
   } catch (error) {
     console.error('Failed to create budget:', error)
