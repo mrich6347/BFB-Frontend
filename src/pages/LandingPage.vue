@@ -13,13 +13,23 @@
         Take control of your finances with our simple, intuitive budgeting tool
       </p>
       <!-- Add Login/Sign Up Buttons -->
-      <div class="flex space-x-4">
+      <div class="flex space-x-4" v-if="!user">
         <button @click="handleLogin" class="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-lg font-medium">
           Login
         </button>
         <button @click="handleSignUp" class="bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 py-2 rounded-lg font-medium">
           Sign Up
         </button>
+      </div>
+      <div v-else class="text-lg text-muted-foreground">
+        <div>
+          Welcome back, {{ user?.email }}! 🎉
+        </div>
+        <div>
+          <button @click="router.push('/dashboard')" class="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-lg font-medium mt-4">
+          Go To Dashboard
+        </button>
+        </div>
       </div>
     </section>
 
@@ -115,8 +125,17 @@
 import ThemeToggle from '@/components/common/ThemeToggle.vue'
 import { PlusIcon, PencilIcon, HeadphonesIcon } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
+import { supabase } from '@/lib/supabaseClient'
+import { onMounted, ref } from 'vue'
+import type { User } from '@supabase/supabase-js'
 
 const router = useRouter()
+const user = ref<User | null>(null)
+
+onMounted(async () => {
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  user.value = authUser
+})
 
 // Placeholder functions for button clicks
 const handleLogin = () => {
