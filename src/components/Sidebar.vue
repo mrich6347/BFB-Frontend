@@ -24,19 +24,33 @@
       <!-- Account Sections -->
       <div class="px-3">
         <template v-for="section in accountSections" :key="section.title">
-          <div class="flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-            <span>{{ section.title }}</span>
+          <button 
+            @click="toggleSection(section.title as SectionTitle)"
+            class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+          >
+            <div class="flex items-center">
+              <ChevronDownIcon 
+                v-if="expandedSections[section.title as SectionTitle]"
+                class="w-4 h-4 mr-1 transition-transform"
+              />
+              <ChevronRightIcon 
+                v-else
+                class="w-4 h-4 mr-1 transition-transform"
+              />
+              <span>{{ section.title }}</span>
+            </div>
             <span>{{ formatTotal(section.total) }}</span>
-          </div>
-          <div class="mb-4">
+          </button>
+          <div v-if="expandedSections[section.title as SectionTitle]" class="mb-4">
             <router-link
               v-for="account in section.accounts"
               :key="account.id"
               :to="'/account/' + account.id"
-              class="flex items-center justify-between px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              class="flex items-center justify-between px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 ml-2 min-w-0"
             >
-              <span class="text-gray-700 dark:text-gray-200 truncate">{{ account.name }}</span>
+              <span class="text-gray-700 dark:text-gray-200 truncate flex-shrink min-w-0 mr-4">{{ account.name }}</span>
               <span :class="[
+                'flex-shrink-0 tabular-nums',
                 account.balance < 0 ? 'text-red-500' : 'text-gray-700 dark:text-gray-200'
               ]">{{ formatAmount(account.balance) }}</span>
             </router-link>
@@ -63,8 +77,12 @@ import ThemeToggle from './common/ThemeToggle.vue'
 import { 
   BarChart2Icon,
   PieChartIcon,
-  PlusIcon 
+  PlusIcon,
+  ChevronDownIcon,
+  ChevronRightIcon
 } from 'lucide-vue-next'
+import { formatCurrency } from '@/utils/formatCurrencyUtil'
+type SectionTitle = 'CASH' | 'CREDIT' | 'TRACKING' | 'CLOSED'
 
 const mainNavItems = [
   { name: 'Budget', to: '/budget', icon: BarChart2Icon },
@@ -105,11 +123,19 @@ const accountSections = ref([
   }
 ])
 
+const expandedSections = ref<Record<SectionTitle, boolean>>({
+  'CASH': true,
+  'CREDIT': true,
+  'TRACKING': true,
+  'CLOSED': true
+})
+
+const toggleSection = (sectionTitle: SectionTitle) => {
+  expandedSections.value[sectionTitle] = !expandedSections.value[sectionTitle]
+}
+
 const formatAmount = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(amount)
+  return formatCurrency(amount)
 }
 
 const formatTotal = (total: number): string => {
