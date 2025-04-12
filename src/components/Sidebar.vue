@@ -3,7 +3,7 @@
     <!-- Header with Theme Toggle -->
     <div class="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
       <ThemeToggle class="text-gray-600 dark:text-gray-300" />
-      <h1 class="text-lg font-semibold text-gray-900 dark:text-white">BFB Finance</h1>
+      <h1 class="text-lg font-semibold text-gray-900 dark:text-white">Budget Friendly Budget</h1>
     </div>
 
     <!-- Navigation Menu -->
