@@ -97,6 +97,7 @@ const isLoading = ref(false)
 const accountTypes = Object.values(AccountType)
 
 const form = reactive<CreateAccountRequest>({
+  id: '',
   name: '',
   account_type: AccountType.CASH,
   current_balance: 0

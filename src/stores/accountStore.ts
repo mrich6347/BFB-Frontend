@@ -2,6 +2,7 @@ import type { Account, AccountType } from "../types/models/account";
 import { defineStore } from "pinia";
 import type { CreateAccountRequest } from "@/types/DTO/account.dto";
 import { AccountService } from "@/services/accountService";
+import { v4 as uuidv4 } from 'uuid';
 
 export const useAccountStore = defineStore('accountStore', {
     state: () => ({
@@ -18,8 +19,8 @@ export const useAccountStore = defineStore('accountStore', {
             this.accounts = accounts
         },   
         async createAccount(request: CreateAccountRequest) {
-            const response = await AccountService.createAccount(request)
-            console.log(response)
+            const id = uuidv4()
+            const response = await AccountService.createAccount({...request, id})
             this.accounts.unshift(response)
             return response
         }
