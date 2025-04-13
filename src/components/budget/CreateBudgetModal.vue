@@ -146,6 +146,14 @@ const form = reactive<CreateBudgetRequest>({
   date_format: DateFormat.US_SLASH
 })
 
+const resetForm = () => {
+  form.name = ''
+  form.currency = 'USD'
+  form.currency_placement = CurrencyPlacement.BEFORE
+  form.number_format = NumberFormat.DOT_COMMA
+  form.date_format = DateFormat.US_SLASH
+}
+
 const close = () => {
   emit('close')
 }
@@ -159,6 +167,7 @@ const handleSubmit = async () => {
     console.error('Failed to create budget:', error)
   } finally {
     isLoading.value = false
+    resetForm()
   }
 }
 </script> 
