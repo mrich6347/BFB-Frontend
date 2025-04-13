@@ -51,8 +51,8 @@
               <span class="text-gray-700 dark:text-gray-200 truncate flex-shrink min-w-0 mr-4">{{ account.name }}</span>
               <span :class="[
                 'flex-shrink-0 tabular-nums',
-                account.balance < 0 ? 'text-red-500' : 'text-gray-700 dark:text-gray-200'
-              ]">{{ formatCurrency(account.balance) }}</span>
+                account.working_balance < 0 ? 'text-red-500' : 'text-gray-700 dark:text-gray-200'
+              ]">{{ formatCurrency(account.working_balance) }}</span>
             </router-link>
           </div>
         </template>
@@ -62,6 +62,7 @@
       <div class="p-4">
         <button 
           class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          @click="isCreateAccountModalOpen = true"
         >
           <PlusIcon class="w-5 h-5 mr-2" />
           Add Account
@@ -92,10 +93,15 @@
       </button>
     </div>
   </aside>
+
+  <CreateAccountModal 
+    :is-open="isCreateAccountModalOpen"
+    @close="isCreateAccountModalOpen = false"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import ThemeToggle from './common/ThemeToggle.vue'
 import { 
   BarChart2Icon,
@@ -109,62 +115,52 @@ import {
 import { authService } from '../services/common/authService'
 import { formatCurrency } from '@/utils/currencyUtil'
 import router from '@/router'
+import CreateAccountModal from './accounts/CreateAccountModal.vue'
+import { useAccountStore } from '@/stores/accountStore'
+import { AccountType } from '@/types/models/account'
 
-
-type SectionTitle = 'CASH' | 'CREDIT' | 'TRACKING' | 'CLOSED'
+type SectionTitle = AccountType | 'CLOSED'
 
 const mainNavItems = [
   { name: 'Budget', to: '/budget', icon: BarChart2Icon },
   { name: 'Reports', to: '/reports', icon: PieChartIcon },
 ]
 
-const accountSections = ref([
+const accountStore = useAccountStore()
+
+const accountSections = computed(() => [
   {
-    title: 'CASH',
-    total: 15102.00,
-    accounts: [
-      { id: 1, name: 'Wells Fargo Checking', balance: 855.73 },
-      { id: 2, name: 'Citi Emergency Fund', balance: 14246.27 },
-      { id: 3, name: 'House Savings', balance: 0.00 },
-    ]
+    title: AccountType.CASH,
+    total: accountStore.getAccountsByType(AccountType.CASH)
+      .reduce((sum, account) => sum + account.working_balance, 0),
+    accounts: accountStore.getAccountsByType(AccountType.CASH)
   },
   {
-    title: 'CREDIT',
-    total: -208.18,
-    accounts: [
-      { id: 4, name: 'Citi Double Cash Citi Double Cash', balance: -1234425.95 },
-      { id: 5, name: 'Apple Pay CC', balance: 0.00 },
-      { id: 6, name: 'Prime CC', balance: -32.23 },
-    ]
+    title: AccountType.CREDIT,
+    total: accountStore.getAccountsByType(AccountType.CREDIT)
+      .reduce((sum, account) => sum + account.working_balance, 0),
+    accounts: accountStore.getAccountsByType(AccountType.CREDIT)
   },
   {
-    title: 'TRACKING',
-    total: 7837.16,
-    accounts: [
-      { id: 7, name: 'Fidelity Roth IRA', balance: 7029.16 },
-      { id: 8, name: 'Fidelity Taxable', balance: 808.00 },
-      { id: 9, name: 'Vanguard 401(k)', balance: 42580.33 },
-      { id: 10, name: 'HSA Investment', balance: 3250.75 },
-      { id: 11, name: 'Robinhood Portfolio', balance: 1875.22 },
-      { id: 12, name: 'Crypto Wallet', balance: 2340.18 },
-      { id: 13, name: 'Real Estate Investment', balance: 85000.00 },
-      { id: 14, name: 'Treasury Bonds', balance: 10000.00 },
-      { id: 15, name: 'College 529 Plan', balance: 15750.45 },
-      { id: 16, name: 'Pension Fund', balance: 28500.00 },
-    ]
+    title: AccountType.TRACKING,
+    total: accountStore.getAccountsByType(AccountType.TRACKING)
+      .reduce((sum, account) => sum + account.working_balance, 0),
+    accounts: accountStore.getAccountsByType(AccountType.TRACKING)
   },
   {
-    title: 'CLOSED',
-    total: 0,
-    accounts: []
+    title: AccountType.LOAN,
+    total: accountStore.getAccountsByType(AccountType.LOAN)
+      .reduce((sum, account) => sum + account.working_balance, 0),
+    accounts: accountStore.getAccountsByType(AccountType.LOAN)
   }
 ])
 
 const expandedSections = ref<Record<SectionTitle, boolean>>({
-  'CASH': true,
-  'CREDIT': true,
-  'TRACKING': true,
-  'CLOSED': true
+  [AccountType.CASH]: true,
+  [AccountType.CREDIT]: true,
+  [AccountType.TRACKING]: true,
+  [AccountType.LOAN]: true,
+  'CLOSED': false
 })
 
 const toggleSection = (sectionTitle: SectionTitle) => {
@@ -172,6 +168,7 @@ const toggleSection = (sectionTitle: SectionTitle) => {
 }
 
 const isSettingsExpanded = ref(false)
+const isCreateAccountModalOpen = ref(false)
 
 const toggleSettings = () => {
   isSettingsExpanded.value = !isSettingsExpanded.value
