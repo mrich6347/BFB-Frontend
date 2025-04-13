@@ -11,21 +11,19 @@ export const useAccountStore = defineStore('accountStore', {
         isLoading: true
     }),
     getters: {
-      getAccountsByType: (state) => (type: AccountType) => {
-        return state.accounts.filter(account => account.account_type === type);
-      },
+        getAccountsByType: (state) => (type: AccountType) => {
+            return state.accounts.filter(account => account.account_type === type);
+        },
     },
     actions: {
         setAccounts(accounts: Account[]) {
             this.accounts = accounts
-        },   
+        },
         async createAccount(request: CreateAccountRequest) {
             const id = uuidv4()
 
-            console.log(request)
-
             const balanceStr = String(request.current_balance).trim();
-            if (request.account_type === AccountType.LOAN || request.account_type === AccountType.CREDIT) { 
+            if (request.account_type === AccountType.LOAN || request.account_type === AccountType.CREDIT) {
                 if (balanceStr.startsWith('+')) {
                     request.current_balance = Math.abs(parseFloat(balanceStr.substring(1)));
                 } else {
@@ -36,7 +34,7 @@ export const useAccountStore = defineStore('accountStore', {
             }
 
             request.budget_id = useBudgetStore().currentBudget?.id || ''
-            const response = await AccountService.createAccount({...request, id})
+            const response = await AccountService.createAccount({ ...request, id })
             this.accounts.unshift(response)
             return response
         }
