@@ -46,12 +46,11 @@
           <input
             id="currentBalance"
             v-model="form.current_balance"
-            type="number"
-            step="0.01"
+            type="text"
             required
             class="w-full px-3 py-2 border rounded-md bg-background dark:bg-background border-input dark:border-input"
             placeholder="0.00"
-          />
+            />
         </div>
 
         <div class="flex justify-end gap-3 mt-6">
@@ -122,6 +121,14 @@ const handleSubmit = async () => {
     console.error('Failed to create account:', error)
   } finally {
     isLoading.value = false
+    resetForm()
   }
+}
+
+const resetForm = () => {
+  form.id = ''
+  form.name = ''
+  form.account_type = AccountType.CASH
+  form.current_balance = 0
 }
 </script> 

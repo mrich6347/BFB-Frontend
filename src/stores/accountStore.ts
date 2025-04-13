@@ -1,4 +1,4 @@
-import type { Account, AccountType } from "../types/models/account";
+import { AccountType, type Account } from "../types/models/account";
 import { defineStore } from "pinia";
 import type { CreateAccountRequest } from "@/types/DTO/account.dto";
 import { AccountService } from "@/services/accountService";
@@ -20,6 +20,14 @@ export const useAccountStore = defineStore('accountStore', {
         },   
         async createAccount(request: CreateAccountRequest) {
             const id = uuidv4()
+
+            const balanceStr = String(request.current_balance).trim();
+            if (balanceStr.startsWith('+')) {
+                request.current_balance = Math.abs(parseFloat(balanceStr.substring(1)));
+            } else {
+                request.current_balance = -Math.abs(parseFloat(balanceStr));
+            }
+
             const response = await AccountService.createAccount({...request, id})
             this.accounts.unshift(response)
             return response
