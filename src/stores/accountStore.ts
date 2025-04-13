@@ -10,7 +10,6 @@ export const useAccountStore = defineStore('accountStore', {
     }),
     getters: {
       getAccountsByType: (state) => (type: AccountType) => {
-        console.log('Account type filter:', type);
         return state.accounts.filter(account => account.account_type === type);
       },
     },
