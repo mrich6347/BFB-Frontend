@@ -68,6 +68,7 @@ export const useAuthStore = defineStore('auth', {
       this.session = null
       this.user = null
       this.lastBanCheck = null
+      this.loading = true
     }
   }
 }) 
