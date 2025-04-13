@@ -1,5 +1,5 @@
 import { useBudgetStore } from '@/stores/budgetStore'
-import { NumberFormat } from '@/types/models/budget'
+import { CurrencyPlacement, NumberFormat } from '@/types/models/budget'
 import { formatNumberByFormat } from '@/utils/numberFormatUtil'
 
 export interface Currency {
@@ -57,16 +57,23 @@ export const formatCurrency = (amount: number): string => {
     const budgetStore = useBudgetStore();
     const budget = budgetStore?.currentBudget;
     const currencyCode = budget?.currency || 'USD';
+    const currencyPlacement = budget?.currency_placement || CurrencyPlacement.BEFORE;
     const numberFormat = budget?.number_format || NumberFormat.DOT_COMMA;
     const currency = getCurrencyByCode(currencyCode);
     
+    const formattedAmount = formatNumberByFormat(amount, numberFormat);
+    
     if (!currency) {
-      return `${formatNumberByFormat(amount, numberFormat)} ${currencyCode}`;
+      return currencyPlacement === CurrencyPlacement.BEFORE 
+        ? `${currencyCode} ${formattedAmount}` 
+        : `${formattedAmount} ${currencyCode}`;
     }
     
-    return `${currency.symbol}${formatNumberByFormat(amount, numberFormat)}`;
+    return currencyPlacement === CurrencyPlacement.BEFORE 
+      ? `${currency.symbol}${formattedAmount}` 
+      : `${formattedAmount}${currency.symbol}`;
   } catch {
     // Fallback to basic formatting if store is not available
-    return `${amount.toFixed(2).toLocaleString()} USD`;
+    return `$${amount.toFixed(2).toLocaleString()}`;
   }
 };
