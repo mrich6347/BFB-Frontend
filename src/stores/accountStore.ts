@@ -22,11 +22,17 @@ export const useAccountStore = defineStore('accountStore', {
         async createAccount(request: CreateAccountRequest) {
             const id = uuidv4()
 
+            console.log(request)
+
             const balanceStr = String(request.current_balance).trim();
-            if (balanceStr.startsWith('+')) {
-                request.current_balance = Math.abs(parseFloat(balanceStr.substring(1)));
+            if (request.account_type === AccountType.LOAN || request.account_type === AccountType.CREDIT) { 
+                if (balanceStr.startsWith('+')) {
+                    request.current_balance = Math.abs(parseFloat(balanceStr.substring(1)));
+                } else {
+                    request.current_balance = -Math.abs(parseFloat(balanceStr));
+                }
             } else {
-                request.current_balance = -Math.abs(parseFloat(balanceStr));
+                request.current_balance = Math.abs(parseFloat(balanceStr));
             }
 
             request.budget_id = useBudgetStore().currentBudget?.id || ''
