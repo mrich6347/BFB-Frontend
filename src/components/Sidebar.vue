@@ -7,7 +7,7 @@
     </div>
 
     <!-- Navigation Menu -->
-    <nav class="flex-1 overflow-y-auto">
+    <nav class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
       <!-- Main Navigation -->
       <div class="p-3">
         <router-link 

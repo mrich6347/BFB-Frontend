@@ -162,4 +162,21 @@
     @apply bg-background text-foreground;
     font-feature-settings: 'rlig' 1, 'calt' 1; /* Enable optional ligatures for cleaner text */
   }
+  
+  /* Webkit scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-1;  /* Thin scrollbar width */
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;  /* Transparent track */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;  /* Rounded thumb */
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-500;  /* Darker on hover */
+  }
 }
