@@ -29,14 +29,16 @@
           <label class="text-sm font-medium text-foreground dark:text-foreground" for="currency">
             Currency
           </label>
-          <input
+          <select
             id="currency"
             v-model="form.currency"
-            type="text"
             required
             class="w-full px-3 py-2 border rounded-md bg-background dark:bg-background border-input dark:border-input"
-            placeholder="USD"
-          />
+          >
+            <option v-for="currency in commonCurrencies" :key="currency.code" :value="currency.code">
+              {{ currency.code }} - {{ currency.name }} ({{ currency.symbol }})
+            </option>
+          </select>
         </div>
 
         <div class="space-y-2">
@@ -58,14 +60,42 @@
           <label class="text-sm font-medium text-foreground dark:text-foreground" for="number_format">
             Number Format
           </label>
-          <input
+          <select
             id="number_format"
             v-model="form.number_format"
-            type="text"
             required
             class="w-full px-3 py-2 border rounded-md bg-background dark:bg-background border-input dark:border-input"
-            placeholder="1,234.56"
-          />
+          >
+            <option value="DOT_COMMA">123,456.78</option>
+            <option value="COMMA_COMMA">123.456,78</option>
+            <option value="DOT_COMMA_THREE">123,456.789</option>
+            <option value="SPACE_DOT">123 456.78</option>
+            <option value="APOSTROPHE_DOT">123'456.78</option>
+            <option value="DOT_NO_DECIMAL">123.456</option>
+            <option value="COMMA_NO_DECIMAL">123,456</option>
+            <option value="SPACE_HYPHEN">123 456-78</option>
+            <option value="SPACE_COMMA">123 456,78</option>
+          </select>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-foreground dark:text-foreground" for="date_format">
+            Date Format
+          </label>
+          <select
+            id="date_format"
+            v-model="form.date_format"
+            required
+            class="w-full px-3 py-2 border rounded-md bg-background dark:bg-background border-input dark:border-input"
+          >
+            <option value="ISO">2025/12/30</option>
+            <option value="HYPHEN">2025-12-30</option>
+            <option value="EUROPEAN">30-12-2025</option>
+            <option value="UK_SLASH">30/12/2025</option>
+            <option value="PERIOD">30.12.2025</option>
+            <option value="US_SLASH">12/30/2025</option>
+            <option value="DOT_NOTATION">2025.12.30</option>
+          </select>
         </div>
 
         <div class="flex justify-end gap-3 mt-6">
@@ -93,8 +123,10 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useBudgetStore } from '@/stores/budgetStore'
-import { CurrencyPlacement } from '@/types/models/budget'
+import { CurrencyPlacement, DateFormat, NumberFormat } from '@/types/models/budget'
 import type { CreateBudgetRequest } from '@/types/DTO/budget.dto'
+import { commonCurrencies } from '@/utils/currencyUtil'
+
 defineProps<{
   isOpen: boolean
 }>()
@@ -110,7 +142,8 @@ const form = reactive<CreateBudgetRequest>({
   name: '',
   currency: 'USD',
   currency_placement: CurrencyPlacement.BEFORE,
-  number_format: '1,234.56'
+  number_format: NumberFormat.DOT_COMMA,
+  date_format: DateFormat.US_SLASH
 })
 
 const close = () => {

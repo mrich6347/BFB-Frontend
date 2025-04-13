@@ -108,8 +108,8 @@ import {
   LogOutIcon,
   ArrowLeftIcon
 } from 'lucide-vue-next'
-import { formatCurrency } from '@/utils/formatCurrencyUtil'
 import { authService } from '../services/common/authService'
+import { formatCurrency } from '@/utils/currencyUtil'
 import router from '@/router'
 
 
