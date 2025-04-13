@@ -62,7 +62,7 @@
                 <div class="space-y-1">
                   <h4 class="text-lg font-semibold text-card-foreground">{{ budget.name }}</h4>
                   <p class="text-sm text-muted-foreground">
-                    Last Used On: {{ new Date(budget.updated_at).toLocaleDateString() }}
+                    Last Used On: {{ formatDate(budget.updated_at, budget.date_format) }}
                   </p>
                 </div>
             
@@ -90,6 +90,7 @@ import CreateBudgetModal from '@/components/budget/CreateBudgetModal.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useRouter } from 'vue-router'
 import { LogOut, Plus, Inbox } from 'lucide-vue-next'
+import { formatDate } from '@/utils/dateFormatUtil'
 
 const loading = ref(true)
 const showCreateModal = ref(false)
