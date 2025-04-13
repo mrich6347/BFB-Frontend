@@ -29,6 +29,9 @@ export const useBudgetStore = defineStore('budgetStore', {
         setIsLoading(isLoading: boolean) {
             this.isLoading = isLoading
         },
+        setBudgets(budgets: Budget[]) {
+            this.budgets = budgets
+        },
         setCurrentBudget(budget: Budget) {
             this.currentBudget = budget
         },

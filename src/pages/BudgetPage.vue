@@ -4,7 +4,7 @@
       <Loader class="w-8 h-8 animate-spin text-blue-500" />
     </div>
     <div v-else>
-      <Sidebar />
+      <Sidebar :budgetId="budgetId" />
     </div>
   </div>
 </template>
@@ -22,24 +22,24 @@ const route = useRoute()
 const router = useRouter()
 const budgetStore = useBudgetStore()
 const accountStore = useAccountStore()
+const budgetId = route.params.budgetId as string
 
 onMounted(async () => {
   budgetStore.setIsLoading(true)
 
   try { 
-    const mainData = await MainDataService.getMainData(route.params.id as string)
-    if (mainData.budget) {
+    const mainData = await MainDataService.getMainData(route.params.budgetId as string)
+    if (mainData?.budget) {
       budgetStore.setCurrentBudget(mainData.budget)
     }
-    if (mainData.accounts) {
+    if (mainData?.accounts?.length) {
       accountStore.setAccounts(mainData.accounts)
     }
-  } catch (error) {
     budgetStore.setIsLoading(false)
+  } catch (error) {
     console.error("Error fetching main data:", error)
-    router.push('/dashboard')
+    budgetStore.reset()
+    await router.push('/dashboard')
   }
-
-  budgetStore.setIsLoading(false)
 })
 </script>

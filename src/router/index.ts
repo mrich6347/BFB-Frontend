@@ -34,7 +34,7 @@ const routes = [
     }
   },
   {
-    path: '/budget/:id',
+    path: '/budget/:budgetId',
     name: 'Budget',
     component: BudgetPage,
     meta: {

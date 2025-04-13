@@ -97,6 +97,7 @@
   <CreateAccountModal 
     :is-open="isCreateAccountModalOpen"
     @close="isCreateAccountModalOpen = false"
+    :budgetId="props.budgetId"
   />
 </template>
 
@@ -118,6 +119,11 @@ import router from '@/router'
 import CreateAccountModal from './accounts/CreateAccountModal.vue'
 import { useAccountStore } from '@/stores/accountStore'
 import { AccountType } from '@/types/models/account'
+
+const props = defineProps<{
+  budgetId: string
+}>()
+
 
 type SectionTitle = AccountType | 'CLOSED'
 

@@ -1,7 +1,6 @@
 import { AccountType } from "@/types/models/account";
 import type { CreateAccountRequest } from "@/types/DTO/account.dto";
 import { v4 as uuidv4 } from 'uuid';
-import { useBudgetStore } from "@/stores/budgetStore";
 import { parseFormattedNumberToDecimal } from "@/utils/numberFormatUtil";
 
 export function useAccounts() {
@@ -24,14 +23,10 @@ export function useAccounts() {
             }
         }
 
-        const budgetStore = useBudgetStore();
-        const budget_id = budgetStore.currentBudget?.id || '';
-
         return {
             ...request,
             id,
             current_balance: numericBalance,
-            budget_id
         };
     };
 

@@ -82,8 +82,9 @@ import { useAccountStore } from '@/stores/accountStore'
 import { AccountType } from '@/types/models/account'
 import type { CreateAccountRequest } from '@/types/DTO/account.dto'
 
-defineProps<{
-  isOpen: boolean
+const props = defineProps<{
+  isOpen: boolean,
+  budgetId: string
 }>()
 
 const emit = defineEmits<{
@@ -99,8 +100,8 @@ const form = reactive<CreateAccountRequest>({
   id: '',
   name: '',
   account_type: AccountType.CASH,
-  current_balance: 0,
-  budget_id: ''
+  current_balance: 0,   
+  budget_id: props.budgetId
 })
 
 const formatAccountType = (type: AccountType): string => {
@@ -131,5 +132,6 @@ const resetForm = () => {
   form.name = ''
   form.account_type = AccountType.CASH
   form.current_balance = 0
+  form.budget_id = props.budgetId
 }
 </script> 
