@@ -99,6 +99,7 @@ const router = useRouter()
 
 onMounted(async () => {
   try {
+    budgetStore.reset()
     await budgetStore.fetchAllBudgets()
   } finally {
     loading.value = false

@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import type { Budget } from '@/types/models/budget'
 import BudgetService from '@/services/budgetService'
 import type { CreateBudgetRequest } from '@/types/DTO/budget.dto'
+
+
 export const useBudgetStore = defineStore('budgetStore', {
     state: () => ({
         budgets: [] as Budget[],
@@ -29,6 +31,11 @@ export const useBudgetStore = defineStore('budgetStore', {
         },
         setCurrentBudget(budget: Budget) {
             this.currentBudget = budget
+        },
+        reset() {
+            this.budgets = []
+            this.currentBudget = null
+            this.isLoading = true
         }
-    }
+    },
 })
