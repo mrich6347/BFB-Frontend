@@ -70,12 +70,11 @@
     </nav>
 
     <!-- Settings Section -->
-    <div class="border-t border-gray-200 dark:border-gray-800">
-      <div v-if="isSettingsExpanded" class="p-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+    <div class="border-t border-gray-200 dark:border-gray-800 relative">
+      <div v-if="isSettingsExpanded" class="absolute bottom-full right-0 w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-t-lg shadow-lg">
         <button @click="router.push('/dashboard')" 
-          class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+          class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 mb-2"
         >
-          <ArrowLeftIcon class="w-5 h-5 mr-2" />
           Back to Budgets
         </button>
         <button @click="authService.logout()" 
@@ -105,8 +104,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   Settings2Icon,
-  LogOutIcon,
-  ArrowLeftIcon
+  LogOutIcon
 } from 'lucide-vue-next'
 import { authService } from '../services/common/authService'
 import { formatCurrency } from '@/utils/currencyUtil'
