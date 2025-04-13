@@ -76,7 +76,7 @@
         <button @click="router.push('/dashboard')" 
           class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 mb-2"
         >
-          Back to Budgets
+          View Budgets
         </button>
         <button @click="authService.logout()" 
           class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
@@ -89,7 +89,7 @@
         @click="toggleSettings"
         class="w-full p-4 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
       >
-        <Settings2Icon class="w-5 h-5" />
+        <SettingsIcon class="w-5 h-5" />
       </button>
     </div>
   </aside>
@@ -109,7 +109,7 @@ import {
   PlusIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  Settings2Icon,
+  SettingsIcon,
   LogOutIcon
 } from 'lucide-vue-next'
 import { authService } from '../services/common/authService'
