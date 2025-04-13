@@ -99,7 +99,8 @@ const form = reactive<CreateAccountRequest>({
   id: '',
   name: '',
   account_type: AccountType.CASH,
-  current_balance: 0
+  current_balance: 0,
+  budget_id: ''
 })
 
 const formatAccountType = (type: AccountType): string => {
