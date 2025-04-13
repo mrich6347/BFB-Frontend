@@ -36,7 +36,7 @@ export const useAccountStore = defineStore('accountStore', {
 
             request.budget_id = useBudgetStore().currentBudget?.id || ''
             const response = await AccountService.createAccount({ ...request, id })
-            this.accounts.unshift(response)
+            this.accounts.push(response)
             return response
         }
     }
