@@ -4,6 +4,7 @@ import type { CreateAccountRequest } from "@/types/DTO/account.dto";
 import { AccountService } from "@/services/accountService";
 import { v4 as uuidv4 } from 'uuid';
 import { useBudgetStore } from "./budgetStore";
+import { parseFormattedNumberToDecimal } from "../utils/numberFormatUtil";
 
 export const useAccountStore = defineStore('accountStore', {
     state: () => ({
@@ -22,18 +23,32 @@ export const useAccountStore = defineStore('accountStore', {
         async createAccount(request: CreateAccountRequest) {
             const id = uuidv4()
 
-            const balanceStr = String(request.current_balance).trim();
+            const inputBalanceStr = String(request.current_balance).trim();
+
+            console.log('inputBalanceStr', inputBalanceStr)
             
-            // If loan or credit, we assume its always negative unless they explicity put '+' in front of it
+            // parsing the number to our DB format ex: 1,234.56 -> 1234.56
+            const decimalBalanceStr = parseFormattedNumberToDecimal(inputBalanceStr);
+
+            console.log('decimalBalanceStr', decimalBalanceStr)
+            
+            let numericBalance = parseFloat(decimalBalanceStr);
+
+            console.log('numericBalance', numericBalance)
+
+            console.log('request.account_type', request.account_type)
+
             if (request.account_type === AccountType.LOAN || request.account_type === AccountType.CREDIT) {
-                if (balanceStr.startsWith('+')) {
-                    request.current_balance = Math.abs(parseFloat(balanceStr.substring(1)));
+                if (inputBalanceStr.startsWith('+')) {
+                    numericBalance = Math.abs(numericBalance);
                 } else {
-                    request.current_balance = -Math.abs(parseFloat(balanceStr));
+                    numericBalance = -Math.abs(numericBalance);
                 }
-            } else {
-                request.current_balance = Math.abs(parseFloat(balanceStr));
             }
+
+            console.log('numericBalance', numericBalance)
+
+            request.current_balance = numericBalance;
 
             request.budget_id = useBudgetStore().currentBudget?.id || ''
             const response = await AccountService.createAccount({ ...request, id })
