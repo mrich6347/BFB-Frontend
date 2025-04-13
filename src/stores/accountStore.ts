@@ -23,6 +23,7 @@ export const useAccountStore = defineStore('accountStore', {
             const id = uuidv4()
 
             const balanceStr = String(request.current_balance).trim();
+            
             // If loan or credit, we assume its always negative unless they explicity put '+' in front of it
             if (request.account_type === AccountType.LOAN || request.account_type === AccountType.CREDIT) {
                 if (balanceStr.startsWith('+')) {

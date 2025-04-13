@@ -41,6 +41,5 @@ onMounted(async () => {
   }
 
   budgetStore.setIsLoading(false)
-
 })
 </script>
