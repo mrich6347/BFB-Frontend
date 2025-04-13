@@ -38,6 +38,10 @@ export const useAccountStore = defineStore('accountStore', {
             const response = await AccountService.createAccount({ ...request, id })
             this.accounts.push(response)
             return response
+        },
+        reset() {
+            this.accounts = []
+            this.isLoading = true
         }
     }
 })
