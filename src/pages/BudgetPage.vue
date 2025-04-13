@@ -16,10 +16,12 @@ import Sidebar from '@/components/Sidebar.vue'
 import { useBudgetStore } from '@/stores/budgetStore'
 import { Loader } from 'lucide-vue-next'
 import { MainDataService } from '@/services/common/mainDataService'
+import { useAccountStore } from '@/stores/accountStore'
 
 const route = useRoute()
 const router = useRouter()
 const budgetStore = useBudgetStore()
+const accountStore = useAccountStore()
 
 onMounted(async () => {
   budgetStore.setIsLoading(true)
@@ -28,6 +30,9 @@ onMounted(async () => {
     const mainData = await MainDataService.getMainData(route.params.id as string)
     if (mainData.budget) {
       budgetStore.setCurrentBudget(mainData.budget)
+    }
+    if (mainData.accounts) {
+      accountStore.setAccounts(mainData.accounts)
     }
   } catch (error) {
     budgetStore.setIsLoading(false)
