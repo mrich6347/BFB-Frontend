@@ -3,8 +3,14 @@
     <div v-if="budgetStore.isLoading" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-900 z-50">
       <Loader class="w-8 h-8 animate-spin text-blue-500" />
     </div>
-    <div v-else>
+    <div v-else class="flex h-screen">
       <Sidebar :budgetId="budgetId" />
+      <div class="flex-1 overflow-auto">
+        <BudgetHeader />
+        <div class="p-4">
+          <!-- Budget content goes here -->
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -13,6 +19,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { onMounted } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
+import BudgetHeader from '@/components/budget/BudgetHeader.vue'
 import { useBudgetStore } from '@/stores/budgetStore'
 import { Loader } from 'lucide-vue-next'
 import { MainDataService } from '@/services/common/mainDataService'
