@@ -126,7 +126,9 @@ import { useBudgetStore } from '@/stores/budgetStore'
 import { CurrencyPlacement, DateFormat, NumberFormat } from '@/types/models/budget'
 import type { CreateBudgetRequest } from '@/types/DTO/budget.dto'
 import { commonCurrencies } from '@/utils/currencyUtil'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 defineProps<{
   isOpen: boolean
 }>()
@@ -161,8 +163,9 @@ const close = () => {
 const handleSubmit = async () => {
   try {
     isLoading.value = true
-    await budgetStore.createBudget(form)
-    close()
+    const budget = await budgetStore.createBudget(form)
+    close();
+    router.push(`/budget/${budget.id}`)
   } catch (error) {
     console.error('Failed to create budget:', error)
   } finally {
