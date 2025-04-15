@@ -9,9 +9,7 @@
         <div class="flex flex-col items-start">
           <div class="flex items-center">
             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200">{{ currentMonth }}</h2>
-            <ChevronDown class="w-3.5 h-3.5 ml-1 text-gray-500 dark:text-gray-400" />
           </div>
-          <span class="text-xs text-gray-500 dark:text-gray-500">Enter a note...</span>
         </div>
         <button class="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <ChevronRight class="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -52,16 +50,13 @@
       >
         {{ filter.name }}
       </button>
-      <button class="p-0.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-        <HelpCircle class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { ChevronLeft, ChevronRight, ChevronDown, HelpCircle } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-vue-next'
 
 // Mock data with a large dollar amount to test display
 const readyToAssign = ref(1754329.87)
@@ -69,9 +64,7 @@ const selectedFilter = ref('all')
 
 const filters = [
   { id: 'all', name: 'All' },
-  { id: 'snoozed', name: 'Snoozed' },
-  { id: 'underfunded', name: 'Underfunded' },
-  { id: 'overfunded', name: 'Overfunded' },
+  { id: 'overspent', name: 'Overspent' },
   { id: 'moneyAvailable', name: 'Money Available' }
 ]
 
