@@ -79,7 +79,7 @@
 import { ref, reactive } from 'vue'
 import { X } from 'lucide-vue-next'
 import { useAccountStore } from '@/stores/accountStore'
-import { AccountType } from '@/types/models/account'
+import { AccountType } from '@/types/DTO/account.dto'
 import type { CreateAccountRequest } from '@/types/DTO/account.dto'
 
 const props = defineProps<{

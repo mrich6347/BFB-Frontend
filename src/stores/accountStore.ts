@@ -1,12 +1,11 @@
-import { AccountType, type Account } from "../types/models/account";
 import { defineStore } from "pinia";
-import type { CreateAccountRequest } from "@/types/DTO/account.dto";
+import type { CreateAccountRequest, AccountResponse, AccountType } from "@/types/DTO/account.dto";
 import { AccountService } from "@/services/accountService";
 import { useAccounts } from "@/composables/accounts/useCreateAccount";
 
 export const useAccountStore = defineStore('accountStore', {
     state: () => ({
-        accounts: [] as Account[],
+        accounts: [] as AccountResponse[],
         isLoading: true
     }),
     getters: {
@@ -15,7 +14,7 @@ export const useAccountStore = defineStore('accountStore', {
         },
     },
     actions: {
-        setAccounts(accounts: Account[]) {
+        setAccounts(accounts: AccountResponse[]) {
             this.accounts = accounts
         },
         async createAccount(request: CreateAccountRequest) {

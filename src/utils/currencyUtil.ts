@@ -1,5 +1,5 @@
 import { useBudgetStore } from '@/stores/budgetStore'
-import { CurrencyPlacement, NumberFormat } from '@/types/models/budget'
+import { CurrencyPlacement, NumberFormat } from '@/types/DTO/budget.dto'
 import { formatNumberByFormat } from '@/utils/numberFormatUtil'
 
 export interface Currency {

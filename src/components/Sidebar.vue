@@ -118,7 +118,7 @@ import { formatCurrency } from '@/utils/currencyUtil'
 import router from '@/router'
 import CreateAccountModal from './accounts/CreateAccountModal.vue'
 import { useAccountStore } from '@/stores/accountStore'
-import { AccountType } from '@/types/models/account'
+import { AccountType } from '@/types/DTO/account.dto'
 
 const props = defineProps<{
   budgetId: string

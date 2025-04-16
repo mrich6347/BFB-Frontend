@@ -1,4 +1,4 @@
-import { NumberFormat } from '@/types/models/budget'
+import { NumberFormat } from '@/types/DTO/budget.dto'
 import { useBudgetStore } from '@/stores/budgetStore'
 
 export const formatNumberByFormat = (amount: number, format: string): string => {

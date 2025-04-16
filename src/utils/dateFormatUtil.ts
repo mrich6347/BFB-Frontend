@@ -1,4 +1,4 @@
-import { DateFormat } from '../types/models/budget';
+import { DateFormat } from '@/types/DTO/budget.dto';
 
 /**
  * Formats a UTC date according to the specified format in the user's local timezone

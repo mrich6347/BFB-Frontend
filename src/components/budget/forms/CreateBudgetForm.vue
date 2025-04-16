@@ -120,7 +120,7 @@
 <script setup lang="ts">
 import type { CreateBudgetRequest } from '@/types/DTO/budget.dto'
 import { commonCurrencies } from '@/utils/currencyUtil'
-import { NumberFormat, CurrencyPlacement, DateFormat } from '@/types/models/budget'
+import { NumberFormat, CurrencyPlacement, DateFormat } from '@/types/DTO/budget.dto'
 
 defineProps<{
   isLoading: boolean

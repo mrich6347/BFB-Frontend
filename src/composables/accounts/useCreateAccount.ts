@@ -1,4 +1,4 @@
-import { AccountType } from "@/types/models/account";
+import { AccountType } from "@/types/DTO/account.dto";
 import type { CreateAccountRequest } from "@/types/DTO/account.dto";
 import { v4 as uuidv4 } from 'uuid';
 import { parseFormattedNumberToDecimal } from "@/utils/numberFormatUtil";

@@ -1,6 +1,5 @@
-import type { CreateBudgetRequest } from '../types/DTO/budget.dto'
+import type { BudgetResponse, CreateBudgetRequest } from '../types/DTO/budget.dto'
 import api from './common/api'
-import type { Budget } from '@/types/models/budget'
 
 export class BudgetService {
   private static readonly BASE_PATH = '/budgets'
@@ -8,18 +7,18 @@ export class BudgetService {
   /**
    * Get all budgets for the authenticated user
    */
-  static async getAllBudgets(): Promise<Budget[]> {
-    const response = await api.get<Budget[]>(this.BASE_PATH)
+  static async getAllBudgets(): Promise<BudgetResponse[]> {
+    const response = await api.get<BudgetResponse[]>(this.BASE_PATH)
     return response.data
   }
 
-  static async createBudget(request: CreateBudgetRequest): Promise<Budget> {
-    const response = await api.post<Budget>(this.BASE_PATH, request)
+  static async createBudget(request: CreateBudgetRequest): Promise<BudgetResponse> {
+    const response = await api.post<BudgetResponse>(this.BASE_PATH, request)
     return response.data
   }
 
-  static async getBudget(id: string): Promise<Budget> {
-    const response = await api.get<Budget>(`${this.BASE_PATH}/${id}`)
+  static async getBudget(id: string): Promise<BudgetResponse> {
+    const response = await api.get<BudgetResponse>(`${this.BASE_PATH}/${id}`)
     return response.data
   }
 }
