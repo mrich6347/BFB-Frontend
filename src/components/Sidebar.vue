@@ -1,9 +1,18 @@
 <template>
-  <aside class="w-72 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+  <aside :class="[
+    'h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300 ease-in-out overflow-hidden',
+    isCollapsed ? 'w-16' : 'w-72'
+  ]">
     <!-- Header with Theme Toggle -->
     <div class="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
-      <ThemeToggle class="text-gray-600 dark:text-gray-300" />
-      <h1 class="text-lg font-semibold text-gray-900 dark:text-white">Budget Friendly Budget</h1>
+      <ThemeToggle :class="['text-gray-600 dark:text-gray-300', isCollapsed ? 'mx-auto' : '']" />
+      <h1 
+        v-if="!isCollapsed" 
+        class="text-lg font-semibold text-gray-900 dark:text-white transition-opacity duration-300 ease-in-out"
+        :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
+      >
+        Budget Friendly Budget
+      </h1>
     </div>
 
     <!-- Navigation Menu -->
@@ -14,15 +23,29 @@
           v-for="item in mainNavItems" 
           :key="item.name"
           :to="item.to"
-          class="flex items-center px-3 py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 mb-1"
+          :class="[
+            'flex items-center rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 mb-1 transition-all duration-300 ease-in-out',
+            isCollapsed ? 'justify-center p-2' : 'px-3 py-2'
+          ]"
+          :title="isCollapsed ? item.name : ''"
         >
-          <component :is="item.icon" class="w-5 h-5 mr-3" />
-          {{ item.name }}
+          <component :is="item.icon" class="w-5 h-5 transition-all duration-300" :class="{ 'mr-3': !isCollapsed }" />
+          <span 
+            v-show="!isCollapsed" 
+            class="transition-opacity duration-300 ease-in-out whitespace-nowrap"
+            :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
+          >
+            {{ item.name }}
+          </span>
         </router-link>
       </div>
 
       <!-- Account Sections -->
-      <div class="px-3">
+      <div 
+        v-show="!isCollapsed" 
+        class="px-3 transition-opacity duration-300 ease-in-out"
+        :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
+      >
         <template v-for="section in accountSections" :key="section.title">
           <button 
             @click="toggleSection(section.title as SectionTitle)"
@@ -59,7 +82,11 @@
       </div>
 
       <!-- Add Account Button -->
-      <div class="p-4">
+      <div 
+        v-show="!isCollapsed" 
+        class="p-4 transition-opacity duration-300 ease-in-out"
+        :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
+      >
         <button 
           class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           @click="isCreateAccountModalOpen = true"
@@ -70,7 +97,7 @@
       </div>
     </nav>
 
-    <!-- Settings Section -->
+    <!-- Settings and Collapse Section -->
     <div class="border-t border-gray-200 dark:border-gray-800 relative">
       <div v-if="isSettingsExpanded" class="absolute bottom-full right-0 w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-t-lg shadow-lg">
         <button @click="router.push('/dashboard')" 
@@ -85,12 +112,26 @@
           Log Out
         </button>
       </div>
-      <button 
-        @click="toggleSettings"
-        class="w-full p-4 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-      >
-        <SettingsIcon class="w-5 h-5" />
-      </button>
+      <div class="flex items-center justify-between p-4">
+        <button 
+          v-show="!isCollapsed"
+          @click="toggleSettings"
+          class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-lg transition-opacity duration-300 ease-in-out"
+          :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
+          :title="'Settings'"
+        >
+          <SettingsIcon class="w-5 h-5" />
+        </button>
+        <button 
+          @click="toggleCollapse"
+          class="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-lg transition-transform duration-300 ease-in-out"
+          :class="{ 'ml-auto': !isCollapsed }"
+          :title="isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'"
+        >
+          <PanelLeftCloseIcon v-if="!isCollapsed" class="w-5 h-5" />
+          <PanelLeftOpenIcon v-else class="w-5 h-5" />
+        </button>
+      </div>
     </div>
   </aside>
 
@@ -111,7 +152,9 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   SettingsIcon,
-  LogOutIcon
+  LogOutIcon,
+  PanelLeftCloseIcon,
+  PanelLeftOpenIcon
 } from 'lucide-vue-next'
 import { authService } from '../services/common/authService'
 import { formatCurrency } from '@/utils/currencyUtil'
@@ -123,7 +166,6 @@ import { AccountType } from '@/types/DTO/account.dto'
 const props = defineProps<{
   budgetId: string
 }>()
-
 
 type SectionTitle = AccountType | 'CLOSED'
 
@@ -175,8 +217,13 @@ const toggleSection = (sectionTitle: SectionTitle) => {
 
 const isSettingsExpanded = ref(false)
 const isCreateAccountModalOpen = ref(false)
+const isCollapsed = ref(false)
 
 const toggleSettings = () => {
   isSettingsExpanded.value = !isSettingsExpanded.value
+}
+
+const toggleCollapse = () => {
+  isCollapsed.value = !isCollapsed.value
 }
 </script>
