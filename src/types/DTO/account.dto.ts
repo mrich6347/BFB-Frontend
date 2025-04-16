@@ -5,8 +5,6 @@ export enum AccountType {
     TRACKING = 'TRACKING',
 }
 
-
-
 export interface CreateAccountRequest {
     id: string;
     name: string;
