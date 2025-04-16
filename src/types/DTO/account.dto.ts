@@ -1,11 +1,3 @@
-export interface CreateAccountRequest {
-    id: string;
-    name: string;
-    account_type: AccountType;
-    current_balance: number;
-    budget_id: string;
-}
-
 export enum AccountType {
     CASH = 'CASH',
     CREDIT = 'CREDIT',
@@ -14,6 +6,14 @@ export enum AccountType {
 }
 
 
+
+export interface CreateAccountRequest {
+    id: string;
+    name: string;
+    account_type: AccountType;
+    current_balance: number;
+    budget_id: string;
+}
 
 export interface AccountResponse {
     id: string;
