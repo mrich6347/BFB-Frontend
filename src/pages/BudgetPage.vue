@@ -1,7 +1,7 @@
 <template>
   <div class="relative min-h-screen">
     <div v-if="budgetStore.isLoading" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-900 z-50">
-      <Loader class="w-8 h-8 animate-spin text-blue-500" />
+      <LoadingSpinner />
     </div>
     <div v-else class="flex h-screen">
       <Sidebar :budgetId="budgetId" />
@@ -21,7 +21,7 @@ import { onMounted } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import BudgetHeader from '@/components/budget/BudgetHeader.vue'
 import { useBudgetStore } from '@/stores/budgetStore'
-import { Loader } from 'lucide-vue-next'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { MainDataService } from '@/services/common/mainDataService'
 import { useAccountStore } from '@/stores/accountStore'
 
