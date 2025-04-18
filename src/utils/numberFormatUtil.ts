@@ -1,5 +1,5 @@
 import { NumberFormat } from '@/types/DTO/budget.dto'
-import { useBudgetStore } from '@/stores/budgetStore'
+import { useBudgetStore } from '@/stores/budget.store'
 
 export const formatNumberByFormat = (amount: number, format: string): string => {
   const [integerPart, decimalPart] = amount.toFixed(2).split('.');

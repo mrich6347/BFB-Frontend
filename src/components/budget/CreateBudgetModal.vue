@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useBudgetStore } from '@/stores/budgetStore'
+import { useBudgetStore } from '@/stores/budget.store'
 import type { CreateBudgetRequest } from '@/types/DTO/budget.dto'
 import { useRouter } from 'vue-router'
 import CreateBudgetForm from './forms/CreateBudgetForm.vue'

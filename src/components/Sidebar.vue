@@ -156,11 +156,11 @@ import {
   PanelLeftCloseIcon,
   PanelLeftOpenIcon
 } from 'lucide-vue-next'
-import { authService } from '../services/common/authService'
+import { authService } from '../services/common/auth.service'
 import { formatCurrency } from '@/utils/currencyUtil'
 import router from '@/router'
 import CreateAccountModal from './accounts/CreateAccountModal.vue'
-import { useAccountStore } from '@/stores/accountStore'
+import { useAccountStore } from '@/stores/account.store'
 import { AccountType } from '@/types/DTO/account.dto'
 
 const props = defineProps<{

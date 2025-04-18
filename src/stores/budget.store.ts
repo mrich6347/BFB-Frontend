@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import BudgetService from '@/services/budgetService'
+import BudgetService from '@/services/budget.service'
 import type { BudgetResponse, CreateBudgetRequest } from '@/types/DTO/budget.dto'
 
 

@@ -78,7 +78,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { X } from 'lucide-vue-next'
-import { useAccountStore } from '@/stores/accountStore'
+import { useAccountStore } from '@/stores/account.store'
 import { AccountType } from '@/types/DTO/account.dto'
 import type { CreateAccountRequest } from '@/types/DTO/account.dto'
 

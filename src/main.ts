@@ -7,7 +7,7 @@ import { plugin, defaultConfig } from '@formkit/vue'
 
 import App from './App.vue'
 import router from './router'
-import { useAuthStore } from './stores/authStore'
+import { useAuthStore } from './stores/auth.store'
 
 const app = createApp(App)
 const pinia = createPinia()

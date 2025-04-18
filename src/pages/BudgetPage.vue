@@ -20,10 +20,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { onMounted } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import BudgetHeader from '@/components/budget/BudgetHeader.vue'
-import { useBudgetStore } from '@/stores/budgetStore'
+import { useBudgetStore } from '@/stores/budget.store'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import { MainDataService } from '@/services/common/mainDataService'
-import { useAccountStore } from '@/stores/accountStore'
+import { MainDataService } from '@/services/common/mainData.service'
+import { useAccountStore } from '@/stores/account.store'
 
 const route = useRoute()
 const router = useRouter()

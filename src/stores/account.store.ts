@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import type { CreateAccountRequest, AccountResponse, AccountType } from "@/types/DTO/account.dto";
-import { AccountService } from "@/services/accountService";
+import { AccountService } from "@/services/account.service";
 import { useAccounts } from "@/composables/accounts/useCreateAccount";
 
 export const useAccountStore = defineStore('accountStore', {

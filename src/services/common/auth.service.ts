@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabaseClient'
 import router from '@/router'
-import { useAccountStore } from '@/stores/accountStore'
-import { useBudgetStore } from '@/stores/budgetStore'
+import { useAccountStore } from '@/stores/account.store'
+import { useBudgetStore } from '@/stores/budget.store'
 
 export class AuthService {
   async logout(): Promise<void> {

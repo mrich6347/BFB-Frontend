@@ -75,8 +75,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useBudgetStore } from '@/stores/budgetStore'
-import { authService } from '@/services/common/authService'
+import { useBudgetStore } from '@/stores/budget.store'
+import { authService } from '@/services/common/auth.service'
 import ThemeToggle from '@/components/common/ThemeToggle.vue'
 import CreateBudgetModal from '@/components/budget/CreateBudgetModal.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'

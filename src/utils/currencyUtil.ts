@@ -1,4 +1,4 @@
-import { useBudgetStore } from '@/stores/budgetStore'
+import { useBudgetStore } from '@/stores/budget.store'
 import { CurrencyPlacement, NumberFormat } from '@/types/DTO/budget.dto'
 import { formatNumberByFormat } from '@/utils/numberFormatUtil'
 
