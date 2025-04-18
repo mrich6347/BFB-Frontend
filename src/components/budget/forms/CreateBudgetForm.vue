@@ -25,7 +25,6 @@
       :options="commonCurrencies.map(c => ({ label: `${c.code} - ${c.name} (${c.symbol})`, value: c.code }))"
       :validation="'required|length:3|matches:' + commonCurrencies.map(c => c.code).join(',')"
       placeholder="Select currency"
-      @input="(value) => console.log('Selected currency value:', value)"
       :classes="{
         input: 'w-full px-3 py-2 border rounded-md bg-background dark:bg-background border-input dark:border-input',
         label: 'text-sm font-medium text-foreground dark:text-foreground',
