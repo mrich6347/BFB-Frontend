@@ -10,6 +10,8 @@ export interface CreateAccountRequest {
     name: string;
     account_type: AccountType;
     current_balance: number;
+    interest_rate: number | null;   
+    minimum_monthly_payment: number | null;
     budget_id: string;
 }
 

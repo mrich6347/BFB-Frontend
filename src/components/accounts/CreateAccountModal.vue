@@ -101,6 +101,8 @@ const form = reactive<CreateAccountRequest>({
   name: '',
   account_type: AccountType.CASH,
   current_balance: 0,   
+  interest_rate: null,
+  minimum_monthly_payment: null,
   budget_id: props.budgetId
 })
 
