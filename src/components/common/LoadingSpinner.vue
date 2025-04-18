@@ -1,71 +1,98 @@
 <style scoped>
-  .loader {
-    width: 48px;
-    height: 48px;
-    margin: auto;
+  .cube-loader {
     position: relative;
+    /* u can choose any size */
+    width: 75px;
+    height: 75px;
+    transform-style: preserve-3d;
+    transform: rotateX(-30deg);
+    animation: animate 4s linear infinite;
   }
 
-  .loader:before {
-    content: '';
-    width: 48px;
-    height: 5px;
-    background: #999;
-    position: absolute;
-    top: 60px;
-    left: 0;
-    border-radius: 50%;
-    animation: shadow324 0.5s linear infinite;
-  }
-
-  .loader:after {
-    content: '';
-    width: 100%;
-    height: 100%;
-    background: rgb(61, 106, 255);
-    position: absolute;
-    top: 0;
-    left: 0;
-    border-radius: 4px;
-    animation: jump7456 0.5s linear infinite;
-  }
-
-  @keyframes jump7456 {
-    15% {
-      border-bottom-right-radius: 3px;
-    }
-
-    25% {
-      transform: translateY(9px) rotate(22.5deg);
-    }
-
-    50% {
-      transform: translateY(18px) scale(1, .9) rotate(45deg);
-      border-bottom-right-radius: 40px;
-    }
-
-    75% {
-      transform: translateY(9px) rotate(67.5deg);
+  @keyframes animate {
+    0% {
+      transform: rotateX(-30deg) rotateY(0);
     }
 
     100% {
-      transform: translateY(0) rotate(90deg);
+      transform: rotateX(-30deg) rotateY(360deg);
     }
   }
 
-  @keyframes shadow324 {
+  .cube-loader .cube-wrapper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+      /* top: 0;
+      left: 0; */
+    transform-style: preserve-3d;
+  }
 
-    0%,
-      100% {
-      transform: scale(1, 1);
-    }
+  .cube-loader .cube-wrapper .cube-span {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+      /* top: 0;
+      left: 0; */
+                                         /* width 75px / 2 = 37.5px */
+    transform: rotateY(calc(90deg * var(--i))) translateZ(37.5px);
+    background: linear-gradient(
+        to bottom,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%,
+        hsl(346.8, 77.2%, 49.8%) 100%
+      );
+  }
 
-    50% {
-      transform: scale(1.2, 1);
-    }
+  .cube-top {
+    position: absolute;
+    width: 75px;
+    height: 75px;
+    background: hsl(346.8, 77.2%, 49.8%) 100%;
+                          /* width 75px / 2 = 37.5px */
+    transform: rotateX(90deg) translateZ(37.5px);
+    transform-style: preserve-3d;
+  }
+
+  .cube-top::before {
+    content: '';
+    position: absolute;
+    /* u can choose any size */
+    width: 75px;
+    height: 75px;
+    background: hsl(346.8, 77.2%, 35%) 19.6%;
+    transform: translateZ(-90px);
+    filter: blur(10px);
+    box-shadow: 0 0 10px #323232,
+                  0 0 20px hsl(346.8, 77.2%, 35%) 19.6%,
+                  0 0 30px #323232,
+                  0 0 40px hsl(346.8, 77.2%, 35%) 19.6%;
   }
 </style>
 
 <template>
-  <div class="loader"></div>
+  <div class="fixed inset-0 flex items-center justify-center z-50">
+    <div class="cube-loader">
+      <div class="cube-top"></div>
+      <div class="cube-wrapper">
+        <span class="cube-span" style="--i:0"></span>
+        <span class="cube-span" style="--i:1"></span>
+        <span class="cube-span" style="--i:2"></span>
+        <span class="cube-span" style="--i:3"></span>
+      </div>
+    </div>
+  </div>
 </template>

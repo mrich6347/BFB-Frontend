@@ -1,11 +1,8 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center p-4 bg-gray-100 dark:bg-gray-900">
-    <div class="flex flex-col md:flex-row w-full max-w-5xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
-      <!-- Left side: Brand messaging & Image -->
-      <div class="w-full md:w-1/2 relative text-white flex flex-col justify-between p-8 sm:p-12 bg-cover bg-center" style="background-image: url('/path/to/your/dune-image.jpg');">
-        <!-- Dark overlay -->
-        <div class="absolute inset-0 bg-gray-900/20 dark:bg-black/50 z-0"></div>
-
+  <div class="min-h-screen flex items-center justify-center p-4 bg-background">
+    <Card class="w-full max-w-md md:max-w-4xl overflow-hidden flex flex-col md:flex-row">
+      <!-- Left section with branding and background -->
+      <div class="w-full md:w-1/2 relative text-white p-8 sm:p-12 bg-gradient-to-br from-primary/90 to-primary/70">
         <!-- Animated Blobs -->
         <div class="absolute inset-0 overflow-hidden z-0">
           <div class="blob blob1"></div>
@@ -15,50 +12,52 @@
         <!-- Content -->
         <div class="relative z-10 flex justify-between items-start">
           <h2 class="text-2xl font-bold">BFB</h2>
-          <a @click="router.push('/')" class="text-sm bg-white/20 dark:bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg hover:bg-white/30 dark:hover:bg-black/40 transition-colors">&larr; Back to website</a>
+          <Button @click="router.push('/')" variant="outline" size="sm" class="text-white border-white/30 bg-white/10 hover:bg-white/20">
+            <ArrowLeft class="mr-2 h-4 w-4" />
+            Back
+          </Button>
         </div>
 
         <div class="relative z-10 mt-auto max-w-md space-y-4">
-          <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Capturing Moments, Creating Memories</h1>
+          <h1 class="text-4xl md:text-5xl font-bold tracking-tight mt-10">Budget Friendly Budget</h1>
           <p class="text-lg opacity-80">Your finances, simplified and visualized.</p>
           <div class="h-1 w-16 bg-white/50 rounded-full"></div>
+          <p class="text-white/80">Manage expenses, track spending habits, and achieve your financial goals all in one place.</p>
         </div>
       </div>
 
-      <!-- Right side: Form -->
-      <div class="w-full md:w-1/2 flex items-center justify-center p-6 sm:p-10 md:p-12 bg-white dark:bg-gray-800">
-        <div class="w-full max-w-md space-y-6">
+      <!-- Right section with login form -->
+      <CardContent class="w-full md:w-1/2 p-6 sm:p-10 md:p-12 bg-card">
+        <div class="w-full space-y-6">
           <div class="text-left space-y-2">
-            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Welcome Back</h2>
-            <p class="text-gray-600 dark:text-gray-400">
+            <h2 class="text-3xl font-bold text-foreground">Welcome Back</h2>
+            <p class="text-muted-foreground">
               Ready to manage your budget?
               <span class="text-primary font-medium">Log in below.</span>
             </p>
           </div>
 
-          <div v-if="errorMessage" class="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700/50 text-red-700 dark:text-red-200 p-4 rounded-lg text-sm flex items-center space-x-3 animate-in fade-in">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-red-500 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
+          <div v-if="errorMessage" class="bg-destructive/10 border border-destructive/30 text-destructive p-4 rounded-lg text-sm flex items-center space-x-3 animate-in fade-in">
+            <AlertCircle class="h-5 w-5 flex-shrink-0" />
             <span>{{ errorMessage }}</span>
           </div>
 
           <form @submit.prevent="handleLogin" class="space-y-5">
             <div class="space-y-1.5">
-              <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
+              <label for="email" class="block text-sm font-medium text-foreground">Email Address</label>
               <input
                 type="email"
                 id="email"
                 v-model="email"
                 required
                 placeholder="you@example.com"
-                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 transition duration-200 ease-in-out placeholder-gray-400 dark:placeholder-gray-500"
+                class="w-full px-4 py-2.5 rounded-md border border-input bg-background text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
 
             <div class="space-y-1.5">
               <div class="flex items-center justify-between">
-                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                <label for="password" class="block text-sm font-medium text-foreground">Password</label>
                 <a href="#" class="text-xs text-primary hover:underline font-medium">Forgot password?</a>
               </div>
               <input
@@ -67,40 +66,27 @@
                 v-model="password"
                 required
                 placeholder="••••••••"
-                class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 transition duration-200 ease-in-out placeholder-gray-400 dark:placeholder-gray-500"
+                class="w-full px-4 py-2.5 rounded-md border border-input bg-background text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
 
-            <button
-              type="submit"
-              class="w-full py-3 px-4 rounded-lg bg-primary hover:bg-primary/90 text-white font-semibold transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 dark:focus:ring-offset-gray-800 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
+            <Button 
+              type="submit" 
+              class="w-full"
             >
               Sign In
-            </button>
+            </Button>
           </form>
 
-          <div class="text-center pt-4 border-t border-gray-200 dark:border-gray-700">
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+          <div class="text-center pt-4 border-t border-border">
+            <p class="text-sm text-muted-foreground">
               Don't have an account?
               <router-link to="/signup" class="text-primary font-medium hover:underline">Create one here</router-link>
             </p>
           </div>
-          <!-- Placeholder for Social Logins -->
-          <!-- <div class="relative my-4">
-            <div class="absolute inset-0 flex items-center" aria-hidden="true">
-              <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
-            </div>
-            <div class="relative flex justify-center text-sm">
-              <span class="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <button class="inline-flex w-full justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">Google</button>
-            <button class="inline-flex w-full justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">Apple</button>
-          </div> -->
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   </div>
 </template>
 
@@ -109,6 +95,10 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import { AuthError } from '@supabase/supabase-js'
+import { ArrowLeft, AlertCircle } from 'lucide-vue-next'
+import Card from '@/components/shadcn-ui/card.vue'
+import CardContent from '@/components/shadcn-ui/card-content.vue'
+import Button from '@/components/shadcn-ui/button.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -137,7 +127,7 @@ const handleLogin = async () => {
     if (error instanceof AuthError) {
       errorMessage.value = `Login failed: ${error.message}`
     } else if (error instanceof Error) {
-        errorMessage.value = `An error occurred: ${error.message}`;
+      errorMessage.value = `An error occurred: ${error.message}`;
     } else {
       errorMessage.value = 'An unexpected error occurred during login.'
     }
@@ -150,7 +140,7 @@ const handleLogin = async () => {
   position: absolute;
   border-radius: 50%;
   filter: blur(40px);
-  opacity: 0.3; /* Lower opacity */
+  opacity: 0.3;
   will-change: transform;
   animation: pulse 15s infinite ease-in-out alternate;
 }
@@ -158,7 +148,7 @@ const handleLogin = async () => {
 .blob1 {
   width: 300px;
   height: 300px;
-  background-color: rgba(168, 85, 247, 0.5); /* Purple, adjusted alpha */
+  background-color: rgba(255, 255, 255, 0.3);
   top: -50px;
   left: -80px;
   animation-delay: 0s;
@@ -167,10 +157,10 @@ const handleLogin = async () => {
 .blob2 {
   width: 250px;
   height: 250px;
-  background-color: rgba(99, 102, 241, 0.5); /* Indigo, adjusted alpha */
+  background-color: rgba(255, 255, 255, 0.2);
   bottom: -50px;
   right: -60px;
-  animation-delay: -5s; /* Offset animation timing */
+  animation-delay: -5s;
 }
 
 @keyframes pulse {
@@ -182,11 +172,5 @@ const handleLogin = async () => {
     transform: scale(1.3) rotate(20deg);
     opacity: 0.4;
   }
-}
-
-/* Ensure content stays above blobs */
-.relative.z-10 {
-  position: relative;
-  z-index: 10;
 }
 </style> 
