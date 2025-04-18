@@ -21,7 +21,7 @@ export const useAccountStore = defineStore('accountStore', {
             const { prepareAccountCreation } = useAccounts();
             const preparedAccount = prepareAccountCreation(request);
             
-            const response = await AccountService.createAccount(preparedAccount);
+            const response = await AccountService.createAccount(preparedAccount) as AccountResponse;
             this.accounts.push(response);
             return response;
         },
