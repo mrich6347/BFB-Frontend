@@ -17,16 +17,13 @@ export interface CreateAccountRequest {
 
 export interface AccountResponse {
     id: string;
-    userId: string | null;
     name: string;
     account_type: AccountType;
+    budget_id: string;
+    interest_rate?: number;
+    minimum_monthly_payment?: number;
     cleared_balance: number;
     uncleared_balance: number;
     working_balance: number;
-    display_order: number;
-    interest_rate: number | null;
-    minimum_monthly_payment: number | null;
     is_active: boolean;
-    created_at: Date;
-    updated_at: Date;
 }
