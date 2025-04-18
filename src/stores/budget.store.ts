@@ -15,7 +15,9 @@ export const useBudgetStore = defineStore('budgetStore', {
             this.isLoading = true
 
             try {
-                this.budgets = await BudgetService.getAllBudgets()
+                const budgets = await BudgetService.getAllBudgets()
+                console.log(budgets)
+                this.budgets = budgets
             } finally {
                 this.isLoading = false
             }

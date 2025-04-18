@@ -36,7 +36,7 @@
             </Button>
           </div>
 
-          <div v-if="budgetStore.budgets.length === 0" class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center">
+          <div v-if="budgetStore.budgets?.length === 0" class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center">
             <div class="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
               <Inbox class="h-10 w-10 text-muted-foreground mb-4" />
               <h3 class="text-lg font-semibold text-foreground">No budgets created</h3>

@@ -3,7 +3,8 @@ import './assets/base.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { plugin, defaultConfig } from '@formkit/vue'
-
+import ToastPlugin from 'vue-toast-notification'
+import 'vue-toast-notification/dist/theme-sugar.css'
 
 import App from './App.vue'
 import router from './router'
@@ -15,6 +16,7 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 app.use(plugin, defaultConfig)
+app.use(ToastPlugin)
 
 const initializeApp = async () => {
   const authStore = useAuthStore(pinia)
