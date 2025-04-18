@@ -1,8 +1,8 @@
 <template>
   <div class="min-h-screen bg-background text-foreground">
     <!-- Theme Toggle -->
-    <div class="fixed top-4 right-4 z-50">
-      <ThemeToggle />
+    <div class="flex justify-start mt-4 ml-4">
+      <ThemeToggle size="sm"/>
     </div>
     
     <!-- Hero Section -->

@@ -5,7 +5,7 @@
   ]">
     <!-- Header with Theme Toggle -->
     <div class="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
-      <ThemeToggle :class="['text-gray-600 dark:text-gray-300', isCollapsed ? 'mx-auto' : '']" />
+      <ThemeToggle size="sm" :class="['text-gray-600 dark:text-gray-300', isCollapsed ? 'mx-auto' : '']" />
       <h1 
         v-if="!isCollapsed" 
         class="text-lg font-semibold text-gray-900 dark:text-white transition-opacity duration-300 ease-in-out"
