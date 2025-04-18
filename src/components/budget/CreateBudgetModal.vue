@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useBudgetStore } from '@/stores/budget.store'
-import type { CreateBudgetRequest } from '@/types/DTO/budget.dto'
+import type { CreateBudgetDto } from '@/types/DTO/budget.dto'
 import { useRouter } from 'vue-router'
 import CreateBudgetForm from './forms/CreateBudgetForm.vue'
 
@@ -42,7 +42,7 @@ const close = () => {
   emit('close')
 }
 
-const handleSubmit = async (formData: CreateBudgetRequest) => {
+const handleSubmit = async (formData: CreateBudgetDto) => {
   try {
     isLoading.value = true
     const budget = await budgetStore.createBudget(formData)

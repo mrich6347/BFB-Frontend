@@ -80,7 +80,7 @@ import { ref, reactive } from 'vue'
 import { X } from 'lucide-vue-next'
 import { useAccountStore } from '@/stores/account.store'
 import { AccountType } from '@/types/DTO/account.dto'
-import type { CreateAccountRequest } from '@/types/DTO/account.dto'
+import type { CreateAccountDto } from '@/types/DTO/account.dto'
 
 const props = defineProps<{
   isOpen: boolean,
@@ -96,7 +96,7 @@ const isLoading = ref(false)
 
 const accountTypes = Object.values(AccountType)
 
-const form = reactive<CreateAccountRequest>({
+const form = reactive<CreateAccountDto>({
   id: '',
   name: '',
   account_type: AccountType.CASH,

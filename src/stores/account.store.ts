@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import type { CreateAccountRequest, AccountResponse, AccountType } from "@/types/DTO/account.dto";
+import type { CreateAccountDto, AccountResponse, AccountType } from "@/types/DTO/account.dto";
 import { AccountService } from "@/services/account.service";
 import { useAccounts } from "@/composables/accounts/useCreateAccount";
 
@@ -17,7 +17,7 @@ export const useAccountStore = defineStore('accountStore', {
         setAccounts(accounts: AccountResponse[]) {
             this.accounts = accounts
         },
-        async createAccount(request: CreateAccountRequest) {
+        async createAccount(request: CreateAccountDto) {
             const { prepareAccountCreation } = useAccounts();
             const preparedAccount = prepareAccountCreation(request);
             

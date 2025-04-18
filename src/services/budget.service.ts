@@ -1,4 +1,4 @@
-import type { BudgetResponse, CreateBudgetRequest } from '../types/DTO/budget.dto'
+import type { BudgetResponse, CreateBudgetDto } from '../types/DTO/budget.dto'
 import api from './common/api'
 
 export class BudgetService {
@@ -12,7 +12,7 @@ export class BudgetService {
     return response.data
   }
 
-  static async createBudget(request: CreateBudgetRequest): Promise<BudgetResponse> {
+  static async createBudget(request: CreateBudgetDto): Promise<BudgetResponse> {
     const response = await api.post<BudgetResponse>(this.BASE_PATH, request)
     return response.data
   }

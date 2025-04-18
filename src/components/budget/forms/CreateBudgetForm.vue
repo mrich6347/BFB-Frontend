@@ -117,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CreateBudgetRequest } from '@/types/DTO/budget.dto'
+import type { CreateBudgetDto } from '@/types/DTO/budget.dto'
 import { commonCurrencies } from '@/utils/currencyUtil'
 import { NumberFormat, CurrencyPlacement, DateFormat } from '@/types/DTO/budget.dto'
 
@@ -126,11 +126,11 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'submit', data: CreateBudgetRequest): void
+  (e: 'submit', data: CreateBudgetDto): void
   (e: 'cancel'): void
 }>()
 
-const handleSubmit = async (formData: CreateBudgetRequest) => {
+const handleSubmit = async (formData: CreateBudgetDto) => {
   emit('submit', formData)
 }
 </script> 

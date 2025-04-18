@@ -1,5 +1,5 @@
 
-export interface CreateBudgetRequest {
+export interface CreateBudgetDto {
     name: string
     currency: string
     currency_placement: CurrencyPlacement

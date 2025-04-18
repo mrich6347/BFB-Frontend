@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import BudgetService from '@/services/budget.service'
-import type { BudgetResponse, CreateBudgetRequest } from '@/types/DTO/budget.dto'
+import type { BudgetResponse, CreateBudgetDto } from '@/types/DTO/budget.dto'
 
 
 export const useBudgetStore = defineStore('budgetStore', {
@@ -20,7 +20,7 @@ export const useBudgetStore = defineStore('budgetStore', {
                 this.isLoading = false
             }
         },
-        async createBudget(request: CreateBudgetRequest) {
+        async createBudget(request: CreateBudgetDto) {
             const response = await BudgetService.createBudget(request)
             this.budgets.unshift(response)
             return response

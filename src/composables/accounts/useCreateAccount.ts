@@ -1,10 +1,10 @@
 import { AccountType } from "@/types/DTO/account.dto";
-import type { CreateAccountRequest } from "@/types/DTO/account.dto";
+import type { CreateAccountDto } from "@/types/DTO/account.dto";
 import { v4 as uuidv4 } from 'uuid';
 import { parseFormattedNumberToDecimal } from "@/utils/numberFormatUtil";
 
 export function useAccounts() {
-    const prepareAccountCreation = (request: CreateAccountRequest) => {
+    const prepareAccountCreation = (request: CreateAccountDto) => {
         const id = uuidv4();
         const inputBalanceStr = String(request.current_balance).trim();
         
