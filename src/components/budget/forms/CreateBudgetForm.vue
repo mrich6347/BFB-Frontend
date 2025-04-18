@@ -79,13 +79,13 @@
       name="date_format"
       label="Date Format"
       :options="[
-        { label: '2025/12/30', value: 'ISO' },
-        { label: '2025-12-30', value: 'HYPHEN' },
-        { label: '30-12-2025', value: 'EUROPEAN' },
-        { label: '30/12/2025', value: 'UK_SLASH' },
-        { label: '30.12.2025', value: 'PERIOD' },
-        { label: '12/30/2025', value: 'US_SLASH' },
-        { label: '2025.12.30', value: 'DOT_NOTATION' }
+        { label: '2025/12/30', value: DateFormat.ISO },
+        { label: '2025-12-30', value: DateFormat.HYPHEN },
+        { label: '30-12-2025', value: DateFormat.EUROPEAN },
+        { label: '30/12/2025', value: DateFormat.UK_SLASH },
+        { label: '30.12.2025', value: DateFormat.PERIOD },
+        { label: '12/30/2025', value: DateFormat.US_SLASH },
+        { label: '2025.12.30', value: DateFormat.DOT_NOTATION }
       ]"
       :validation="'required|matches:' + Object.values(DateFormat).join(',')"
       :classes="{
