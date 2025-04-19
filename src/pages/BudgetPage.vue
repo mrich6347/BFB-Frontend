@@ -2,7 +2,6 @@
   <div class="relative min-h-screen">
     <div v-if="budgetStore.isLoading" class="flex justify-center items-center min-h-[400px]">
       <LoadingSpinner>
-        <p class="text-muted-foreground">Loading budget data...</p>
       </LoadingSpinner>
     </div>
     <div v-else class="flex h-screen">
