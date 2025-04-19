@@ -1,7 +1,9 @@
 <template>
   <div class="relative min-h-screen">
-    <div v-if="budgetStore.isLoading" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-900 z-50">
-      <LoadingSpinner />
+    <div v-if="budgetStore.isLoading" class="flex justify-center items-center min-h-[400px]">
+      <LoadingSpinner>
+        <p class="text-muted-foreground">Loading budget data...</p>
+      </LoadingSpinner>
     </div>
     <div v-else class="flex h-screen">
       <Sidebar :budgetId="budgetId" />
