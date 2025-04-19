@@ -30,10 +30,16 @@
         <Section class="mt-0">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-semibold text-foreground">Your Budgets</h3>
-            <Button @click="showCreateModal = true">
-              <Plus class="h-5 w-5 mr-2" />
-              New Budget
+            <div class="flex items-center gap-2">
+              <Button @click="showCreateModal = true">
+                <Plus class="h-5 w-5 mr-2" />
+                New Budget
             </Button>
+            <Button variant="outline" class="ml-2">
+              <Import class="h-5 w-5 mr-2" />
+              Import From YNAB
+            </Button>
+            </div>
           </div>
 
           <div v-if="budgetStore.budgets?.length === 0" class="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center">
@@ -81,7 +87,7 @@ import ThemeToggle from '@/components/common/ThemeToggle.vue'
 import CreateBudgetModal from '@/components/budget/CreateBudgetModal.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useRouter } from 'vue-router'
-import { LogOut, Plus, Inbox } from 'lucide-vue-next'
+import { LogOut, Plus, Inbox, Import } from 'lucide-vue-next'
 import { formatDate } from '@/utils/dateFormatUtil'
 
 // Import ShadCN components
