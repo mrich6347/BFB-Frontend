@@ -8,10 +8,10 @@
       <ThemeToggle size="sm" :class="['text-muted-foreground', isCollapsed ? 'mx-auto' : '']" />
       <h1 
         v-if="!isCollapsed" 
-        class="text-lg font-semibold text-foreground transition-opacity duration-300 ease-in-out"
+        class="ml-2.5 text-lg font-semibold text-foreground transition-opacity duration-300 ease-in-out text-ellipsis overflow-hidden w-full text-nowrap"
         :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
       >
-        Budget Friendly Budget
+       {{ budgetStore?.currentBudget?.name }}
       </h1>
     </div>
 
@@ -162,6 +162,9 @@ import router from '@/router'
 import CreateAccountModal from './accounts/CreateAccountModal.vue'
 import { useAccountStore } from '@/stores/account.store'
 import { AccountType } from '@/types/DTO/account.dto'
+import { useBudgetStore } from '../stores/budget.store'
+
+const budgetStore = useBudgetStore()
 
 const props = defineProps<{
   budgetId: string
