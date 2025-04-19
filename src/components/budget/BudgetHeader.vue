@@ -3,7 +3,7 @@
     <div class="container mx-auto px-2 py-2 flex flex-col md:flex-row justify-between items-center">
       <!-- Month Navigation -->
       <div class="flex items-center space-x-1 md:w-1/4 justify-start">
-        <button class="p-1.5 rounded-full hover:bg-accent transition-colors">
+        <button class="p-1.5 rounded-full transition-colors">
           <ChevronLeft class="w-4 h-4 text-muted-foreground" />
         </button>
         <div class="flex flex-col items-start">
@@ -11,7 +11,7 @@
             <h2 class="text-lg font-semibold text-foreground">{{ currentMonth }}</h2>
           </div>
         </div>
-        <button class="p-1.5 rounded-full hover:bg-accent transition-colors">
+        <button class="p-1.5 rounded-full transition-colors">
           <ChevronRight class="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
@@ -24,7 +24,7 @@
             <div class="text-base font-bold text-primary whitespace-nowrap">${{ formattedAmount }}</div>
           </div>
           <div class="w-px bg-primary/20"></div>
-          <button class="flex items-center px-4 bg-primary/10 hover:bg-primary/20 text-primary font-medium transition-colors whitespace-nowrap">
+          <button class="flex items-center px-4 bg-primary/10  text-primary font-medium transition-colors whitespace-nowrap">
             Assign
             <ChevronDown class="w-3.5 h-3.5 ml-1" />
           </button>
@@ -41,10 +41,10 @@
         v-for="filter in filters" 
         :key="filter.id"
         :class="[
-          'px-2.5 py-0.5 text-sm rounded-md transition-colors',
+          'px-2.5 py-0.5 text-sm rounded-md transition-colors cursor-pointer',
           selectedFilter === filter.id 
             ? 'bg-primary/15 text-primary' 
-            : 'bg-secondary text-secondary-foreground hover:bg-accent'
+            : 'bg-secondary text-secondary-foreground'
         ]"
         @click="selectedFilter = filter.id"
       >

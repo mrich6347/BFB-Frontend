@@ -1,118 +1,90 @@
 <style scoped>
-  .cube-loader {
-    position: relative;
-    /* u can choose any size */
-    width: 75px;
-    height: 75px;
-    transform-style: preserve-3d;
-    transform: rotateX(-30deg);
-    animation: animate 4s linear infinite;
+  .spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 50;
   }
 
-  @keyframes animate {
+  .lds-ellipsis {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+  }
+
+  .lds-ellipsis div {
+    position: absolute;
+    top: 33px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #000; /* Default to black for light mode */
+    animation-timing-function: cubic-bezier(0, 1, 1, 0);
+  }
+
+  :is(.dark *) .lds-ellipsis div {
+    background: #fff; /* White for dark mode */
+  }
+
+  .lds-ellipsis div:nth-child(1) {
+    left: 8px;
+    animation: lds-ellipsis1 0.6s infinite;
+  }
+
+  .lds-ellipsis div:nth-child(2) {
+    left: 8px;
+    animation: lds-ellipsis2 0.6s infinite;
+  }
+
+  .lds-ellipsis div:nth-child(3) {
+    left: 32px;
+    animation: lds-ellipsis2 0.6s infinite;
+  }
+
+  .lds-ellipsis div:nth-child(4) {
+    left: 56px;
+    animation: lds-ellipsis3 0.6s infinite;
+  }
+
+  @keyframes lds-ellipsis1 {
     0% {
-      transform: rotateX(-30deg) rotateY(0);
+      transform: scale(0);
     }
 
     100% {
-      transform: rotateX(-30deg) rotateY(360deg);
+      transform: scale(1);
     }
   }
 
-  .cube-loader .cube-wrapper {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    transform-style: preserve-3d;
+  @keyframes lds-ellipsis3 {
+    0% {
+      transform: scale(1);
+    }
+
+    100% {
+      transform: scale(0);
+    }
   }
 
-  .cube-loader .cube-wrapper .cube-span {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    /* width 75px / 2 = 37.5px */
-    transform: rotateY(calc(90deg * var(--i))) translateZ(37.5px);
-    background: linear-gradient(
-        to bottom,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%,
-        var(--cube-color) 100%
-      );
-  }
+  @keyframes lds-ellipsis2 {
+    0% {
+      transform: translate(0, 0);
+    }
 
-  .cube-top {
-    position: absolute;
-    width: 75px;
-    height: 75px;
-    background: var(--cube-color) 100%;
-    /* width 75px / 2 = 37.5px */
-    transform: rotateX(90deg) translateZ(37.5px);
-    transform-style: preserve-3d;
-  }
-
-  .cube-top::before {
-    content: '';
-    position: absolute;
-    /* u can choose any size */
-    width: 75px;
-    height: 75px;
-    background: var(--glow-color);
-    transform: translateZ(-90px);
-    filter: blur(10px);
-    box-shadow: 0 0 10px var(--shadow-color),
-                0 0 20px var(--glow-color),
-                0 0 30px var(--shadow-color),
-                0 0 40px var(--glow-color);
-    opacity: var(--glow-opacity);
-  }
-
-  /* Theme-specific variables */
-  .cube-container {
-    --cube-color: var(--primary);
-    --glow-color: color-mix(in srgb, var(--primary) 70%, black);
-    --shadow-color: var(--card);
-  }
-
-  /* Light mode specific adjustments */
-  :root .cube-container {
-    --glow-opacity: 0.5;
-    --glow-color: color-mix(in srgb, var(--primary) 60%, black);
-    --shadow-color: transparent;
-  }
-
-  /* Dark mode specific adjustments */
-  .dark .cube-container {
-    --glow-opacity: 0.8;
-    --glow-color: color-mix(in srgb, var(--primary) 70%, black);
-    --shadow-color: var(--card);
+    100% {
+      transform: translate(24px, 0);
+    }
   }
 </style>
 
 <template>
-  <div class="fixed inset-0 flex items-center justify-center z-50 bg-background/50 backdrop-blur-sm">
-    <div class="cube-container">
-      <div class="cube-loader">
-        <div class="cube-top"></div>
-        <div class="cube-wrapper">
-          <span class="cube-span" style="--i:0"></span>
-          <span class="cube-span" style="--i:1"></span>
-          <span class="cube-span" style="--i:2"></span>
-          <span class="cube-span" style="--i:3"></span>
-        </div>
-      </div>
-    </div>
+  <div class="spinner-container">
+    <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
   </div>
 </template>
