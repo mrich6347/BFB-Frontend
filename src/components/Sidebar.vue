@@ -162,7 +162,7 @@ import router from '@/router'
 import CreateAccountModal from './accounts/CreateAccountModal.vue'
 import { useAccountStore } from '@/stores/account.store'
 import { AccountType } from '@/types/DTO/account.dto'
-import { useBudgetStore } from '../stores/budget.store'
+import { useBudgetStore } from '@/stores/budget.store'
 
 const budgetStore = useBudgetStore()
 

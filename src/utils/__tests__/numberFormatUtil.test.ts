@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { parseFormattedNumberToDecimal, formatNumberByFormat } from '../numberFormatUtil'
-import { useBudgetStore } from '@/stores/budgetStore'
+import { useBudgetStore } from '@/stores/budget.store'
 import { NumberFormat } from '@/types/DTO/budget.dto'
 // Mock the budget store
 vi.mock('@/stores/budgetStore', () => ({
