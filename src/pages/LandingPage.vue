@@ -1,20 +1,20 @@
 <template>
-  <div class="min-h-screen bg-background text-foreground">
+  <div class="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 text-foreground">
     <!-- Theme Toggle -->
     <div class="flex justify-start mt-4 ml-4">
       <ThemeToggle size="sm"/>
     </div>
     
     <!-- Hero Section -->
-    <Section class="text-center">
-      <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-6">
+    <Section class="text-center overflow-hidden">
+      <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-6 animate-fade-in-up">
         Budget Friendly Budget
       </h1>
-      <p class="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
+      <p class="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10 animate-fade-in-up animation-delay-200">
         Take control of your finances with our simple, intuitive budgeting tool
       </p>
       <!-- Add Login/Sign Up Buttons -->
-      <div class="flex flex-wrap justify-center gap-4" v-if="!user">
+      <div class="flex flex-wrap justify-center gap-4 animate-fade-in-up animation-delay-400" v-if="!user">
         <Button @click="handleLogin" variant="default" size="lg">
           Login
         </Button>
@@ -22,7 +22,7 @@
           Sign Up
         </Button>
       </div>
-      <div v-else class="text-lg text-foreground">
+      <div v-else class="text-lg text-foreground animate-fade-in-up animation-delay-400">
         <div>
           Welcome back, {{ user?.email }}! 🎉
         </div>
@@ -39,7 +39,7 @@
       <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">Why Choose BFB?</h2>
       <div class="grid md:grid-cols-3 gap-8">
         <!-- Feature 1 -->
-        <Card>
+        <Card class="transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl">
           <CardHeader>
             <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <PlusIcon class="h-6 w-6 text-primary" />
@@ -52,7 +52,7 @@
         </Card>
         
         <!-- Feature 2 -->
-        <Card>
+        <Card class="transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl">
           <CardHeader>
             <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <PencilIcon class="h-6 w-6 text-primary" />
@@ -65,7 +65,7 @@
         </Card>
         
         <!-- Feature 3 -->
-        <Card>
+        <Card class="transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl">
           <CardHeader>
             <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <HeadphonesIcon class="h-6 w-6 text-primary" />
@@ -80,25 +80,25 @@
     </Section>
 
     <!-- How It Works Section -->
-    <Section>
+    <Section class="overflow-hidden">
       <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">How It Works</h2>
       <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
         <!-- Step 1 -->
-        <div class="flex flex-col items-center text-center">
+        <div class="flex flex-col items-center text-center animate-fade-in-up">
           <div class="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold mb-4">1</div>
           <h3 class="text-xl font-semibold mb-2 text-foreground">Create Your Budget</h3>
           <p class="text-muted-foreground">Set up your income, expenses, and savings goals in minutes.</p>
         </div>
         
         <!-- Step 2 -->
-        <div class="flex flex-col items-center text-center">
+        <div class="flex flex-col items-center text-center animate-fade-in-up animation-delay-200">
           <div class="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold mb-4">2</div>
           <h3 class="text-xl font-semibold mb-2 text-foreground">Track Spending</h3>
           <p class="text-muted-foreground">Log your transactions and see where your money is going.</p>
         </div>
         
         <!-- Step 3 -->
-        <div class="flex flex-col items-center text-center">
+        <div class="flex flex-col items-center text-center animate-fade-in-up animation-delay-400">
           <div class="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold mb-4">3</div>
           <h3 class="text-xl font-semibold mb-2 text-foreground">Reach Your Goals</h3>
           <p class="text-muted-foreground">Watch your savings grow as you stay on track with your budget.</p>
@@ -107,8 +107,8 @@
     </Section>
 
     <!-- CTA Section -->
-    <Section variant="primary">
-      <div class="text-center">
+    <Section variant="primary" class="relative overflow-hidden">
+      <div class="text-center relative z-10">
         <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to Take Control of Your Finances?</h2>
         <p class="text-xl max-w-2xl mx-auto mb-8 text-primary-foreground/90">Join thousands of users who have transformed their financial future with BFB.</p>
         <Button 
@@ -173,3 +173,30 @@ const handleSignUp = () => {
   router.push('/signup')
 }
 </script>
+
+<style scoped>
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+  opacity: 0; /* Start hidden */
+}
+
+/* Simple utility classes for animation delay */
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+</style>
