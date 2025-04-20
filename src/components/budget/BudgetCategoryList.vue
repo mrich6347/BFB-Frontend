@@ -2,7 +2,10 @@
   <div class="space-y-1">
     <!-- Header Row -->
     <div class="grid grid-cols-[2fr_150px_150px_150px] gap-10 text-xs font-medium text-muted-foreground px-2 py-1 border-b">
-      <div>CATEGORY</div>
+      <div class="flex items-center gap-1">
+        CATEGORY
+        <PlusIcon class="h-4 w-4 cursor-pointer hover:text-primary bg-primary/20 rounded-full p-0.5" />
+      </div>
       <div class="text-right">ASSIGNED</div>
       <div class="text-right">ACTIVITY</div>
       <div class="text-right">AVAILABLE</div>
@@ -52,7 +55,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ChevronRightIcon, ChevronDownIcon } from 'lucide-vue-next'
+import { ChevronRightIcon, ChevronDownIcon, PlusIcon } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import Badge from '@/components/shadcn-ui/Badge.vue'
 // Mock Data
