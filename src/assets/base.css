@@ -81,36 +81,36 @@
 
 /* --- Shark Theme - Dark --- */
 .dark {
-  --background: oklch(0.1 0.01 250); /* Deep shark gray */
+  --background: oklch(0.15 0.03 265); /* Soft dark bluish-purple */
   --foreground: oklch(0.92 0 0);
-  --card: oklch(0.15 0.01 250);
+  --card: oklch(0.18 0.03 265);
   --card-foreground: oklch(0.92 0 0);
-  --popover: oklch(0.15 0.01 250);
+  --popover: oklch(0.18 0.03 265);
   --popover-foreground: oklch(0.92 0 0);
   --primary: oklch(0.55 0.15 230); /* Bright blue */
-  --primary-foreground: oklch(0.1 0.01 250);
-  --secondary: oklch(0.2 0.01 250);
+  --primary-foreground: oklch(0.15 0.03 265);
+  --secondary: oklch(0.22 0.03 265);
   --secondary-foreground: oklch(0.92 0 0);
-  --muted: oklch(0.2 0.01 250);
+  --muted: oklch(0.22 0.03 265);
   --muted-foreground: oklch(0.7 0.01 250);
   --accent: oklch(0.65 0.1 190); /* Teal accent */
-  --accent-foreground: oklch(0.1 0.01 250);
+  --accent-foreground: oklch(0.15 0.03 265);
   --destructive: oklch(0.65 0.2 15);
-  --border: oklch(0.25 0.01 250);
-  --input: oklch(0.2 0.01 250);
+  --border: oklch(0.28 0.03 265);
+  --input: oklch(0.22 0.03 265);
   --ring: oklch(0.55 0.15 230);
   --chart-1: oklch(0.55 0.15 230); /* Blue */
   --chart-2: oklch(0.65 0.1 190); /* Teal */
   --chart-3: oklch(0.7 0.18 280); /* Purple */
   --chart-4: oklch(0.6 0.1 150); /* Green */
   --chart-5: oklch(0.65 0.2 15); /* Red */
-  --sidebar: oklch(0.05 0.01 250); /* Very dark sidebar */
+  --sidebar: oklch(0.12 0.03 265); /* Darker bluish-purple sidebar */
   --sidebar-foreground: oklch(0.92 0 0);
   --sidebar-primary: oklch(0.55 0.15 230);
-  --sidebar-primary-foreground: oklch(0.1 0.01 250);
-  --sidebar-accent: oklch(0.2 0.01 250);
+  --sidebar-primary-foreground: oklch(0.15 0.03 265);
+  --sidebar-accent: oklch(0.22 0.03 265);
   --sidebar-accent-foreground: oklch(0.92 0 0);
-  --sidebar-border: oklch(0.18 0.01 250);
+  --sidebar-border: oklch(0.20 0.03 265);
   --sidebar-ring: oklch(0.55 0.15 230);
 }
 
