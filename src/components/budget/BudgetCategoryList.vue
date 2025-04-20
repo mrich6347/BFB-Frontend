@@ -71,7 +71,7 @@ const categoryGroups = ref([
     available: 25.00,
     categories: [
       { id: 'cat-1-1', name: 'Rent | $1050 | 1st (Manual)', assigned: 25.00, activity: 0.00, available: -25.00 },
-      { id: 'cat-1-2', name: 'Auto Insurance | $131.61 | 4th (Checking)', assigned: 0.00, activity: 0.00, available: 0.00 },
+      { id: 'cat-1-2', name: 'Auto Insurance | $131.61 | 4th (Checking)', assigned: 0.00, activity: 0.00, available: 50.00 },
       { id: 'cat-1-3', name: 'Visible Phone Plan | $34 | 9th (Citi)', assigned: 25.00, activity: -25.00, available: 0.00 },
     ]
   },

@@ -10,7 +10,7 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        positive: 'border-transparent bg-green-600 text-white',
+        positive: 'border-transparent bg-green-600 text-black',
         negative: 'border-transparent bg-red-600 text-white',
         neutral: 'border-gray-600 bg-transparent text-gray-600',
       },

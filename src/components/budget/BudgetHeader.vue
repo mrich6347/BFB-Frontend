@@ -24,7 +24,7 @@
             <div class="text-base font-bold text-white whitespace-nowrap">${{ formatCurrency(readyToAssign) }}</div>
           </div>
           <div class="w-px bg-green-600"></div>
-          <button class="flex items-center px-4 bg-green-600  text-white font-medium transition-colors whitespace-nowrap">
+          <button class="flex items-center px-4 bg-green-600   text-white font-medium transition-colors whitespace-nowrap">
             Assign
             <ChevronDown class="w-3.5 h-3.5 ml-1" />
           </button>
