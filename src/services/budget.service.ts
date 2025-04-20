@@ -21,6 +21,11 @@ export class BudgetService {
     const response = await api.get<BudgetResponse>(`${this.BASE_PATH}/${id}`)
     return response.data
   }
+
+  static async updateBudget(id: string, request: CreateBudgetDto): Promise<BudgetResponse> {
+    const response = await api.patch<BudgetResponse>(`${this.BASE_PATH}/${id}`, request)
+    return response.data
+  }
 }
 
 export default BudgetService

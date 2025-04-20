@@ -27,6 +27,17 @@ export const useBudgetStore = defineStore('budgetStore', {
             this.budgets.unshift(response)
             return response
         },
+        async updateBudget(id: string, request: CreateBudgetDto) {
+            const response = await BudgetService.updateBudget(id, request)
+            const index = this.budgets.findIndex(b => b.id === id)
+            if (index !== -1) {
+                this.budgets[index] = response
+            }
+            if (this.currentBudget?.id === id) {
+                this.currentBudget = response
+            }
+            return response
+        },
         setIsLoading(isLoading: boolean) {
             this.isLoading = isLoading
         },

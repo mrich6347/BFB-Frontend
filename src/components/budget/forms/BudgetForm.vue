@@ -3,6 +3,7 @@
     type="form"
     @submit="handleSubmit"
     :actions="false"
+    :value="initialValues"
   >
     <FormKit
       type="text"
@@ -109,8 +110,7 @@
         :disabled="isLoading"
         input-class="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50"
       >
-        <span v-if="isLoading">Creating...</span>
-        <span v-else>Create Budget</span>
+        <span>{{ isLoading ? (mode === 'edit' ? 'Updating...' : 'Creating...') : (mode === 'edit' ? 'Update Budget' : 'Create Budget') }}</span>
       </FormKit>
     </div>
   </FormKit>
@@ -121,9 +121,16 @@ import type { CreateBudgetDto } from '@/types/DTO/budget.dto'
 import { commonCurrencies } from '@/utils/currencyUtil'
 import { NumberFormat, CurrencyPlacement, DateFormat } from '@/types/DTO/budget.dto'
 
-defineProps<{
+interface Props {
   isLoading: boolean
-}>()
+  mode: 'create' | 'edit'
+  initialValues?: Partial<CreateBudgetDto>
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  initialValues: () => ({}),
+  mode: 'create'
+})
 
 const emit = defineEmits<{
   (e: 'submit', data: CreateBudgetDto): void

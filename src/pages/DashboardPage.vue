@@ -62,7 +62,7 @@
                   variant="ghost"
                   size="icon"
                   class="h-8 w-8"
-                  @click.stop="editBudget(budget.id)"
+                  @click.stop="openEditModal(budget)"
                 >
                   <Edit class="h-4 w-4" />
                 </Button>
@@ -86,6 +86,15 @@
       :is-open="showCreateModal"
       @close="showCreateModal = false"
     />
+
+    <!-- Edit Budget Modal -->
+    <EditBudgetModal
+      v-if="selectedBudget"
+      :is-open="showEditModal"
+      :budget="selectedBudget"
+      @close="closeEditModal"
+      @updated="handleBudgetUpdated"
+    />
   </div>
 </template>
 
@@ -107,9 +116,13 @@ import CardHeader from '@/components/shadcn-ui/card-header.vue'
 import CardTitle from '@/components/shadcn-ui/card-title.vue'
 import CardContent from '@/components/shadcn-ui/card-content.vue'
 import Section from '@/components/shadcn-ui/section.vue'
+import EditBudgetModal from '@/components/budget/EditBudgetModal.vue'
+import type { BudgetResponse } from '@/types/DTO/budget.dto'
 
 const loading = ref(true)
 const showCreateModal = ref(false)
+const showEditModal = ref(false)
+const selectedBudget = ref<BudgetResponse | null>(null)
 const budgetStore = useBudgetStore()
 const router = useRouter()
 
@@ -126,9 +139,25 @@ const goToBudget = (budgetId: string) => {
   router.push(`/budget/${budgetId}`)
 }
 
+const openEditModal = (budget: BudgetResponse) => {
+  selectedBudget.value = budget
+  showEditModal.value = true
+}
+
+const closeEditModal = () => {
+  showEditModal.value = false
+  selectedBudget.value = null
+}
+
+const handleBudgetUpdated = async () => {
+  await budgetStore.fetchAllBudgets()
+}
+
 const editBudget = (budgetId: string) => {
-  // TODO: Implement budget editing functionality
-  console.log('Edit budget:', budgetId)
+  const budget = budgetStore.budgets?.find(b => b.id === budgetId)
+  if (budget) {
+    openEditModal(budget)
+  }
 }
 </script>
 
