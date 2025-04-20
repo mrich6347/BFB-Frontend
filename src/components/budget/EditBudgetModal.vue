@@ -1,13 +1,10 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-    <div class="bg-background dark:bg-background rounded-lg shadow-lg w-full max-w-md p-6">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold text-foreground dark:text-foreground">Edit Budget</h3>
-        <button @click="close" class="text-muted-foreground hover:text-foreground">
-          <X class="h-6 w-6" />
-        </button>
-      </div>
-
+  <Dialog :open="isOpen" @update:open="(value) => !value && close()">
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>Edit Budget</DialogTitle>
+      </DialogHeader>
+      
       <BudgetForm
         :is-loading="isLoading"
         mode="edit"
@@ -15,8 +12,8 @@
         @submit="handleSubmit"
         @cancel="close"
       />
-    </div>
-  </div>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -25,7 +22,7 @@ import { useBudgetStore } from '@/stores/budget.store'
 import type { CreateBudgetDto, BudgetResponse } from '@/types/DTO/budget.dto'
 import { useRouter } from 'vue-router'
 import BudgetForm from './forms/BudgetForm.vue'
-import { X } from 'lucide-vue-next'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
 
 const props = defineProps<{
   isOpen: boolean
