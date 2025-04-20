@@ -207,10 +207,10 @@ const accountSections = computed(() => [
 ])
 
 const expandedSections = ref<Record<SectionTitle, boolean>>({
-  [AccountType.CASH]: true,
-  [AccountType.CREDIT]: true,
-  [AccountType.TRACKING]: true,
-  [AccountType.LOAN]: true,
+  [AccountType.CASH]: false,
+  [AccountType.CREDIT]: false,
+  [AccountType.TRACKING]: false,
+  [AccountType.LOAN]: false,
   'CLOSED': false
 })
 
