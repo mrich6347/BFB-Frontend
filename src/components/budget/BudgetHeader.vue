@@ -21,7 +21,7 @@
         <div class="flex items-stretch rounded-lg shadow-sm border border-primary/20 overflow-hidden max-w-full">
           <div class="flex flex-col justify-center px-4 py-1.5 bg-green-600">
             <div class="text-xs font-medium text-white">Ready to Assign</div>
-            <div class="text-base font-bold text-white whitespace-nowrap">${{ formattedAmount }}</div>
+            <div class="text-base font-bold text-white whitespace-nowrap">${{ formatCurrency(readyToAssign) }}</div>
           </div>
           <div class="w-px bg-green-600"></div>
           <button class="flex items-center px-4 bg-green-600  text-white font-medium transition-colors whitespace-nowrap">
@@ -57,6 +57,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-vue-next'
+import { formatCurrency } from '../../utils/currencyUtil'
 
 // Mock data with a large dollar amount to test display
 const readyToAssign = ref(1754329.87)
@@ -73,11 +74,4 @@ const currentMonth = computed(() => {
   return 'Apr 2025'
 })
 
-// Format currency with commas for thousands
-const formattedAmount = computed(() => {
-  return readyToAssign.value.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })
-})
 </script> 

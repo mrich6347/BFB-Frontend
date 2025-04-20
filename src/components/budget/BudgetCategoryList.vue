@@ -18,10 +18,10 @@
         class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 font-semibold px-2 py-1.5 cursor-pointer hover:bg-muted/50"
         @click="toggleGroup(group.id)"
       >
-        <div class="flex items-center">
+        <div class="flex items-center truncate">
           <ChevronDownIcon v-if="expandedGroups.has(group.id)" class="h-4 w-4 mr-1 flex-shrink-0" />
           <ChevronRightIcon v-else class="h-4 w-4 mr-1 flex-shrink-0" />
-          <span class="flex items-center gap-1">
+          <span class="flex items-center gap-1 truncate">
             {{ group.name }}
             <PlusIcon class="h-4 w-4 cursor-pointer hover:text-primary bg-primary/20 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
           </span>
