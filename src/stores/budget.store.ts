@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import BudgetService from '@/services/budget.service'
 import type { BudgetResponse, CreateBudgetDto } from '@/types/DTO/budget.dto'
+import { usePatchStoreBudget } from '@/composables/budgets/usePatchStoreBudget'
 
 
 export const useBudgetStore = defineStore('budgetStore', {
@@ -29,13 +30,8 @@ export const useBudgetStore = defineStore('budgetStore', {
         },
         async updateBudget(id: string, request: CreateBudgetDto) {
             const response = await BudgetService.updateBudget(id, request)
-            const index = this.budgets.findIndex(b => b.id === id)
-            if (index !== -1) {
-                this.budgets[index] = response
-            }
-            if (this.currentBudget?.id === id) {
-                this.currentBudget = response
-            }
+            const { updateBudgetInStore } = usePatchStoreBudget()
+            updateBudgetInStore(id, response)
             return response
         },
         setIsLoading(isLoading: boolean) {
