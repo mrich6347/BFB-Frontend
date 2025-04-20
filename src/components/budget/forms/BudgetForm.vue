@@ -4,12 +4,14 @@
     @submit="handleSubmit"
     :actions="false"
     :value="initialValues"
+    validation-visibility="live"
     #default="{ state }"
   >
     <FormKit
       type="text"
       name="name"
       label="Budget Name"
+      validation-visibility="live"
       :validation-rules="{ 
         uniqueBudgetName: uniqueBudgetNameRule 
       }"
@@ -30,6 +32,7 @@
       type="select"
       name="currency"
       label="Currency"
+      validation-visibility="live"
       :options="commonCurrencies.map(c => ({ label: `${c.code} - ${c.name} (${c.symbol})`, value: c.code }))"
       :validation="'required|length:3|matches:' + commonCurrencies.map(c => c.code).join(',')"
       placeholder="Select currency"
@@ -45,6 +48,7 @@
       type="select"
       name="currency_placement"
       label="Currency Placement"
+      validation-visibility="live"
       :options="[
         { label: '$123.45', value: 'BEFORE' },
         { label: '123.45$', value: 'AFTER' }
@@ -62,6 +66,7 @@
       type="select"
       name="number_format"
       label="Number Format"
+      validation-visibility="live"
       :options="[
         { label: '123,456.78', value: NumberFormat.DOT_COMMA },
         { label: '123.456,78', value: NumberFormat.COMMA_COMMA },
@@ -86,6 +91,7 @@
       type="select"
       name="date_format"
       label="Date Format"
+      validation-visibility="live"
       :options="[
         { label: '2025/12/30', value: DateFormat.ISO },
         { label: '2025-12-30', value: DateFormat.HYPHEN },
