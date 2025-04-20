@@ -20,9 +20,11 @@
           <ChevronRightIcon v-else class="h-4 w-4 mr-1 flex-shrink-0" />
           {{ group.name }}
         </div>
-        <div class="text-right">{{ formatCurrency(group.assigned) }}</div>
-        <div class="text-right">{{ formatCurrency(group.activity) }}</div>
-        <div class="text-right">{{ formatCurrency(group.available) }}</div>
+        <div class="text-right text-sm">{{ formatCurrency(group.assigned) }}</div>
+        <div class="text-right text-sm">{{ formatCurrency(group.activity) }}</div>
+        <div class="text-right text-sm">
+            {{ formatCurrency(group.available) }}
+        </div>
       </div>
 
       <!-- Categories within Group -->
@@ -37,13 +39,10 @@
           </div>
           <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.assigned) }}</div>
           <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
-          <div 
-            :class="[
-              'text-right text-xs font-medium',
-              category.available < 0 ? 'text-red-600' : 'text-green-600'
-            ]"
-          >
-            {{ formatCurrency(category.available) }}
+          <div class="text-right">
+            <Badge :variant="getBadgeVariant(category.available)" class="cursor-pointer">
+              {{ formatCurrency(category.available) }}
+            </Badge>
           </div>
         </div>
       </div>
@@ -55,6 +54,7 @@
 import { ref } from 'vue'
 import { ChevronRightIcon, ChevronDownIcon } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
+import Badge from '@/components/shadcn-ui/Badge.vue'
 // Mock Data
 const categoryGroups = ref([
   {
@@ -64,7 +64,7 @@ const categoryGroups = ref([
     activity: -25.00,
     available: 25.00,
     categories: [
-      { id: 'cat-1-1', name: 'Rent | $1050 | 1st (Manual)', assigned: 25.00, activity: 0.00, available: 25.00 },
+      { id: 'cat-1-1', name: 'Rent | $1050 | 1st (Manual)', assigned: 25.00, activity: 0.00, available: -25.00 },
       { id: 'cat-1-2', name: 'Auto Insurance | $131.61 | 4th (Checking)', assigned: 0.00, activity: 0.00, available: 0.00 },
       { id: 'cat-1-3', name: 'Visible Phone Plan | $34 | 9th (Citi)', assigned: 25.00, activity: -25.00, available: 0.00 },
     ]
@@ -119,6 +119,12 @@ const toggleGroup = (groupId: string) => {
     expandedGroups.value.add(groupId);
   }
 };
+
+const getBadgeVariant = (amount: number): 'positive' | 'negative' | 'neutral' => {
+  if (amount < 0) return 'negative'
+  if (amount === 0) return 'neutral'
+  return 'positive'
+}
 
 // Define grid columns layout in Tailwind config or a global CSS file if not already done
 // Example in tailwind.config.js:
