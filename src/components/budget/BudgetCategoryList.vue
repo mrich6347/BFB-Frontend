@@ -15,13 +15,16 @@
     <div v-for="group in categoryGroups" :key="group.id" class="border-b last:border-b-0">
       <!-- Group Header -->
       <div 
-        class="grid grid-cols-[2fr_150px_150px_150px] gap-10 font-semibold px-2 py-1.5 cursor-pointer hover:bg-muted/50"
+        class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 font-semibold px-2 py-1.5 cursor-pointer hover:bg-muted/50"
         @click="toggleGroup(group.id)"
       >
         <div class="flex items-center">
           <ChevronDownIcon v-if="expandedGroups.has(group.id)" class="h-4 w-4 mr-1 flex-shrink-0" />
           <ChevronRightIcon v-else class="h-4 w-4 mr-1 flex-shrink-0" />
-          {{ group.name }}
+          <span class="flex items-center gap-1">
+            {{ group.name }}
+            <PlusIcon class="h-4 w-4 cursor-pointer hover:text-primary bg-primary/20 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </span>
         </div>
         <div class="text-right text-sm">{{ formatCurrency(group.assigned) }}</div>
         <div class="text-right text-sm">{{ formatCurrency(group.activity) }}</div>
