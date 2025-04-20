@@ -55,8 +55,18 @@
               v-for="budget in budgetStore.budgets" 
               :key="budget.id"
               @click="goToBudget(budget.id)"
-              class="hover:shadow-md transition-all duration-200 cursor-pointer"
+              class="hover:shadow-md transition-all duration-200 cursor-pointer relative group"
             >
+              <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="h-8 w-8"
+                  @click.stop="editBudget(budget.id)"
+                >
+                  <Edit class="h-4 w-4" />
+                </Button>
+              </div>
               <CardHeader>
                 <CardTitle class="truncate">{{ budget.name }}</CardTitle>
               </CardHeader>
@@ -87,7 +97,7 @@ import ThemeToggle from '@/components/common/ThemeToggle.vue'
 import CreateBudgetModal from '@/components/budget/CreateBudgetModal.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useRouter } from 'vue-router'
-import { LogOut, Plus, Inbox, Import } from 'lucide-vue-next'
+import { LogOut, Plus, Inbox, Import, Edit } from 'lucide-vue-next'
 import { formatDate } from '@/utils/dateFormatUtil'
 
 // Import ShadCN components
@@ -114,6 +124,11 @@ onMounted(async () => {
 
 const goToBudget = (budgetId: string) => {
   router.push(`/budget/${budgetId}`)
+}
+
+const editBudget = (budgetId: string) => {
+  // TODO: Implement budget editing functionality
+  console.log('Edit budget:', budgetId)
 }
 </script>
 
