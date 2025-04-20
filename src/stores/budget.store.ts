@@ -11,6 +11,12 @@ export const useBudgetStore = defineStore('budgetStore', {
         isLoading: true
     }),
 
+    getters: {
+        budgetExistsByName: (state) => (name: string) => {
+            return state.budgets.find(b => b.name === name)
+        }
+    },
+
     actions: {
         async fetchAllBudgets() {
             this.isLoading = true

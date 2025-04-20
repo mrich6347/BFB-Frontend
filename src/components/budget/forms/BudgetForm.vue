@@ -4,12 +4,19 @@
     @submit="handleSubmit"
     :actions="false"
     :value="initialValues"
+    #default="{ state }"
   >
     <FormKit
       type="text"
       name="name"
       label="Budget Name"
-      validation="required"
+      :validation-rules="{ 
+        uniqueBudgetName: uniqueBudgetNameRule 
+      }"
+      :validation-messages="{
+        uniqueBudgetName: 'Budget already exists with this name'
+      }"
+      validation="required|uniqueBudgetName"
       placeholder="Enter budget name"
       :classes="{
         input: 'w-full px-3 py-2 border rounded-md bg-background dark:bg-background border-input dark:border-input',
@@ -107,7 +114,7 @@
       </button>
       <FormKit
         type="submit"
-        :disabled="isLoading"
+        :disabled="isLoading || state.valid === false"
         input-class="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50"
       >
         <span>{{ isLoading ? (mode === 'edit' ? 'Updating...' : 'Creating...') : (mode === 'edit' ? 'Update Budget' : 'Create Budget') }}</span>
@@ -120,6 +127,11 @@
 import type { CreateBudgetDto } from '@/types/DTO/budget.dto'
 import { commonCurrencies } from '@/utils/currencyUtil'
 import { NumberFormat, CurrencyPlacement, DateFormat } from '@/types/DTO/budget.dto'
+import { useBudgetStore } from '@/stores/budget.store'
+import type { FormKitNode } from '@formkit/core'
+
+const budgetStore = useBudgetStore()
+
 
 interface Props {
   isLoading: boolean
@@ -136,6 +148,20 @@ const emit = defineEmits<{
   (e: 'submit', data: CreateBudgetDto): void
   (e: 'cancel'): void
 }>()
+
+
+// Custom validation rule for unique budget name
+const uniqueBudgetNameRule = (node: FormKitNode): boolean => {
+  const value = node.value as string
+  if (!value) return true
+  
+  // If we're in edit mode and the name hasn't changed, it's valid
+  if (props.mode === 'edit' && value === props.initialValues?.name) {
+    return true
+  }
+  
+  return !budgetStore.budgetExistsByName(value)
+}
 
 const handleSubmit = async (formData: CreateBudgetDto) => {
   emit('submit', formData)
