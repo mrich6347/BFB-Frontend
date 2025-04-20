@@ -11,7 +11,7 @@
       type="text"
       name="name"
       label="Budget Name"
-      validation-visibility="live"
+      :validation-visibility="props.mode === 'edit' ? 'live' : 'blur'"
       :validation-rules="{ 
         uniqueBudgetName: uniqueBudgetNameRule 
       }"
@@ -32,7 +32,7 @@
       type="select"
       name="currency"
       label="Currency"
-      validation-visibility="live"
+      :validation-visibility="props.mode === 'edit' ? 'live' : 'blur'"
       :options="commonCurrencies.map(c => ({ label: `${c.code} - ${c.name} (${c.symbol})`, value: c.code }))"
       :validation="'required|length:3|matches:' + commonCurrencies.map(c => c.code).join(',')"
       placeholder="Select currency"

@@ -13,7 +13,7 @@ export const useBudgetStore = defineStore('budgetStore', {
 
     getters: {
         budgetExistsByName: (state) => (name: string) => {
-            return state.budgets.find(b => b.name === name)
+            return state.budgets.find(b => b.name.toLowerCase() === name.toLowerCase())
         }
     },
 
