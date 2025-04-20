@@ -58,7 +58,7 @@
               class="hover:shadow-md transition-all duration-200 cursor-pointer"
             >
               <CardHeader>
-                <CardTitle>{{ budget.name }}</CardTitle>
+                <CardTitle class="truncate">{{ budget.name }}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p class="text-sm text-muted-foreground">
