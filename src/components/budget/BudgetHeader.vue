@@ -18,13 +18,13 @@
 
       <!-- Ready to Assign Section - Cleaner Design -->
       <div class="flex items-center mt-2 md:mt-0 md:w-2/4 justify-center">
-        <div class="flex items-stretch rounded-lg shadow-sm border border-primary/20 overflow-hidden max-w-full">
+        <div class="flex items-stretch rounded-lg shadow-sm overflow-hidden max-w-full">
           <div class="flex flex-col justify-center px-4 py-1.5 bg-green-600">
             <div class="text-xs font-medium text-white">Ready to Assign</div>
             <div class="text-base font-bold text-white whitespace-nowrap">${{ formatCurrency(readyToAssign) }}</div>
           </div>
           <div class="w-px bg-green-600"></div>
-          <button class="flex items-center px-4 bg-green-600   text-white font-medium transition-colors whitespace-nowrap">
+          <button class="flex items-center px-4 bg-green-600 cursor-pointer  text-white font-medium transition-colors whitespace-nowrap">
             Assign
             <ChevronDown class="w-3.5 h-3.5 ml-1" />
           </button>
