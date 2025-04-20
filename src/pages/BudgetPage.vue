@@ -10,6 +10,7 @@
         <BudgetHeader />
         <div class="p-4">
           <!-- Budget content goes here -->
+          <BudgetCategoryList />
         </div>
       </div>
     </div>
@@ -25,6 +26,7 @@ import { useBudgetStore } from '@/stores/budget.store'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { MainDataService } from '@/services/common/mainData.service'
 import { useAccountStore } from '@/stores/account.store'
+import BudgetCategoryList from '@/components/budget/BudgetCategoryList.vue'
 
 const route = useRoute()
 const router = useRouter()
