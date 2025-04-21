@@ -12,6 +12,9 @@ export const useAccountStore = defineStore('accountStore', {
         getAccountsByType: (state) => (type: AccountType) => {
             return state.accounts.filter(account => account.account_type === type);
         },
+        accountExistsByName: (state) => (name: string) => {
+            return state.accounts.find(account => account.name.toLowerCase() === name.toLowerCase())
+        }
     },
     actions: {
         setAccounts(accounts: AccountResponse[]) {
