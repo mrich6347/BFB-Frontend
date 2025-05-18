@@ -105,6 +105,12 @@
         >
           View Budgets
         </button>
+        <button @click="showNukeDatabaseConfirm = true"
+          class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-destructive bg-background dark:bg-background rounded-lg border border-border dark:border-border mb-2"
+        >
+          <DatabaseIcon class="w-5 h-5 mr-2" />
+          Nuke Database
+        </button>
         <button @click="authService.logout()"
             class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground bg-background dark:bg-background rounded-lg border border-border dark:border-border"
         >
@@ -140,6 +146,32 @@
     @close="isCreateAccountModalOpen = false"
     :budgetId="props.budgetId"
   />
+
+  <!-- Nuke Database Confirmation Dialog -->
+  <Dialog :open="showNukeDatabaseConfirm" @update:open="(value) => !value && (showNukeDatabaseConfirm = false)">
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle class="text-destructive">Nuke Database</DialogTitle>
+        <DialogDescription>
+          This will permanently delete all your data including budgets, accounts, categories, and transactions. This action cannot be undone.
+        </DialogDescription>
+      </DialogHeader>
+      <div class="flex flex-col gap-4">
+        <p class="text-sm text-muted-foreground">
+          Are you absolutely sure you want to proceed? This is intended for testing purposes only.
+        </p>
+        <div class="flex justify-end gap-2">
+          <Button variant="outline" @click="showNukeDatabaseConfirm = false">
+            Cancel
+          </Button>
+          <Button variant="destructive" :disabled="isNuking" @click="nukeDatabase">
+            <Loader2Icon v-if="isNuking" class="mr-2 h-4 w-4 animate-spin" />
+            {{ isNuking ? 'Nuking...' : 'Yes, Nuke Everything' }}
+          </Button>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -154,7 +186,9 @@ import {
   SettingsIcon,
   LogOutIcon,
   PanelLeftCloseIcon,
-  PanelLeftOpenIcon
+  PanelLeftOpenIcon,
+  DatabaseIcon,
+  Loader2Icon
 } from 'lucide-vue-next'
 import { authService } from '../services/common/auth.service'
 import { formatCurrency } from '@/utils/currencyUtil'
@@ -163,6 +197,10 @@ import CreateAccountModal from './accounts/CreateAccountModal.vue'
 import { useAccountStore } from '@/stores/account.store'
 import { AccountType } from '@/types/DTO/account.dto'
 import { useBudgetStore } from '@/stores/budget.store'
+import { DatabaseService } from '@/services/database.service'
+import { useToast } from 'vue-toast-notification'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shadcn-ui'
+import Button from '@/components/shadcn-ui/button.vue'
 
 const budgetStore = useBudgetStore()
 
@@ -221,6 +259,9 @@ const toggleSection = (sectionTitle: SectionTitle) => {
 const isSettingsExpanded = ref(false)
 const isCreateAccountModalOpen = ref(false)
 const isCollapsed = ref(false)
+const showNukeDatabaseConfirm = ref(false)
+const isNuking = ref(false)
+const toast = useToast()
 
 const toggleSettings = () => {
   isSettingsExpanded.value = !isSettingsExpanded.value
@@ -228,5 +269,28 @@ const toggleSettings = () => {
 
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
+}
+
+const nukeDatabase = async () => {
+  try {
+    isNuking.value = true
+    isSettingsExpanded.value = false
+
+    const result = await DatabaseService.nukeDatabase()
+
+    if (result.success) {
+      toast.success('Database has been successfully wiped')
+      // Redirect to dashboard page
+      router.push('/dashboard')
+    } else {
+      toast.error('Failed to wipe database: ' + result.message)
+    }
+  } catch (error) {
+    console.error('Error nuking database:', error)
+    toast.error('An error occurred while wiping the database')
+  } finally {
+    isNuking.value = false
+    showNukeDatabaseConfirm.value = false
+  }
 }
 </script>
