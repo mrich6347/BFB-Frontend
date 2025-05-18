@@ -66,33 +66,45 @@
 
         <!-- Categories within Group -->
         <div v-if="expandedGroups.has(group.id)">
-          <div
-            v-for="category in getCategoriesForGroup(group.id)"
-            :key="category.id"
-            class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 text-sm pl-8 pr-2 py-1.5 hover:bg-muted/50 transition-colors border-b border-border/40 last:border-b-0"
+          <draggable
+            v-model="categoryLists[group.id]"
+            item-key="id"
+            :animation="150"
+            handle=".drag-handle"
+            ghost-class="ghost-item"
+            chosen-class="sortable-chosen"
+            drag-class="sortable-drag"
+            @change="onChange($event, group.id)"
+            class="category-list"
           >
-            <div class="flex items-center truncate">
-              <span class="truncate">{{ category.name }}</span>
-              <Edit
-                class="h-3.5 w-3.5 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                @click="openEditCategoryModal(category)"
-              />
-            </div>
-            <div
-              class="text-right text-xs text-muted-foreground cursor-pointer hover:text-primary"
-              @click="openAssignModal(category)"
-            >
-              {{ formatCurrency(category.assigned) }}
-            </div>
-            <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
-            <div class="text-right">
-              <Badge :variant="getBadgeVariant(category.available)" class="cursor-pointer">
-                {{ formatCurrency(category.available) }}
-              </Badge>
-            </div>
-          </div>
-
-
+            <template #item="{ element: category }">
+              <div
+                class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 text-sm pl-8 pr-2 py-1.5 hover:bg-muted/50 transition-colors border-b border-border/40 last:border-b-0 category-item"
+                :data-category-id="category.id"
+              >
+                <div class="flex items-center truncate">
+                  <GripVertical class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span class="truncate">{{ category.name }}</span>
+                  <Edit
+                    class="h-3.5 w-3.5 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                    @click="openEditCategoryModal(category)"
+                  />
+                </div>
+                <div
+                  class="text-right text-xs text-muted-foreground cursor-pointer hover:text-primary"
+                  @click="openAssignModal(category)"
+                >
+                  {{ formatCurrency(category.assigned) }}
+                </div>
+                <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
+                <div class="text-right">
+                  <Badge :variant="getBadgeVariant(category.available)" class="cursor-pointer">
+                    {{ formatCurrency(category.available) }}
+                  </Badge>
+                </div>
+              </div>
+            </template>
+          </draggable>
         </div>
       </div>
 
@@ -126,8 +138,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { ChevronRightIcon, ChevronDownIcon, PlusIcon, Edit } from 'lucide-vue-next'
+import { ref, computed, onMounted, reactive, watch } from 'vue'
+import { ChevronRightIcon, ChevronDownIcon, PlusIcon, Edit, GripVertical } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import Badge from '@/components/shadcn-ui/Badge.vue'
 import { useCategoryStore } from '@/stores/category.store'
@@ -136,11 +148,13 @@ import type { CategoryGroupResponse } from '@/types/DTO/category-group.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 import CategoryGroupModal from './CategoryGroupModal.vue'
 import CategoryModal from './CategoryModal.vue'
+import draggable from 'vuedraggable'
 
 const categoryStore = useCategoryStore()
 const budgetStore = useBudgetStore()
 
 const expandedGroups = ref<Set<string>>(new Set())
+const categoryLists = reactive<Record<string, CategoryResponse[]>>({})
 
 // Computed property to get sorted category groups
 const sortedCategoryGroups = computed(() => {
@@ -152,14 +166,45 @@ const getCategoriesForGroup = (groupId: string) => {
   return categoryStore.getCategoriesByGroupId(groupId)
 }
 
+// Get categories from the reactive categoryLists
+const getReactiveCategoriesForGroup = (groupId: string) => {
+  if (!categoryLists[groupId]) {
+    categoryLists[groupId] = [...getCategoriesForGroup(groupId)]
+  }
+  return categoryLists[groupId]
+}
+
 // Get totals for a specific group
 const getGroupTotals = (groupId: string) => {
   return categoryStore.getGroupTotals(groupId)
 }
 
-// Add all group IDs to expandedGroups initially
+// Initialize category lists for each group
+const initializeCategoryLists = () => {
+  sortedCategoryGroups.value.forEach(group => {
+    // Create a reactive reference to the categories for this group
+    categoryLists[group.id] = [...getCategoriesForGroup(group.id)]
+  })
+}
+
+// Watch for changes in categories and update the categoryLists
+watch(() => categoryStore.categories, () => {
+  initializeCategoryLists()
+}, { deep: true })
+
+// Watch for changes in category groups and update the categoryLists
+watch(() => sortedCategoryGroups.value, (newGroups) => {
+  newGroups.forEach(group => {
+    if (!categoryLists[group.id]) {
+      categoryLists[group.id] = [...getCategoriesForGroup(group.id)]
+    }
+  })
+}, { immediate: true })
+
+// Add all group IDs to expandedGroups initially and initialize category lists
 onMounted(() => {
   sortedCategoryGroups.value.forEach(group => expandedGroups.value.add(group.id))
+  initializeCategoryLists()
 })
 
 const toggleGroup = (groupId: string) => {
@@ -167,6 +212,32 @@ const toggleGroup = (groupId: string) => {
     expandedGroups.value.delete(groupId)
   } else {
     expandedGroups.value.add(groupId)
+  }
+}
+
+// Handle change event from draggable
+const onChange = async (event: any, groupId: string) => {
+  // Only process if this is a moved event
+  if (!event.moved) {
+    console.log('Not a move event, ignoring', event)
+    return
+  }
+
+  console.log('Drag event detected:', event)
+
+  // Get the category IDs in the new order
+  const categoryIds = categoryLists[groupId].map(category => category.id)
+  console.log('New category order:', categoryIds)
+
+  try {
+    // The store will optimistically update the UI and then send to backend
+    console.log('Calling reorderCategories in store')
+    await categoryStore.reorderCategories(categoryIds)
+    console.log('Reorder completed successfully')
+  } catch (error) {
+    console.error('Failed to reorder categories:', error)
+    // Reset to original order if there's an error
+    categoryLists[groupId] = [...getCategoriesForGroup(groupId)]
   }
 }
 
@@ -242,6 +313,22 @@ const handleCategoryCreated = (category: CategoryResponse) => {
   // Ensure the category group is expanded
   expandedGroups.value.add(category.category_group_id)
   showCategoryModal.value = false
+
+  // Update the category lists
+  initializeCategoryLists()
+
+  // Add highlight animation to the new category
+  setTimeout(() => {
+    const categoryElement = document.querySelector(`[data-category-id="${category.id}"]`)
+    if (categoryElement) {
+      categoryElement.classList.add('highlight-new')
+
+      // Remove the class after animation completes
+      setTimeout(() => {
+        categoryElement.classList.remove('highlight-new')
+      }, 2000)
+    }
+  }, 100)
 }
 
 const handleCategoryUpdated = (category: CategoryResponse) => {
@@ -255,5 +342,47 @@ const handleCategoryDeleted = (categoryId: string) => {
 </script>
 
 <style scoped>
-/* Component-specific styles */
+.category-list {
+  width: 100%;
+}
+
+.category-item {
+  transition: background-color 0.2s, border 0.2s;
+}
+
+.category-item.sortable-chosen {
+  background-color: var(--muted);
+  cursor: grabbing;
+  border: 1px solid var(--primary);
+}
+
+.ghost-item {
+  opacity: 0.7;
+  border: 1px dashed var(--primary);
+}
+
+.drag-handle {
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+@keyframes highlight {
+  0% {
+    border-color: transparent;
+  }
+  50% {
+    border-color: var(--primary);
+    border-width: 1px;
+  }
+  100% {
+    border-color: transparent;
+  }
+}
+
+.highlight-new {
+  animation: highlight 2s ease-in-out;
+}
 </style>

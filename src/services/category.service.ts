@@ -1,9 +1,9 @@
 import api from './common/api';
-import type { 
-  CategoryResponse, 
-  CreateCategoryDto, 
-  UpdateCategoryDto, 
-  ReorderCategoriesDto 
+import type {
+  CategoryResponse,
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  ReorderCategoriesDto
 } from '@/types/DTO/category.dto';
 
 export default class CategoryService {

@@ -172,15 +172,26 @@ export const useCategoryStore = defineStore('categoryStore', {
     },
 
     async reorderCategories(categoryIds: string[]) {
-      await CategoryService.reorderCategories({ category_ids: categoryIds });
+      // Optimistically update the UI first for immediate feedback
+      const originalCategories = [...this.categories];
 
-      // Update local display_order values
-      categoryIds.forEach((id, index) => {
-        const categoryIndex = this.categories.findIndex(category => category.id === id);
-        if (categoryIndex !== -1) {
-          this.categories[categoryIndex].display_order = index;
-        }
-      });
+      try {
+        // Update local display_order values immediately
+        categoryIds.forEach((id, index) => {
+          const categoryIndex = this.categories.findIndex(category => category.id === id);
+          if (categoryIndex !== -1) {
+            this.categories[categoryIndex].display_order = index;
+          }
+        });
+
+        // Then send the update to the backend
+        await CategoryService.reorderCategories({ category_ids: categoryIds });
+      } catch (error) {
+        // If the backend update fails, revert to the original order
+        console.error('Failed to reorder categories:', error);
+        this.categories = originalCategories;
+        throw error;
+      }
     },
 
     setCategoryGroups(categoryGroups: CategoryGroupResponse[]) {
