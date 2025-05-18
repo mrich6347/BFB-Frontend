@@ -20,7 +20,7 @@ export interface UpdateCategoryGroupDto {
 }
 
 export interface ReorderCategoryGroupsDto {
-  category_group_ids: string[];
+  group_ids: string[];
 }
 
 export interface CategoryGroupResponse {

@@ -160,7 +160,7 @@ export const useCategoryStore = defineStore('categoryStore', {
     },
 
     async reorderCategoryGroups(groupIds: string[]) {
-      await CategoryGroupService.reorderCategoryGroups({ category_group_ids: groupIds });
+      await CategoryGroupService.reorderCategoryGroups({ group_ids: groupIds });
 
       // Update local display_order values
       groupIds.forEach((id, index) => {

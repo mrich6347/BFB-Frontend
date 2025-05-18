@@ -36,77 +36,92 @@
       </div>
 
       <!-- Category Groups -->
-      <div v-for="group in sortedCategoryGroups" :key="group.id" class="border-b last:border-b-0">
-        <!-- Group Header -->
-        <div
-          class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 font-semibold px-2 py-1.5 cursor-pointer hover:bg-muted/50"
-          @click="toggleGroup(group.id)"
-        >
-          <div class="flex items-center truncate">
-            <ChevronDownIcon v-if="expandedGroups.has(group.id)" class="h-4 w-4 mr-1 flex-shrink-0" />
-            <ChevronRightIcon v-else class="h-4 w-4 mr-1 flex-shrink-0" />
-            <span class="flex items-center gap-1 truncate">
-              {{ group.name }}
-              <PlusIcon
-                class="h-4 w-4 cursor-pointer hover:text-primary bg-primary/20 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                @click.stop="openCreateCategoryModal(group.id)"
-              />
-              <Edit
-                class="h-4 w-4 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                @click.stop="openEditCategoryGroupModal(group)"
-              />
-            </span>
-          </div>
-          <div class="text-right text-sm">{{ formatCurrency(getGroupTotals(group.id).assigned) }}</div>
-          <div class="text-right text-sm">{{ formatCurrency(getGroupTotals(group.id).activity) }}</div>
-          <div class="text-right text-sm">
-              {{ formatCurrency(getGroupTotals(group.id).available) }}
-          </div>
-        </div>
-
-        <!-- Categories within Group -->
-        <div v-if="expandedGroups.has(group.id)">
-          <draggable
-            v-model="categoryLists[group.id]"
-            item-key="id"
-            :animation="150"
-            handle=".drag-handle"
-            ghost-class="ghost-item"
-            chosen-class="sortable-chosen"
-            drag-class="sortable-drag"
-            @change="onChange($event, group.id)"
-            class="category-list"
-          >
-            <template #item="{ element: category }">
-              <div
-                class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 text-sm pl-8 pr-2 py-1.5 hover:bg-muted/50 transition-colors border-b border-border/40 last:border-b-0 category-item"
-                :data-category-id="category.id"
-              >
-                <div class="flex items-center truncate">
-                  <GripVertical class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span class="truncate">{{ category.name }}</span>
-                  <Edit
-                    class="h-3.5 w-3.5 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                    @click="openEditCategoryModal(category)"
+      <draggable
+        v-model="categoryGroupsList"
+        item-key="id"
+        :animation="150"
+        handle=".group-drag-handle"
+        ghost-class="ghost-item"
+        chosen-class="sortable-chosen"
+        drag-class="sortable-drag"
+        @change="onGroupChange"
+        class="category-group-list"
+      >
+        <template #item="{ element: group }">
+          <div :key="group.id" class="border-b last:border-b-0 category-group-item" :data-group-id="group.id">
+            <!-- Group Header -->
+            <div
+              class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 font-semibold px-2 py-1.5 cursor-pointer hover:bg-muted/50"
+              @click="toggleGroup(group.id)"
+            >
+              <div class="flex items-center truncate">
+                <GripVertical class="h-4 w-4 mr-1 text-muted-foreground cursor-grab group-drag-handle opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ChevronDownIcon v-if="expandedGroups.has(group.id)" class="h-4 w-4 mr-1 flex-shrink-0" />
+                <ChevronRightIcon v-else class="h-4 w-4 mr-1 flex-shrink-0" />
+                <span class="flex items-center gap-1 truncate">
+                  {{ group.name }}
+                  <PlusIcon
+                    class="h-4 w-4 cursor-pointer hover:text-primary bg-primary/20 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    @click.stop="openCreateCategoryModal(group.id)"
                   />
-                </div>
-                <div
-                  class="text-right text-xs text-muted-foreground cursor-pointer hover:text-primary"
-                  @click="openAssignModal(category)"
-                >
-                  {{ formatCurrency(category.assigned) }}
-                </div>
-                <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
-                <div class="text-right">
-                  <Badge :variant="getBadgeVariant(category.available)" class="cursor-pointer">
-                    {{ formatCurrency(category.available) }}
-                  </Badge>
-                </div>
+                  <Edit
+                    class="h-4 w-4 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                    @click.stop="openEditCategoryGroupModal(group)"
+                  />
+                </span>
               </div>
-            </template>
-          </draggable>
-        </div>
-      </div>
+              <div class="text-right text-sm">{{ formatCurrency(getGroupTotals(group.id).assigned) }}</div>
+              <div class="text-right text-sm">{{ formatCurrency(getGroupTotals(group.id).activity) }}</div>
+              <div class="text-right text-sm">
+                  {{ formatCurrency(getGroupTotals(group.id).available) }}
+              </div>
+            </div>
+
+            <!-- Categories within Group -->
+            <div v-if="expandedGroups.has(group.id)">
+              <draggable
+                v-model="categoryLists[group.id]"
+                item-key="id"
+                :animation="150"
+                handle=".drag-handle"
+                ghost-class="ghost-item"
+                chosen-class="sortable-chosen"
+                drag-class="sortable-drag"
+                @change="onChange($event, group.id)"
+                class="category-list"
+              >
+                <template #item="{ element: category }">
+                  <div
+                    class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 text-sm pl-8 pr-2 py-1.5 hover:bg-muted/50 transition-colors border-b border-border/40 last:border-b-0 category-item"
+                    :data-category-id="category.id"
+                  >
+                    <div class="flex items-center truncate">
+                      <GripVertical class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <span class="truncate">{{ category.name }}</span>
+                      <Edit
+                        class="h-3.5 w-3.5 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                        @click="openEditCategoryModal(category)"
+                      />
+                    </div>
+                    <div
+                      class="text-right text-xs text-muted-foreground cursor-pointer hover:text-primary"
+                      @click="openAssignModal(category)"
+                    >
+                      {{ formatCurrency(category.assigned) }}
+                    </div>
+                    <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
+                    <div class="text-right">
+                      <Badge :variant="getBadgeVariant(category.available)" class="cursor-pointer">
+                        {{ formatCurrency(category.available) }}
+                      </Badge>
+                    </div>
+                  </div>
+                </template>
+              </draggable>
+            </div>
+          </div>
+        </template>
+      </draggable>
 
 
     </div>
@@ -155,11 +170,17 @@ const budgetStore = useBudgetStore()
 
 const expandedGroups = ref<Set<string>>(new Set())
 const categoryLists = reactive<Record<string, CategoryResponse[]>>({})
+const categoryGroupsList = ref<CategoryGroupResponse[]>([])
 
 // Computed property to get sorted category groups
 const sortedCategoryGroups = computed(() => {
   return categoryStore.sortedCategoryGroups
 })
+
+// Update categoryGroupsList when sortedCategoryGroups changes
+watch(() => sortedCategoryGroups.value, (newGroups) => {
+  categoryGroupsList.value = [...newGroups]
+}, { immediate: true })
 
 // Get categories for a specific group
 const getCategoriesForGroup = (groupId: string) => {
@@ -215,7 +236,42 @@ const toggleGroup = (groupId: string) => {
   }
 }
 
-// Handle change event from draggable
+// Handle change event from category group draggable
+const onGroupChange = async (event: any) => {
+  // Only process if this is a moved event
+  if (!event.moved) {
+    console.log('Not a group move event, ignoring', event)
+    return
+  }
+
+  console.log('Group drag event detected:', event)
+
+  // Get the category group IDs in the new order
+  const groupIds = categoryGroupsList.value.map(group => group.id)
+  console.log('New category group order:', groupIds)
+
+  // Validate that all group IDs are valid UUIDs
+  const validGroupIds = groupIds.filter(id => id && typeof id === 'string' && id.trim() !== '')
+  if (validGroupIds.length !== groupIds.length) {
+    console.error('Invalid group IDs detected:', groupIds)
+    // Reset to original order
+    categoryGroupsList.value = [...sortedCategoryGroups.value]
+    return
+  }
+
+  try {
+    // The store will optimistically update the UI and then send to backend
+    console.log('Calling reorderCategoryGroups in store')
+    await categoryStore.reorderCategoryGroups(validGroupIds)
+    console.log('Group reorder completed successfully')
+  } catch (error) {
+    console.error('Failed to reorder category groups:', error)
+    // Reset to original order if there's an error
+    categoryGroupsList.value = [...sortedCategoryGroups.value]
+  }
+}
+
+// Handle change event from category draggable
 const onChange = async (event: any, groupId: string) => {
   // Only process if this is a moved event
   if (!event.moved) {
@@ -229,10 +285,19 @@ const onChange = async (event: any, groupId: string) => {
   const categoryIds = categoryLists[groupId].map(category => category.id)
   console.log('New category order:', categoryIds)
 
+  // Validate that all category IDs are valid UUIDs
+  const validCategoryIds = categoryIds.filter(id => id && typeof id === 'string' && id.trim() !== '')
+  if (validCategoryIds.length !== categoryIds.length) {
+    console.error('Invalid category IDs detected:', categoryIds)
+    // Reset to original order
+    categoryLists[groupId] = [...getCategoriesForGroup(groupId)]
+    return
+  }
+
   try {
     // The store will optimistically update the UI and then send to backend
     console.log('Calling reorderCategories in store')
-    await categoryStore.reorderCategories(categoryIds)
+    await categoryStore.reorderCategories(validCategoryIds)
     console.log('Reorder completed successfully')
   } catch (error) {
     console.error('Failed to reorder categories:', error)
@@ -342,14 +407,17 @@ const handleCategoryDeleted = (categoryId: string) => {
 </script>
 
 <style scoped>
+.category-group-list,
 .category-list {
   width: 100%;
 }
 
+.category-group-item,
 .category-item {
   transition: background-color 0.2s, border 0.2s;
 }
 
+.category-group-item.sortable-chosen,
 .category-item.sortable-chosen {
   background-color: var(--muted);
   cursor: grabbing;
@@ -361,10 +429,12 @@ const handleCategoryDeleted = (categoryId: string) => {
   border: 1px dashed var(--primary);
 }
 
+.group-drag-handle,
 .drag-handle {
   cursor: grab;
 }
 
+.group-drag-handle:active,
 .drag-handle:active {
   cursor: grabbing;
 }
