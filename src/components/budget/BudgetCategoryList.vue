@@ -92,26 +92,11 @@
             </div>
           </div>
 
-          <!-- Add Category Button -->
-          <div class="pl-8 pr-2 py-2">
-            <button
-              class="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
-              @click="openCreateCategoryModal(group.id)"
-            >
-              <PlusIcon class="h-3 w-3" />
-              Add Category
-            </button>
-          </div>
+
         </div>
       </div>
 
-      <!-- Totals Row -->
-      <div class="grid grid-cols-[2fr_150px_150px_150px] gap-10 font-semibold px-2 py-2 mt-2 border-t">
-        <div>Total</div>
-        <div class="text-right">{{ formatCurrency(totals.assigned) }}</div>
-        <div class="text-right">{{ formatCurrency(totals.activity) }}</div>
-        <div class="text-right">{{ formatCurrency(totals.available) }}</div>
-      </div>
+
     </div>
   </div>
 
@@ -191,14 +176,7 @@ const getBadgeVariant = (amount: number): 'positive' | 'negative' | 'neutral' =>
   return 'positive'
 }
 
-// Computed property for total assigned, activity, and available
-const totals = computed(() => {
-  return {
-    assigned: categoryStore.getTotalAssigned,
-    activity: categoryStore.getTotalActivity,
-    available: categoryStore.getTotalAvailable
-  }
-})
+
 
 // Modal states
 const showCategoryGroupModal = ref(false)
@@ -261,6 +239,8 @@ const handleCategoryGroupDeleted = (categoryGroupId: string) => {
 }
 
 const handleCategoryCreated = (category: CategoryResponse) => {
+  // Ensure the category group is expanded
+  expandedGroups.value.add(category.category_group_id)
   showCategoryModal.value = false
 }
 
@@ -275,5 +255,5 @@ const handleCategoryDeleted = (categoryId: string) => {
 </script>
 
 <style scoped>
-/* Add any component-specific styles here */
+/* Component-specific styles */
 </style>

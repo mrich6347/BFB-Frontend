@@ -15,46 +15,46 @@ export const useCategoryStore = defineStore('categoryStore', {
     getCategoryGroupById: (state) => (id: string) => {
       return state.categoryGroups.find(group => group.id === id);
     },
-    
+
     getCategoriesByGroupId: (state) => (groupId: string) => {
       return state.categories.filter(category => category.category_group_id === groupId)
         .sort((a, b) => a.display_order - b.display_order);
     },
-    
+
     categoryGroupExistsByName: (state) => (name: string, budgetId: string) => {
       return state.categoryGroups.find(
         group => group.name.toLowerCase() === name.toLowerCase() && group.budget_id === budgetId
       );
     },
-    
+
     categoryExistsByName: (state) => (name: string, groupId: string) => {
       return state.categories.find(
         category => category.name.toLowerCase() === name.toLowerCase() && category.category_group_id === groupId
       );
     },
-    
+
     getTotalAssigned: (state) => {
       return state.categories.reduce((sum, category) => sum + category.assigned, 0);
     },
-    
+
     getTotalActivity: (state) => {
       return state.categories.reduce((sum, category) => sum + category.activity, 0);
     },
-    
+
     getTotalAvailable: (state) => {
       return state.categories.reduce((sum, category) => sum + category.available, 0);
     },
-    
+
     getGroupTotals: (state) => (groupId: string) => {
       const groupCategories = state.categories.filter(category => category.category_group_id === groupId);
-      
+
       return {
         assigned: groupCategories.reduce((sum, category) => sum + category.assigned, 0),
         activity: groupCategories.reduce((sum, category) => sum + category.activity, 0),
         available: groupCategories.reduce((sum, category) => sum + category.available, 0)
       };
     },
-    
+
     sortedCategoryGroups: (state) => {
       return [...state.categoryGroups].sort((a, b) => a.display_order - b.display_order);
     }
@@ -70,7 +70,7 @@ export const useCategoryStore = defineStore('categoryStore', {
         this.isLoading = false;
       }
     },
-    
+
     async fetchCategories(budgetId: string) {
       this.isLoading = true;
       try {
@@ -80,7 +80,7 @@ export const useCategoryStore = defineStore('categoryStore', {
         this.isLoading = false;
       }
     },
-    
+
     async fetchAllCategoryData(budgetId: string) {
       this.isLoading = true;
       try {
@@ -88,63 +88,80 @@ export const useCategoryStore = defineStore('categoryStore', {
           CategoryGroupService.getAllCategoryGroups(budgetId),
           CategoryService.getCategoriesByBudget(budgetId)
         ]);
-        
+
         this.categoryGroups = categoryGroups;
         this.categories = categories;
       } finally {
         this.isLoading = false;
       }
     },
-    
+
     async createCategoryGroup(request: CreateCategoryGroupDto) {
       const response = await CategoryGroupService.createCategoryGroup(request);
       this.categoryGroups.push(response);
       return response;
     },
-    
+
     async updateCategoryGroup(id: string, request: UpdateCategoryGroupDto) {
       const response = await CategoryGroupService.updateCategoryGroup(id, request);
       const index = this.categoryGroups.findIndex(group => group.id === id);
-      
+
       if (index !== -1) {
         this.categoryGroups[index] = response;
       }
-      
+
       return response;
     },
-    
+
     async deleteCategoryGroup(id: string) {
       await CategoryGroupService.deleteCategoryGroup(id);
       this.categoryGroups = this.categoryGroups.filter(group => group.id !== id);
       // Also remove all categories in this group
       this.categories = this.categories.filter(category => category.category_group_id !== id);
     },
-    
+
     async createCategory(request: CreateCategoryDto) {
-      const response = await CategoryService.createCategory(request);
+      // Set display_order to 0 to place it at the top
+      const createRequest = {
+        ...request,
+        display_order: 0
+      };
+
+      const response = await CategoryService.createCategory(createRequest);
+
+      // Update display_order for existing categories in the group locally
+      // Increment display_order for all other categories in the same group
+      this.categories.forEach(category => {
+        if (category.category_group_id === response.category_group_id) {
+          category.display_order += 1;
+        }
+      });
+
+      // Add the new category to the array
       this.categories.push(response);
+
       return response;
     },
-    
+
     async updateCategory(id: string, request: UpdateCategoryDto) {
       const response = await CategoryService.updateCategory(id, request);
       const index = this.categories.findIndex(category => category.id === id);
-      
+
       if (index !== -1) {
         this.categories[index] = response;
       }
-      
+
       return response;
     },
-    
+
     async deleteCategory(id: string) {
       await CategoryService.deleteCategory(id);
       this.categories = this.categories.filter(category => category.id !== id);
     },
-    
+
     async reorderCategoryGroups(groupIds: string[]) {
       await CategoryGroupService.reorderCategoryGroups({ category_group_ids: groupIds });
-      
+
       // Update local display_order values
       groupIds.forEach((id, index) => {
         const groupIndex = this.categoryGroups.findIndex(group => group.id === id);
@@ -153,10 +170,10 @@ export const useCategoryStore = defineStore('categoryStore', {
         }
       });
     },
-    
+
     async reorderCategories(categoryIds: string[]) {
       await CategoryService.reorderCategories({ category_ids: categoryIds });
-      
+
       // Update local display_order values
       categoryIds.forEach((id, index) => {
         const categoryIndex = this.categories.findIndex(category => category.id === id);
@@ -165,19 +182,19 @@ export const useCategoryStore = defineStore('categoryStore', {
         }
       });
     },
-    
+
     setCategoryGroups(categoryGroups: CategoryGroupResponse[]) {
       this.categoryGroups = categoryGroups;
     },
-    
+
     setCategories(categories: CategoryResponse[]) {
       this.categories = categories;
     },
-    
+
     setIsLoading(isLoading: boolean) {
       this.isLoading = isLoading;
     },
-    
+
     reset() {
       this.categoryGroups = [];
       this.categories = [];
