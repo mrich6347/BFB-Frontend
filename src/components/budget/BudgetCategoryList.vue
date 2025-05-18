@@ -318,15 +318,15 @@ const getBadgeVariant = (amount: number): 'positive' | 'negative' | 'neutral' =>
 const showCategoryGroupModal = ref(false)
 const showCategoryModal = ref(false)
 const showAssignModal = ref(false)
-const selectedCategoryGroup = ref<CategoryGroupResponse | null>(null)
-const selectedCategory = ref<CategoryResponse | null>(null)
+const selectedCategoryGroup = ref<CategoryGroupResponse | undefined>(undefined)
+const selectedCategory = ref<CategoryResponse | undefined>(undefined)
 const modalMode = ref<'create' | 'edit'>('create')
 const selectedGroupId = ref<string>('')
 
 // Open modals
 const openCreateCategoryGroupModal = () => {
   modalMode.value = 'create'
-  selectedCategoryGroup.value = null
+  selectedCategoryGroup.value = undefined
   showCategoryGroupModal.value = true
 }
 
@@ -338,7 +338,7 @@ const openEditCategoryGroupModal = (group: CategoryGroupResponse) => {
 
 const openCreateCategoryModal = (groupId: string) => {
   modalMode.value = 'create'
-  selectedCategory.value = null
+  selectedCategory.value = undefined
   selectedGroupId.value = groupId
   showCategoryModal.value = true
 }
