@@ -4,7 +4,7 @@
       <DialogHeader>
         <DialogTitle>{{ mode === 'edit' ? 'Edit Category' : 'Create Category' }}</DialogTitle>
       </DialogHeader>
-      
+
       <CategoryForm
         :is-loading="isLoading"
         :mode="mode"
@@ -14,10 +14,10 @@
         @submit="handleSubmit"
         @cancel="close"
       />
-      
+
       <div v-if="mode === 'edit'" class="mt-4 pt-4 border-t">
-        <button 
-          @click="confirmDelete" 
+        <button
+          @click="confirmDelete"
           class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-destructive border border-destructive rounded-md hover:bg-destructive/10"
         >
           <Trash2 class="h-4 w-4" />
@@ -26,7 +26,7 @@
       </div>
     </DialogContent>
   </Dialog>
-  
+
   <!-- Confirmation Dialog -->
   <Dialog :open="showConfirmation" @update:open="(value) => !value && cancelDelete()">
     <DialogContent class="sm:max-w-md">
@@ -36,7 +36,7 @@
           Are you sure you want to delete this category? This action cannot be undone.
         </DialogDescription>
       </DialogHeader>
-      
+
       <div class="flex justify-end gap-3 mt-6">
         <button
           @click="cancelDelete"
@@ -92,8 +92,7 @@ const showConfirmation = ref(false)
 const initialValues = computed(() => {
   if (props.mode === 'edit' && props.category) {
     return {
-      name: props.category.name,
-      assigned: props.category.assigned
+      name: props.category.name
     }
   }
   return {}
@@ -105,7 +104,7 @@ const close = () => {
 
 const handleSubmit = async (formData: CreateCategoryDto | UpdateCategoryDto) => {
   isLoading.value = true
-  
+
   try {
     if (props.mode === 'create') {
       const createData = formData as CreateCategoryDto
@@ -134,9 +133,9 @@ const cancelDelete = () => {
 
 const handleDelete = async () => {
   if (!props.category) return
-  
+
   isDeleting.value = true
-  
+
   try {
     await categoryStore.deleteCategory(props.category.id)
     emit('deleted', props.category.id)

@@ -11,9 +11,9 @@
       type="text"
       name="name"
       label="Category Group Name"
-      :validation-visibility="props.mode === 'edit' ? 'live' : 'blur'"
-      :validation-rules="{ 
-        uniqueCategoryGroupName: uniqueCategoryGroupNameRule 
+      :validation-visibility="props.mode === 'edit' ? 'live' : 'dirty'"
+      :validation-rules="{
+        uniqueCategoryGroupName: uniqueCategoryGroupNameRule
       }"
       :validation-messages="{
         uniqueCategoryGroupName: 'Category group already exists with this name'
@@ -27,7 +27,7 @@
         message: 'text-red-500 dark:text-red-400 text-sm mt-1'
       }"
     />
-    
+
     <div class="flex justify-end gap-3 mt-6">
       <button
         type="button"
@@ -78,16 +78,16 @@ const emit = defineEmits<{
 const uniqueCategoryGroupNameRule = (node: FormKitNode): boolean => {
   const value = node.value as string
   if (!value) return true
-  
+
   // If we're in edit mode and the name hasn't changed, it's valid
   if (props.mode === 'edit' && value === props.initialValues?.name) {
     return true
   }
-  
+
   // Get the budget ID from props or from the current budget
   const budgetId = props.budgetId || budgetStore.currentBudget?.id
   if (!budgetId) return true
-  
+
   // Check against the store, case-insensitive
   return !categoryStore.categoryGroupExistsByName(value, budgetId)
 }
@@ -95,17 +95,17 @@ const uniqueCategoryGroupNameRule = (node: FormKitNode): boolean => {
 const handleSubmit = (formData: { name: string }) => {
   // Get the budget ID from props or from the current budget
   const budgetId = props.budgetId || budgetStore.currentBudget?.id
-  
+
   if (!budgetId) {
     console.error('No budget ID available')
     return
   }
-  
+
   const data: CreateCategoryGroupDto = {
     name: formData.name,
     budget_id: budgetId
   }
-  
+
   emit('submit', data)
 }
 </script>

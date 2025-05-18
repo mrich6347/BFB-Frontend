@@ -97,9 +97,66 @@ export const useCategoryStore = defineStore('categoryStore', {
     },
 
     async createCategoryGroup(request: CreateCategoryGroupDto) {
-      const response = await CategoryGroupService.createCategoryGroup(request);
-      this.categoryGroups.push(response);
-      return response;
+      // Create a temporary ID for optimistic updates
+      const tempId = 'temp-' + Date.now();
+
+      // Create a temporary response for optimistic UI update
+      const tempResponse: CategoryGroupResponse = {
+        id: tempId,
+        name: request.name,
+        budget_id: request.budget_id,
+        display_order: 0,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+
+      // Store original groups in case we need to revert
+      const originalGroups = [...this.categoryGroups];
+
+      try {
+        // Optimistically update the UI
+        // Update display_order for existing groups locally
+        this.categoryGroups.forEach(group => {
+          if (group.budget_id === request.budget_id) {
+            group.display_order += 1;
+          }
+        });
+
+        // Add the temporary group to the array
+        this.categoryGroups.push(tempResponse);
+
+        // Set display_order to 0 to place it at the top
+        const createRequest = {
+          ...request,
+          display_order: 0
+        };
+
+        // Make the actual API call in the background
+        const response = await CategoryGroupService.createCategoryGroup(createRequest);
+
+        // Replace the temporary group with the real one
+        const tempIndex = this.categoryGroups.findIndex(group => group.id === tempId);
+        if (tempIndex !== -1) {
+          this.categoryGroups[tempIndex] = response;
+        }
+
+        // After successful creation, reorder all groups on the server to match our optimistic update
+        const groupIds = this.categoryGroups
+          .filter(group => group.budget_id === response.budget_id)
+          .sort((a, b) => a.display_order - b.display_order)
+          .map(group => group.id);
+
+        // Fire and forget - don't await this call
+        CategoryGroupService.reorderCategoryGroups({ group_ids: groupIds })
+          .catch(error => console.error('Failed to reorder category groups after creation:', error));
+
+        return response;
+      } catch (error) {
+        // If the API call fails, revert to the original state
+        console.error('Failed to create category group:', error);
+        this.categoryGroups = originalGroups;
+        throw error;
+      }
     },
 
     async updateCategoryGroup(id: string, request: UpdateCategoryGroupDto) {
@@ -121,26 +178,70 @@ export const useCategoryStore = defineStore('categoryStore', {
     },
 
     async createCategory(request: CreateCategoryDto) {
-      // Set display_order to 0 to place it at the top
-      const createRequest = {
-        ...request,
-        display_order: 0
+      // Create a temporary ID for optimistic updates
+      const tempId = 'temp-' + Date.now();
+
+      // Create a temporary response for optimistic UI update
+      const tempResponse: CategoryResponse = {
+        id: tempId,
+        name: request.name,
+        category_group_id: request.category_group_id,
+        budget_id: request.budget_id,
+        display_order: 0,
+        assigned: 0,
+        activity: 0,
+        available: 0,
+        created_at: new Date(),
+        updated_at: new Date()
       };
 
-      const response = await CategoryService.createCategory(createRequest);
+      // Store original categories in case we need to revert
+      const originalCategories = [...this.categories];
 
-      // Update display_order for existing categories in the group locally
-      // Increment display_order for all other categories in the same group
-      this.categories.forEach(category => {
-        if (category.category_group_id === response.category_group_id) {
-          category.display_order += 1;
+      try {
+        // Optimistically update the UI
+        // Update display_order for existing categories in the group locally
+        this.categories.forEach(category => {
+          if (category.category_group_id === request.category_group_id) {
+            category.display_order += 1;
+          }
+        });
+
+        // Add the temporary category to the array
+        this.categories.push(tempResponse);
+
+        // Set display_order to 0 to place it at the top
+        const createRequest = {
+          ...request,
+          display_order: 0
+        };
+
+        // Make the actual API call in the background
+        const response = await CategoryService.createCategory(createRequest);
+
+        // Replace the temporary category with the real one
+        const tempIndex = this.categories.findIndex(category => category.id === tempId);
+        if (tempIndex !== -1) {
+          this.categories[tempIndex] = response;
         }
-      });
 
-      // Add the new category to the array
-      this.categories.push(response);
+        // After successful creation, reorder all categories in this group on the server to match our optimistic update
+        const categoryIds = this.categories
+          .filter(category => category.category_group_id === response.category_group_id)
+          .sort((a, b) => a.display_order - b.display_order)
+          .map(category => category.id);
 
-      return response;
+        // Fire and forget - don't await this call
+        CategoryService.reorderCategories({ category_ids: categoryIds })
+          .catch(error => console.error('Failed to reorder categories after creation:', error));
+
+        return response;
+      } catch (error) {
+        // If the API call fails, revert to the original state
+        console.error('Failed to create category:', error);
+        this.categories = originalCategories;
+        throw error;
+      }
     },
 
     async updateCategory(id: string, request: UpdateCategoryDto) {

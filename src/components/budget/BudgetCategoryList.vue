@@ -164,6 +164,7 @@ import type { CategoryResponse } from '@/types/DTO/category.dto'
 import CategoryGroupModal from './CategoryGroupModal.vue'
 import CategoryModal from './CategoryModal.vue'
 import draggable from 'vuedraggable'
+import { saveExpandedGroups, loadExpandedGroups } from '@/utils/expandedGroupsStorage'
 
 const categoryStore = useCategoryStore()
 const budgetStore = useBudgetStore()
@@ -222,10 +223,58 @@ watch(() => sortedCategoryGroups.value, (newGroups) => {
   })
 }, { immediate: true })
 
-// Add all group IDs to expandedGroups initially and initialize category lists
+// Watch for changes in the current budget ID to load the appropriate expanded groups
+watch(() => budgetStore.currentBudget?.id, (newBudgetId) => {
+  if (newBudgetId) {
+    // Load expanded groups from local storage for the new budget
+    const savedExpandedGroups = loadExpandedGroups(newBudgetId)
+
+    // Clear the current set
+    expandedGroups.value.clear()
+
+    // If we have saved expanded groups, use them
+    if (savedExpandedGroups.length > 0) {
+      savedExpandedGroups.forEach(groupId => {
+        // Only add if the group exists in the current budget
+        if (sortedCategoryGroups.value.some(group => group.id === groupId)) {
+          expandedGroups.value.add(groupId)
+        }
+      })
+    } else {
+      // If no saved state, expand all groups by default
+      sortedCategoryGroups.value.forEach(group => expandedGroups.value.add(group.id))
+    }
+  }
+})
+
+// Initialize category lists and load expanded groups from local storage
 onMounted(() => {
-  sortedCategoryGroups.value.forEach(group => expandedGroups.value.add(group.id))
   initializeCategoryLists()
+
+  // Get the current budget ID
+  const budgetId = budgetStore.currentBudget?.id
+  if (budgetId) {
+    // Load expanded groups from local storage
+    const savedExpandedGroups = loadExpandedGroups(budgetId)
+
+    // If we have saved expanded groups, use them
+    if (savedExpandedGroups.length > 0) {
+      // Clear the current set and add the saved groups
+      expandedGroups.value.clear()
+      savedExpandedGroups.forEach(groupId => {
+        // Only add if the group still exists
+        if (sortedCategoryGroups.value.some(group => group.id === groupId)) {
+          expandedGroups.value.add(groupId)
+        }
+      })
+    } else {
+      // If no saved state, expand all groups by default
+      sortedCategoryGroups.value.forEach(group => expandedGroups.value.add(group.id))
+    }
+  } else {
+    // If no budget ID, expand all groups by default
+    sortedCategoryGroups.value.forEach(group => expandedGroups.value.add(group.id))
+  }
 })
 
 const toggleGroup = (groupId: string) => {
@@ -233,6 +282,12 @@ const toggleGroup = (groupId: string) => {
     expandedGroups.value.delete(groupId)
   } else {
     expandedGroups.value.add(groupId)
+  }
+
+  // Save the updated expanded groups to local storage
+  const budgetId = budgetStore.currentBudget?.id
+  if (budgetId) {
+    saveExpandedGroups(budgetId, Array.from(expandedGroups.value))
   }
 }
 
@@ -362,6 +417,12 @@ const handleCategoryGroupCreated = (categoryGroup: CategoryGroupResponse) => {
   // Add the new group to expandedGroups
   expandedGroups.value.add(categoryGroup.id)
   showCategoryGroupModal.value = false
+
+  // Save the updated expanded groups to local storage
+  const budgetId = budgetStore.currentBudget?.id
+  if (budgetId) {
+    saveExpandedGroups(budgetId, Array.from(expandedGroups.value))
+  }
 }
 
 const handleCategoryGroupUpdated = (categoryGroup: CategoryGroupResponse) => {
@@ -372,12 +433,24 @@ const handleCategoryGroupDeleted = (categoryGroupId: string) => {
   // Remove the deleted group from expandedGroups
   expandedGroups.value.delete(categoryGroupId)
   showCategoryGroupModal.value = false
+
+  // Save the updated expanded groups to local storage
+  const budgetId = budgetStore.currentBudget?.id
+  if (budgetId) {
+    saveExpandedGroups(budgetId, Array.from(expandedGroups.value))
+  }
 }
 
 const handleCategoryCreated = (category: CategoryResponse) => {
   // Ensure the category group is expanded
   expandedGroups.value.add(category.category_group_id)
   showCategoryModal.value = false
+
+  // Save the updated expanded groups to local storage
+  const budgetId = budgetStore.currentBudget?.id
+  if (budgetId) {
+    saveExpandedGroups(budgetId, Array.from(expandedGroups.value))
+  }
 
   // Update the category lists
   initializeCategoryLists()

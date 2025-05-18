@@ -11,9 +11,9 @@
       type="text"
       name="name"
       label="Category Name"
-      :validation-visibility="props.mode === 'edit' ? 'live' : 'blur'"
-      :validation-rules="{ 
-        uniqueCategoryName: uniqueCategoryNameRule 
+      :validation-visibility="props.mode === 'edit' ? 'live' : 'dirty'"
+      :validation-rules="{
+        uniqueCategoryName: uniqueCategoryNameRule
       }"
       :validation-messages="{
         uniqueCategoryName: 'Category already exists with this name in this group'
@@ -27,23 +27,7 @@
         message: 'text-red-500 dark:text-red-400 text-sm mt-1'
       }"
     />
-    
-    <FormKit
-      v-if="mode === 'edit'"
-      type="number"
-      name="assigned"
-      label="Assigned Amount"
-      step="0.01"
-      validation="number"
-      placeholder="0.00"
-      :classes="{
-        input: 'w-full px-3 py-2 border rounded-md bg-background dark:bg-background border-input dark:border-input',
-        label: 'text-sm font-medium text-foreground dark:text-foreground',
-        outer: 'space-y-2 mb-4',
-        message: 'text-red-500 dark:text-red-400 text-sm mt-1'
-      }"
-    />
-    
+
     <div class="flex justify-end gap-3 mt-6">
       <button
         type="button"
@@ -94,12 +78,12 @@ const emit = defineEmits<{
 const uniqueCategoryNameRule = (node: FormKitNode): boolean => {
   const value = node.value as string
   if (!value) return true
-  
+
   // If we're in edit mode and the name hasn't changed, it's valid
   if (props.mode === 'edit' && value === props.initialValues?.name) {
     return true
   }
-  
+
   // Check against the store, case-insensitive
   return !categoryStore.categoryExistsByName(value, props.categoryGroupId)
 }
@@ -111,17 +95,13 @@ const handleSubmit = (formData: { name: string, assigned?: number }) => {
       category_group_id: props.categoryGroupId,
       budget_id: props.budgetId
     }
-    
+
     emit('submit', data)
   } else {
     const data: UpdateCategoryDto = {
       name: formData.name
     }
-    
-    if (formData.assigned !== undefined) {
-      data.assigned = formData.assigned
-    }
-    
+
     emit('submit', data)
   }
 }
