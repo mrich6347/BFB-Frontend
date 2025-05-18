@@ -6,8 +6,8 @@
     <!-- Header with Theme Toggle -->
     <div class="p-4 flex items-center justify-between border-b border-border dark:border-border">
       <ThemeToggle size="sm" :class="['text-muted-foreground', isCollapsed ? 'mx-auto' : '']" />
-      <h1 
-        v-if="!isCollapsed" 
+      <h1
+        v-if="!isCollapsed"
         class="ml-2.5 text-lg font-semibold text-foreground transition-opacity duration-300 ease-in-out text-ellipsis overflow-hidden w-full text-nowrap"
         :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
       >
@@ -19,8 +19,8 @@
     <nav class="flex-1 overflow-y-auto">
       <!-- Main Navigation -->
       <div class="p-3">
-        <router-link 
-          v-for="item in mainNavItems" 
+        <router-link
+          v-for="item in mainNavItems"
           :key="item.name"
           :to="item.to"
           :class="[
@@ -30,8 +30,8 @@
           :title="isCollapsed ? item.name : ''"
         >
           <component :is="item.icon" class="w-5 h-5 transition-all duration-300" :class="{ 'mr-3': !isCollapsed }" />
-          <span 
-            v-show="!isCollapsed" 
+          <span
+            v-show="!isCollapsed"
             class="transition-opacity duration-300 ease-in-out whitespace-nowrap"
             :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
           >
@@ -41,22 +41,22 @@
       </div>
 
       <!-- Account Sections -->
-      <div 
-        v-show="!isCollapsed" 
+      <div
+        v-show="!isCollapsed"
         class="px-3 transition-opacity duration-300 ease-in-out"
         :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
       >
         <template v-for="section in accountSections" :key="section.title">
-          <button 
+          <button
             @click="toggleSection(section.title as SectionTitle)"
             class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground cursor-pointer rounded-lg"
           >
             <div class="flex items-center">
-              <ChevronDownIcon 
+              <ChevronDownIcon
                 v-if="expandedSections[section.title as SectionTitle]"
                 class="w-4 h-4 mr-1 transition-transform"
               />
-              <ChevronRightIcon 
+              <ChevronRightIcon
                 v-else
                 class="w-4 h-4 mr-1 transition-transform"
               />
@@ -82,12 +82,12 @@
       </div>
 
       <!-- Add Account Button -->
-      <div 
-        v-show="!isCollapsed" 
+      <div
+        v-show="!isCollapsed"
         class="p-4 transition-opacity duration-300 ease-in-out"
         :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
       >
-        <button 
+        <button
           class="w-full cursor-pointer flex items-center justify-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
           @click="isCreateAccountModalOpen = true"
         >
@@ -100,12 +100,12 @@
     <!-- Settings and Collapse Section -->
     <div class="border-t border-border dark:border-border relative">
       <div v-if="isSettingsExpanded" class="absolute bottom-full right-0 w-full p-4 bg-secondary dark:bg-secondary border border-border dark:border-border rounded-t-lg shadow-lg">
-        <button @click="router.push('/dashboard')" 
+        <button @click="router.push('/dashboard')"
           class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground bg-background dark:bg-background rounded-lg border border-border dark:border-border mb-2"
         >
           View Budgets
         </button>
-        <button @click="authService.logout()" 
+        <button @click="authService.logout()"
             class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground bg-background dark:bg-background rounded-lg border border-border dark:border-border"
         >
           <LogOutIcon class="w-5 h-5 mr-2" />
@@ -113,7 +113,7 @@
         </button>
       </div>
       <div class="flex items-center justify-between p-4">
-        <button 
+        <button
           v-show="!isCollapsed"
           @click="toggleSettings"
           class="text-muted-foreground  p-2 rounded-lg transition-opacity duration-300 ease-in-out"
@@ -122,7 +122,7 @@
         >
           <SettingsIcon class="w-5 h-5 cursor-pointer" />
         </button>
-        <button 
+        <button
           @click="toggleCollapse"
           class="text-muted-foreground  p-2 rounded-lg transition-transform duration-300 ease-in-out"
           :class="{ 'ml-auto': !isCollapsed }"
@@ -135,7 +135,7 @@
     </div>
   </aside>
 
-  <CreateAccountModal 
+  <CreateAccountModal
     :is-open="isCreateAccountModalOpen"
     @close="isCreateAccountModalOpen = false"
     :budgetId="props.budgetId"
@@ -145,7 +145,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import ThemeToggle from './common/ThemeToggle.vue'
-import { 
+import {
   BarChart2Icon,
   PieChartIcon,
   PlusIcon,

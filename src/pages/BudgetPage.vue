@@ -26,18 +26,20 @@ import { useBudgetStore } from '@/stores/budget.store'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { MainDataService } from '@/services/common/mainData.service'
 import { useAccountStore } from '@/stores/account.store'
+import { useCategoryStore } from '@/stores/category.store'
 import BudgetCategoryList from '@/components/budget/BudgetCategoryList.vue'
 
 const route = useRoute()
 const router = useRouter()
 const budgetStore = useBudgetStore()
 const accountStore = useAccountStore()
+const categoryStore = useCategoryStore()
 const budgetId = route.params.budgetId as string
 
 onMounted(async () => {
   budgetStore.setIsLoading(true)
 
-  try { 
+  try {
     const mainData = await MainDataService.getMainData(route.params.budgetId as string)
     if (mainData?.budget) {
       budgetStore.setCurrentBudget(mainData.budget)
@@ -45,10 +47,20 @@ onMounted(async () => {
     if (mainData?.accounts?.length) {
       accountStore.setAccounts(mainData.accounts)
     }
+    if (mainData?.categoryGroups) {
+      categoryStore.setCategoryGroups(mainData.categoryGroups)
+    }
+    if (mainData?.categories) {
+      categoryStore.setCategories(mainData.categories)
+    }
+
+    // Set loading to false for both stores
     budgetStore.setIsLoading(false)
+    categoryStore.setIsLoading(false)
   } catch (error) {
     console.error("Error fetching main data:", error)
     budgetStore.reset()
+    categoryStore.reset()
     await router.push('/dashboard')
   }
 })
