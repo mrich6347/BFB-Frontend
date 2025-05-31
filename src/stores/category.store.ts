@@ -326,6 +326,35 @@ export const useCategoryStore = defineStore('categoryStore', {
       }
     },
 
+    async moveMoney(sourceCategoryId: string, destinationCategoryId: string, amount: number, year: number, month: number) {
+      // Find the categories
+      const sourceIndex = this.categories.findIndex(category => category.id === sourceCategoryId);
+      const destinationIndex = this.categories.findIndex(category => category.id === destinationCategoryId);
+
+      if (sourceIndex === -1 || destinationIndex === -1) {
+        throw new Error('Source or destination category not found');
+      }
+
+      // Store original values for rollback
+      const originalSourceAvailable = this.categories[sourceIndex].available;
+      const originalDestinationAvailable = this.categories[destinationIndex].available;
+
+      // Optimistically update the UI
+      this.categories[sourceIndex].available -= amount;
+      this.categories[destinationIndex].available += amount;
+
+      try {
+        // Send update to backend
+        await CategoryService.moveMoney(sourceCategoryId, destinationCategoryId, amount, year, month);
+      } catch (error) {
+        // If the backend update fails, revert to the original values
+        console.error('Failed to move money:', error);
+        this.categories[sourceIndex].available = originalSourceAvailable;
+        this.categories[destinationIndex].available = originalDestinationAvailable;
+        throw error;
+      }
+    },
+
     setCategoryGroups(categoryGroups: CategoryGroupResponse[]) {
       this.categoryGroups = categoryGroups;
     },

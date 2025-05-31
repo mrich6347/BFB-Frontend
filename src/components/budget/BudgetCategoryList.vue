@@ -112,7 +112,11 @@
                     </div>
                     <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
                     <div class="text-right">
-                      <Badge :variant="getBadgeVariant(category.available)" class="cursor-pointer">
+                      <Badge
+                        :variant="getBadgeVariant(category.available)"
+                        class="cursor-pointer"
+                        @click="handleAvailableClick(category, $event)"
+                      >
                         {{ formatCurrency(category.available) }}
                       </Badge>
                     </div>
@@ -151,6 +155,15 @@
     @updated="handleCategoryUpdated"
     @deleted="handleCategoryDeleted"
   />
+
+  <MoveMoneyModal
+    :is-open="showMoveMoneyModal"
+    :source-category="selectedSourceCategory"
+    :available-categories="availableDestinationCategories"
+    :position="moveMoneyModalPosition"
+    @close="showMoveMoneyModal = false"
+    @move="handleMoveMoney"
+  />
 </template>
 
 <script setup lang="ts">
@@ -164,6 +177,7 @@ import type { CategoryGroupResponse } from '@/types/DTO/category-group.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 import CategoryGroupModal from './CategoryGroupModal.vue'
 import CategoryModal from './CategoryModal.vue'
+import MoveMoneyModal from './MoveMoneyModal.vue'
 import CalculationInput from './CalculationInput.vue'
 import draggable from 'vuedraggable'
 import { saveExpandedGroups, loadExpandedGroups } from '@/utils/expandedGroupsStorage'
@@ -379,10 +393,13 @@ const getBadgeVariant = (amount: number | undefined | null): 'positive' | 'negat
 // Modal states
 const showCategoryGroupModal = ref(false)
 const showCategoryModal = ref(false)
+const showMoveMoneyModal = ref(false)
 const selectedCategoryGroup = ref<CategoryGroupResponse | undefined>(undefined)
 const selectedCategory = ref<CategoryResponse | undefined>(undefined)
+const selectedSourceCategory = ref<CategoryResponse | null>(null)
 const modalMode = ref<'create' | 'edit'>('create')
 const selectedGroupId = ref<string>('')
+const moveMoneyModalPosition = ref({ x: 0, y: 0 })
 
 // Open modals
 const openCreateCategoryGroupModal = () => {
@@ -488,6 +505,48 @@ const updateCategoryAssigned = async (categoryId: string, assignedValue: number)
     )
   } catch (error) {
     console.error('Failed to update category assigned value:', error)
+  }
+}
+
+// Move money functionality
+const availableDestinationCategories = computed(() => {
+  if (!selectedSourceCategory.value) return []
+
+  return categoryStore.categories.filter(category =>
+    category.id !== selectedSourceCategory.value?.id
+  )
+})
+
+const handleAvailableClick = (category: CategoryResponse, event: MouseEvent) => {
+  // Only allow clicking on positive available amounts
+  if (!category.available || category.available <= 0) return
+
+  selectedSourceCategory.value = category
+
+  // Get the position of the clicked element for modal positioning
+  const rect = (event.target as HTMLElement).getBoundingClientRect()
+  moveMoneyModalPosition.value = {
+    x: rect.left + rect.width / 2,
+    y: rect.bottom + 8
+  }
+
+  showMoveMoneyModal.value = true
+}
+
+const handleMoveMoney = async (destinationCategoryId: string, amount: number) => {
+  if (!selectedSourceCategory.value) return
+
+  try {
+    await categoryStore.moveMoney(
+      selectedSourceCategory.value.id,
+      destinationCategoryId,
+      amount,
+      budgetStore.currentYear,
+      budgetStore.currentMonth
+    )
+    showMoveMoneyModal.value = false
+  } catch (error) {
+    console.error('Failed to move money:', error)
   }
 }
 

@@ -39,4 +39,14 @@ export default class CategoryService {
     const response = await api.patch(`/categories/${categoryId}?year=${year}&month=${month}`, balanceData);
     return response.data;
   }
+
+  static async moveMoney(sourceCategoryId: string, destinationCategoryId: string, amount: number, year: number, month: number): Promise<void> {
+    await api.post('/categories/move-money', {
+      sourceCategoryId,
+      destinationCategoryId,
+      amount,
+      year,
+      month
+    });
+  }
 }
