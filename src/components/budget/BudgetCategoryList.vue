@@ -164,6 +164,15 @@
     @close="showMoveMoneyModal = false"
     @move="handleMoveMoney"
   />
+
+  <PullMoneyModal
+    :is-open="showPullMoneyModal"
+    :destination-category="selectedDestinationCategory"
+    :available-categories="availableSourceCategories"
+    :position="pullMoneyModalPosition"
+    @close="showPullMoneyModal = false"
+    @pull="handlePullMoney"
+  />
 </template>
 
 <script setup lang="ts">
@@ -178,6 +187,7 @@ import type { CategoryResponse } from '@/types/DTO/category.dto'
 import CategoryGroupModal from './CategoryGroupModal.vue'
 import CategoryModal from './CategoryModal.vue'
 import MoveMoneyModal from './MoveMoneyModal.vue'
+import PullMoneyModal from './PullMoneyModal.vue'
 import CalculationInput from './CalculationInput.vue'
 import draggable from 'vuedraggable'
 import { saveExpandedGroups, loadExpandedGroups } from '@/utils/expandedGroupsStorage'
@@ -394,12 +404,15 @@ const getBadgeVariant = (amount: number | undefined | null): 'positive' | 'negat
 const showCategoryGroupModal = ref(false)
 const showCategoryModal = ref(false)
 const showMoveMoneyModal = ref(false)
+const showPullMoneyModal = ref(false)
 const selectedCategoryGroup = ref<CategoryGroupResponse | undefined>(undefined)
 const selectedCategory = ref<CategoryResponse | undefined>(undefined)
 const selectedSourceCategory = ref<CategoryResponse | null>(null)
+const selectedDestinationCategory = ref<CategoryResponse | null>(null)
 const modalMode = ref<'create' | 'edit'>('create')
 const selectedGroupId = ref<string>('')
 const moveMoneyModalPosition = ref({ x: 0, y: 0 })
+const pullMoneyModalPosition = ref({ x: 0, y: 0 })
 
 // Open modals
 const openCreateCategoryGroupModal = () => {
@@ -517,20 +530,47 @@ const availableDestinationCategories = computed(() => {
   )
 })
 
+// Pull money functionality
+const availableSourceCategories = computed(() => {
+  if (!selectedDestinationCategory.value) return []
+
+  return categoryStore.categories.filter(category =>
+    category.id !== selectedDestinationCategory.value?.id &&
+    category.available &&
+    category.available > 0
+  )
+})
+
 const handleAvailableClick = (category: CategoryResponse, event: MouseEvent) => {
-  // Only allow clicking on positive available amounts
-  if (!category.available || category.available <= 0) return
+  // Handle positive balances - move money out
+  if (category.available && category.available > 0) {
+    selectedSourceCategory.value = category
 
-  selectedSourceCategory.value = category
+    // Get the position of the clicked element for modal positioning
+    const rect = (event.target as HTMLElement).getBoundingClientRect()
+    moveMoneyModalPosition.value = {
+      x: rect.left + rect.width / 2,
+      y: rect.bottom + 8
+    }
 
-  // Get the position of the clicked element for modal positioning
-  const rect = (event.target as HTMLElement).getBoundingClientRect()
-  moveMoneyModalPosition.value = {
-    x: rect.left + rect.width / 2,
-    y: rect.bottom + 8
+    showMoveMoneyModal.value = true
+    return
   }
 
-  showMoveMoneyModal.value = true
+  // Handle negative balances - pull money in
+  if (category.available && category.available < 0) {
+    selectedDestinationCategory.value = category
+
+    // Get the position of the clicked element for modal positioning
+    const rect = (event.target as HTMLElement).getBoundingClientRect()
+    pullMoneyModalPosition.value = {
+      x: rect.left + rect.width / 2,
+      y: rect.bottom + 8
+    }
+
+    showPullMoneyModal.value = true
+    return
+  }
 }
 
 const handleMoveMoney = async (destinationCategoryId: string, amount: number) => {
@@ -547,6 +587,23 @@ const handleMoveMoney = async (destinationCategoryId: string, amount: number) =>
     showMoveMoneyModal.value = false
   } catch (error) {
     console.error('Failed to move money:', error)
+  }
+}
+
+const handlePullMoney = async (sourceCategoryId: string, amount: number) => {
+  if (!selectedDestinationCategory.value) return
+
+  try {
+    await categoryStore.moveMoney(
+      sourceCategoryId,
+      selectedDestinationCategory.value.id,
+      amount,
+      budgetStore.currentYear,
+      budgetStore.currentMonth
+    )
+    showPullMoneyModal.value = false
+  } catch (error) {
+    console.error('Failed to pull money:', error)
   }
 }
 
