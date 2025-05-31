@@ -361,7 +361,12 @@ const onChange = async (event: any, groupId: string) => {
   }
 }
 
-const getBadgeVariant = (amount: number): 'positive' | 'negative' | 'neutral' => {
+const getBadgeVariant = (amount: number | undefined | null): 'positive' | 'negative' | 'neutral' => {
+  // Handle null, undefined, or NaN values
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    amount = 0
+  }
+
   if (amount < 0) return 'negative'
   if (amount === 0) return 'neutral'
   return 'positive'

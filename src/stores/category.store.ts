@@ -34,24 +34,24 @@ export const useCategoryStore = defineStore('categoryStore', {
     },
 
     getTotalAssigned: (state) => {
-      return state.categories.reduce((sum, category) => sum + category.assigned, 0);
+      return state.categories.reduce((sum, category) => sum + (category.assigned || 0), 0);
     },
 
     getTotalActivity: (state) => {
-      return state.categories.reduce((sum, category) => sum + category.activity, 0);
+      return state.categories.reduce((sum, category) => sum + (category.activity || 0), 0);
     },
 
     getTotalAvailable: (state) => {
-      return state.categories.reduce((sum, category) => sum + category.available, 0);
+      return state.categories.reduce((sum, category) => sum + (category.available || 0), 0);
     },
 
     getGroupTotals: (state) => (groupId: string) => {
       const groupCategories = state.categories.filter(category => category.category_group_id === groupId);
 
       return {
-        assigned: groupCategories.reduce((sum, category) => sum + category.assigned, 0),
-        activity: groupCategories.reduce((sum, category) => sum + category.activity, 0),
-        available: groupCategories.reduce((sum, category) => sum + category.available, 0)
+        assigned: groupCategories.reduce((sum, category) => sum + (category.assigned || 0), 0),
+        activity: groupCategories.reduce((sum, category) => sum + (category.activity || 0), 0),
+        available: groupCategories.reduce((sum, category) => sum + (category.available || 0), 0)
       };
     },
 

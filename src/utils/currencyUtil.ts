@@ -52,7 +52,12 @@ export const getCurrencySymbol = (code: string): string => {
 };
 
 // Helper function to format amount with currency symbol
-export const formatCurrency = (amount: number): string => {
+export const formatCurrency = (amount: number | undefined | null): string => {
+  // Handle null, undefined, or NaN values
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    amount = 0;
+  }
+
   try {
     const budgetStore = useBudgetStore();
     const budget = budgetStore?.currentBudget;
@@ -60,20 +65,22 @@ export const formatCurrency = (amount: number): string => {
     const currencyPlacement = budget?.currency_placement || CurrencyPlacement.BEFORE;
     const numberFormat = budget?.number_format || NumberFormat.DOT_COMMA;
     const currency = getCurrencyByCode(currencyCode);
-    
+
     const formattedAmount = formatNumberByFormat(amount, numberFormat);
-    
+
     if (!currency) {
-      return currencyPlacement === CurrencyPlacement.BEFORE 
-        ? `${currencyCode} ${formattedAmount}` 
+      return currencyPlacement === CurrencyPlacement.BEFORE
+        ? `${currencyCode} ${formattedAmount}`
         : `${formattedAmount} ${currencyCode}`;
     }
-    
-    return currencyPlacement === CurrencyPlacement.BEFORE 
-      ? `${currency.symbol}${formattedAmount}` 
+
+    return currencyPlacement === CurrencyPlacement.BEFORE
+      ? `${currency.symbol}${formattedAmount}`
       : `${formattedAmount}${currency.symbol}`;
-  } catch {
+  } catch (error) {
     // Fallback to basic formatting if store is not available
-    return `$${amount.toFixed(2).toLocaleString()}`;
+    // Ensure amount is a valid number for the fallback
+    const safeAmount = (amount === null || amount === undefined || isNaN(amount)) ? 0 : amount;
+    return `$${safeAmount.toFixed(2)}`;
   }
 };
