@@ -4,6 +4,7 @@
       ref="inputRef"
       v-model="displayValue"
       @focus="handleFocus"
+      @click="handleClick"
       @blur="handleBlur"
       @keydown="handleKeydown"
       @input="handleInput"
@@ -13,7 +14,7 @@
     />
     <div
       v-if="showCalculation && calculationResult !== null"
-      class="absolute top-full left-0 mt-1 px-2 py-1 bg-popover border border-border rounded text-xs text-muted-foreground z-10"
+      class="absolute top-full right-0 mt-1 px-2 py-1 bg-popover border border-border rounded text-xs text-muted-foreground z-10"
     >
       = {{ formatCurrency(calculationResult) }}
     </div>
@@ -76,7 +77,21 @@ const handleFocus = () => {
   displayValue.value = props.modelValue.toString()
 
   nextTick(() => {
-    inputRef.value?.select()
+    if (inputRef.value) {
+      // Set cursor at the end instead of selecting all text
+      const length = inputRef.value.value.length
+      inputRef.value.setSelectionRange(length, length)
+    }
+  })
+}
+
+const handleClick = () => {
+  // Always position cursor at the end when clicking
+  nextTick(() => {
+    if (inputRef.value) {
+      const length = inputRef.value.value.length
+      inputRef.value.setSelectionRange(length, length)
+    }
   })
 }
 
