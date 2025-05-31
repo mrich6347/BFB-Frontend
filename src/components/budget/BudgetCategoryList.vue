@@ -103,11 +103,12 @@
                         @click="openEditCategoryModal(category)"
                       />
                     </div>
-                    <div
-                      class="text-right text-xs text-muted-foreground cursor-pointer hover:text-primary"
-                      @click="openAssignModal(category)"
-                    >
-                      {{ formatCurrency(category.assigned) }}
+                    <div class="text-right text-xs">
+                      <CalculationInput
+                        :model-value="category.assigned"
+                        @update:model-value="(value) => updateCategoryAssigned(category.id, value)"
+                        class="text-muted-foreground hover:text-primary"
+                      />
                     </div>
                     <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
                     <div class="text-right">
@@ -163,6 +164,7 @@ import type { CategoryGroupResponse } from '@/types/DTO/category-group.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 import CategoryGroupModal from './CategoryGroupModal.vue'
 import CategoryModal from './CategoryModal.vue'
+import CalculationInput from './CalculationInput.vue'
 import draggable from 'vuedraggable'
 import { saveExpandedGroups, loadExpandedGroups } from '@/utils/expandedGroupsStorage'
 
@@ -377,7 +379,6 @@ const getBadgeVariant = (amount: number | undefined | null): 'positive' | 'negat
 // Modal states
 const showCategoryGroupModal = ref(false)
 const showCategoryModal = ref(false)
-const showAssignModal = ref(false)
 const selectedCategoryGroup = ref<CategoryGroupResponse | undefined>(undefined)
 const selectedCategory = ref<CategoryResponse | undefined>(undefined)
 const modalMode = ref<'create' | 'edit'>('create')
@@ -410,12 +411,7 @@ const openEditCategoryModal = (category: CategoryResponse) => {
   showCategoryModal.value = true
 }
 
-const openAssignModal = (category: CategoryResponse) => {
-  selectedCategory.value = category
-  modalMode.value = 'edit'
-  selectedGroupId.value = category.category_group_id
-  showCategoryModal.value = true
-}
+
 
 // Handle modal events
 const handleCategoryGroupCreated = (categoryGroup: CategoryGroupResponse) => {
@@ -480,6 +476,19 @@ const handleCategoryUpdated = (category: CategoryResponse) => {
 
 const handleCategoryDeleted = (categoryId: string) => {
   showCategoryModal.value = false
+}
+
+const updateCategoryAssigned = async (categoryId: string, assignedValue: number) => {
+  try {
+    await categoryStore.updateCategoryBalance(
+      categoryId,
+      assignedValue,
+      budgetStore.currentYear,
+      budgetStore.currentMonth
+    )
+  } catch (error) {
+    console.error('Failed to update category assigned value:', error)
+  }
 }
 
 </script>

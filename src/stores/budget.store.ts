@@ -8,12 +8,21 @@ export const useBudgetStore = defineStore('budgetStore', {
     state: () => ({
         budgets: [] as BudgetResponse[],
         currentBudget: null as BudgetResponse | null,
-        isLoading: true
+        isLoading: true,
+        currentYear: new Date().getFullYear(),
+        currentMonth: new Date().getMonth() + 1
     }),
 
     getters: {
         budgetExistsByName: (state) => (name: string) => {
             return state.budgets.find(b => b.name.toLowerCase() === name.toLowerCase())
+        },
+        currentMonthName: (state) => {
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ]
+            return `${monthNames[state.currentMonth - 1]} ${state.currentYear}`
         }
     },
 
@@ -52,6 +61,27 @@ export const useBudgetStore = defineStore('budgetStore', {
             this.budgets = []
             this.currentBudget = null
             this.isLoading = true
+        },
+        setCurrentMonth(year: number, month: number) {
+            this.currentYear = year
+            this.currentMonth = month
+        },
+        navigateMonth(direction: 'prev' | 'next') {
+            if (direction === 'next') {
+                if (this.currentMonth === 12) {
+                    this.currentMonth = 1
+                    this.currentYear += 1
+                } else {
+                    this.currentMonth += 1
+                }
+            } else {
+                if (this.currentMonth === 1) {
+                    this.currentMonth = 12
+                    this.currentYear -= 1
+                } else {
+                    this.currentMonth -= 1
+                }
+            }
         }
     },
 })

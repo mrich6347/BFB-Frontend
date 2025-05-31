@@ -3,15 +3,21 @@
     <div class="container mx-auto px-2 py-2 flex flex-col md:flex-row justify-between items-center">
       <!-- Month Navigation -->
       <div class="flex items-center space-x-1 md:w-1/4 justify-start">
-        <button class="p-1.5 rounded-full transition-colors">
+        <button
+          @click="budgetStore.navigateMonth('prev')"
+          class="p-1.5 rounded-full transition-colors hover:bg-accent"
+        >
           <ChevronLeft class="w-4 h-4 text-muted-foreground" />
         </button>
         <div class="flex flex-col items-start">
           <div class="flex items-center">
-            <h2 class="text-lg font-semibold text-foreground">{{ currentMonth }}</h2>
+            <h2 class="text-lg font-semibold text-foreground">{{ budgetStore.currentMonthName }}</h2>
           </div>
         </div>
-        <button class="p-1.5 rounded-full transition-colors">
+        <button
+          @click="budgetStore.navigateMonth('next')"
+          class="p-1.5 rounded-full transition-colors hover:bg-accent"
+        >
           <ChevronRight class="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
@@ -37,13 +43,13 @@
 
     <!-- Filter Tags -->
     <div class="container mx-auto px-2 pb-2 flex flex-wrap items-center gap-1.5">
-      <button 
-        v-for="filter in filters" 
+      <button
+        v-for="filter in filters"
         :key="filter.id"
         :class="[
           'px-2.5 py-0.5 text-sm rounded-md transition-colors cursor-pointer',
-          selectedFilter === filter.id 
-            ? 'bg-primary/15 text-primary' 
+          selectedFilter === filter.id
+            ? 'bg-primary/15 text-primary'
             : 'bg-secondary text-secondary-foreground'
         ]"
         @click="selectedFilter = filter.id"
@@ -55,9 +61,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-vue-next'
 import { formatCurrency } from '../../utils/currencyUtil'
+import { useBudgetStore } from '@/stores/budget.store'
+
+const budgetStore = useBudgetStore()
 
 // Mock data with a large dollar amount to test display
 const readyToAssign = ref(1754329.87)
@@ -69,9 +78,4 @@ const filters = [
   { id: 'moneyAvailable', name: 'Money Available' }
 ]
 
-// For now, use a static month value since we don't have a month property in the budget model
-const currentMonth = computed(() => {
-  return 'Apr 2025'
-})
-
-</script> 
+</script>

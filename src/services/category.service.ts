@@ -34,4 +34,9 @@ export default class CategoryService {
   static async reorderCategories(request: ReorderCategoriesDto): Promise<void> {
     await api.post('/categories/reorder', request);
   }
+
+  static async updateCategoryBalance(categoryId: string, balanceData: { assigned?: number; activity?: number; available?: number }, year: number, month: number): Promise<CategoryResponse> {
+    const response = await api.patch(`/categories/${categoryId}?year=${year}&month=${month}`, balanceData);
+    return response.data;
+  }
 }

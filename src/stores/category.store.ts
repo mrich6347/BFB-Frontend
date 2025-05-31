@@ -295,6 +295,37 @@ export const useCategoryStore = defineStore('categoryStore', {
       }
     },
 
+    async updateCategoryBalance(categoryId: string, assigned: number, year: number, month: number) {
+      // Optimistically update the UI first
+      const categoryIndex = this.categories.findIndex(category => category.id === categoryId);
+      const originalAssigned = categoryIndex !== -1 ? this.categories[categoryIndex].assigned : 0;
+      const originalAvailable = categoryIndex !== -1 ? this.categories[categoryIndex].available : 0;
+
+      if (categoryIndex !== -1) {
+        // Calculate the difference in assigned amount
+        const assignedDifference = assigned - originalAssigned;
+
+        // Update assigned amount
+        this.categories[categoryIndex].assigned = assigned;
+
+        // Update available by adding the difference (like YNAB)
+        this.categories[categoryIndex].available = originalAvailable + assignedDifference;
+      }
+
+      try {
+        // Send update to backend - only update assigned, let backend calculate available
+        await CategoryService.updateCategoryBalance(categoryId, { assigned }, year, month);
+      } catch (error) {
+        // If the backend update fails, revert to the original values
+        console.error('Failed to update category balance:', error);
+        if (categoryIndex !== -1) {
+          this.categories[categoryIndex].assigned = originalAssigned;
+          this.categories[categoryIndex].available = originalAvailable;
+        }
+        throw error;
+      }
+    },
+
     setCategoryGroups(categoryGroups: CategoryGroupResponse[]) {
       this.categoryGroups = categoryGroups;
     },
