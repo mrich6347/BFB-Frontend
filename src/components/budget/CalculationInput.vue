@@ -146,13 +146,23 @@ const evaluateExpression = (expression: string): number | null => {
       return simpleNumber
     }
 
-    // Handle expressions starting with operators (relative to current value)
-    if (cleaned.match(/^[+\-*/]/)) {
-      const fullExpression = `${props.modelValue}${cleaned}`
-      return evaluateBasicMath(fullExpression)
+    // Check if this is a relative operation (starts with +, -, *, / but is NOT a negative number)
+    // A relative operation should be like "+50", "-50", "*2", "/2"
+    // But NOT "-350-50" (which is a full expression with a negative number)
+    const relativeOperatorMatch = cleaned.match(/^([+\-*/])(.+)$/)
+    if (relativeOperatorMatch) {
+      const operator = relativeOperatorMatch[1]
+      const operand = relativeOperatorMatch[2].trim()
+
+      // Check if the operand is a simple number (no additional operators)
+      // This distinguishes "+50" (relative) from "-350-50" (full expression)
+      if (/^[0-9.]+$/.test(operand)) {
+        const fullExpression = `${props.modelValue}${operator}${operand}`
+        return evaluateBasicMath(fullExpression)
+      }
     }
 
-    // Handle full expressions
+    // Handle full expressions (including negative numbers with additional operations)
     return evaluateBasicMath(cleaned)
   } catch {
     return null
