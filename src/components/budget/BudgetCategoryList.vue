@@ -211,7 +211,7 @@ watch(() => sortedCategoryGroups.value, (newGroups) => {
 
 // Get categories for a specific group
 const getCategoriesForGroup = (groupId: string) => {
-  return categoryStore.getCategoriesByGroupId(groupId)
+  return categoryStore.getCategoriesByGroupWithBalances(groupId, budgetStore.currentYear, budgetStore.currentMonth)
 }
 
 // Get categories from the reactive categoryLists
@@ -224,7 +224,7 @@ const getReactiveCategoriesForGroup = (groupId: string) => {
 
 // Get totals for a specific group
 const getGroupTotals = (groupId: string) => {
-  return categoryStore.getGroupTotals(groupId)
+  return categoryStore.getGroupTotalsWithBalances(groupId, budgetStore.currentYear, budgetStore.currentMonth)
 }
 
 // Initialize category lists for each group
@@ -236,7 +236,17 @@ const initializeCategoryLists = () => {
 }
 
 // Watch for changes in categories and update the categoryLists
-watch(() => categoryStore.categories, () => {
+watch(() => categoryStore.getCategoriesWithBalances(budgetStore.currentYear, budgetStore.currentMonth), () => {
+  initializeCategoryLists()
+}, { deep: true })
+
+// Watch for changes in budget month and update the categoryLists
+watch(() => [budgetStore.currentYear, budgetStore.currentMonth], () => {
+  initializeCategoryLists()
+}, { deep: true })
+
+// Watch for changes in budget month and update the categoryLists
+watch(() => [budgetStore.currentYear, budgetStore.currentMonth], () => {
   initializeCategoryLists()
 }, { deep: true })
 
@@ -525,7 +535,7 @@ const updateCategoryAssigned = async (categoryId: string, assignedValue: number)
 const availableDestinationCategories = computed(() => {
   if (!selectedSourceCategory.value) return []
 
-  return categoryStore.categories.filter(category =>
+  return categoryStore.getCategoriesWithBalances(budgetStore.currentYear, budgetStore.currentMonth).filter(category =>
     category.id !== selectedSourceCategory.value?.id
   )
 })
@@ -534,7 +544,7 @@ const availableDestinationCategories = computed(() => {
 const availableSourceCategories = computed(() => {
   if (!selectedDestinationCategory.value) return []
 
-  return categoryStore.categories.filter(category =>
+  return categoryStore.getCategoriesWithBalances(budgetStore.currentYear, budgetStore.currentMonth).filter(category =>
     category.id !== selectedDestinationCategory.value?.id &&
     category.available &&
     category.available > 0

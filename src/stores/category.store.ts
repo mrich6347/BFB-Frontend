@@ -3,11 +3,13 @@ import CategoryGroupService from '@/services/category-group.service';
 import CategoryService from '@/services/category.service';
 import type { CategoryGroupResponse, CreateCategoryGroupDto, UpdateCategoryGroupDto } from '@/types/DTO/category-group.dto';
 import type { CategoryResponse, CreateCategoryDto, UpdateCategoryDto } from '@/types/DTO/category.dto';
+import type { CategoryBalanceResponse } from '@/types/DTO/category-balance.dto';
 
 export const useCategoryStore = defineStore('categoryStore', {
   state: () => ({
     categoryGroups: [] as CategoryGroupResponse[],
     categories: [] as CategoryResponse[],
+    categoryBalances: [] as CategoryBalanceResponse[],
     isLoading: true
   }),
 
@@ -296,20 +298,46 @@ export const useCategoryStore = defineStore('categoryStore', {
     },
 
     async updateCategoryBalance(categoryId: string, assigned: number, year: number, month: number) {
-      // Optimistically update the UI first
-      const categoryIndex = this.categories.findIndex(category => category.id === categoryId);
-      const originalAssigned = categoryIndex !== -1 ? this.categories[categoryIndex].assigned : 0;
-      const originalAvailable = categoryIndex !== -1 ? this.categories[categoryIndex].available : 0;
+      // Find existing balance or create a new one
+      let balanceIndex = this.categoryBalances.findIndex(b =>
+        b.category_id === categoryId && b.year === year && b.month === month
+      );
 
-      if (categoryIndex !== -1) {
+      let originalBalance: CategoryBalanceResponse | null = null;
+
+      if (balanceIndex !== -1) {
+        // Store original for rollback
+        originalBalance = { ...this.categoryBalances[balanceIndex] };
+
         // Calculate the difference in assigned amount
-        const assignedDifference = assigned - originalAssigned;
+        const assignedDifference = assigned - originalBalance.assigned;
 
         // Update assigned amount
-        this.categories[categoryIndex].assigned = assigned;
+        this.categoryBalances[balanceIndex].assigned = assigned;
 
         // Update available by adding the difference (like YNAB)
-        this.categories[categoryIndex].available = originalAvailable + assignedDifference;
+        this.categoryBalances[balanceIndex].available = originalBalance.available + assignedDifference;
+      } else {
+        // Create new balance record optimistically
+        const category = this.categories.find(c => c.id === categoryId);
+        if (category) {
+          const newBalance: CategoryBalanceResponse = {
+            id: 'temp-' + Date.now(),
+            category_id: categoryId,
+            budget_id: category.budget_id,
+            user_id: '', // Will be set by backend
+            year,
+            month,
+            assigned,
+            activity: 0,
+            available: assigned, // New balance, so available equals assigned
+            created_at: new Date(),
+            updated_at: new Date()
+          };
+
+          this.categoryBalances.push(newBalance);
+          balanceIndex = this.categoryBalances.length - 1;
+        }
       }
 
       try {
@@ -318,30 +346,68 @@ export const useCategoryStore = defineStore('categoryStore', {
       } catch (error) {
         // If the backend update fails, revert to the original values
         console.error('Failed to update category balance:', error);
-        if (categoryIndex !== -1) {
-          this.categories[categoryIndex].assigned = originalAssigned;
-          this.categories[categoryIndex].available = originalAvailable;
+
+        if (originalBalance) {
+          // Restore original balance
+          this.categoryBalances[balanceIndex] = originalBalance;
+        } else {
+          // Remove the newly created balance
+          this.categoryBalances.splice(balanceIndex, 1);
         }
+
         throw error;
       }
     },
 
     async moveMoney(sourceCategoryId: string, destinationCategoryId: string, amount: number, year: number, month: number) {
-      // Find the categories
-      const sourceIndex = this.categories.findIndex(category => category.id === sourceCategoryId);
-      const destinationIndex = this.categories.findIndex(category => category.id === destinationCategoryId);
+      // Find the balance records for the specified month
+      let sourceBalanceIndex = this.categoryBalances.findIndex(b =>
+        b.category_id === sourceCategoryId && b.year === year && b.month === month
+      );
+      let destinationBalanceIndex = this.categoryBalances.findIndex(b =>
+        b.category_id === destinationCategoryId && b.year === year && b.month === month
+      );
 
-      if (sourceIndex === -1 || destinationIndex === -1) {
-        throw new Error('Source or destination category not found');
+      if (sourceBalanceIndex === -1) {
+        throw new Error('Source category balance not found for the specified month');
       }
 
       // Store original values for rollback
-      const originalSourceAvailable = this.categories[sourceIndex].available;
-      const originalDestinationAvailable = this.categories[destinationIndex].available;
+      const originalSourceBalance = { ...this.categoryBalances[sourceBalanceIndex] };
+      let originalDestinationBalance: CategoryBalanceResponse | null = null;
+
+      if (destinationBalanceIndex !== -1) {
+        originalDestinationBalance = { ...this.categoryBalances[destinationBalanceIndex] };
+      }
 
       // Optimistically update the UI
-      this.categories[sourceIndex].available -= amount;
-      this.categories[destinationIndex].available += amount;
+      this.categoryBalances[sourceBalanceIndex].available -= amount;
+
+      if (destinationBalanceIndex !== -1) {
+        // Update existing destination balance
+        this.categoryBalances[destinationBalanceIndex].available += amount;
+      } else {
+        // Create new destination balance
+        const destinationCategory = this.categories.find(c => c.id === destinationCategoryId);
+        if (destinationCategory) {
+          const newBalance: CategoryBalanceResponse = {
+            id: 'temp-' + Date.now(),
+            category_id: destinationCategoryId,
+            budget_id: destinationCategory.budget_id,
+            user_id: '', // Will be set by backend
+            year,
+            month,
+            assigned: 0,
+            activity: 0,
+            available: amount,
+            created_at: new Date(),
+            updated_at: new Date()
+          };
+
+          this.categoryBalances.push(newBalance);
+          destinationBalanceIndex = this.categoryBalances.length - 1;
+        }
+      }
 
       try {
         // Send update to backend
@@ -349,8 +415,18 @@ export const useCategoryStore = defineStore('categoryStore', {
       } catch (error) {
         // If the backend update fails, revert to the original values
         console.error('Failed to move money:', error);
-        this.categories[sourceIndex].available = originalSourceAvailable;
-        this.categories[destinationIndex].available = originalDestinationAvailable;
+
+        // Restore source balance
+        this.categoryBalances[sourceBalanceIndex] = originalSourceBalance;
+
+        if (originalDestinationBalance) {
+          // Restore original destination balance
+          this.categoryBalances[destinationBalanceIndex] = originalDestinationBalance;
+        } else {
+          // Remove the newly created destination balance
+          this.categoryBalances.splice(destinationBalanceIndex, 1);
+        }
+
         throw error;
       }
     },
@@ -363,6 +439,10 @@ export const useCategoryStore = defineStore('categoryStore', {
       this.categories = categories;
     },
 
+    setCategoryBalances(categoryBalances: CategoryBalanceResponse[]) {
+      this.categoryBalances = categoryBalances;
+    },
+
     setIsLoading(isLoading: boolean) {
       this.isLoading = isLoading;
     },
@@ -370,7 +450,43 @@ export const useCategoryStore = defineStore('categoryStore', {
     reset() {
       this.categoryGroups = [];
       this.categories = [];
+      this.categoryBalances = [];
       this.isLoading = true;
+    },
+
+    // Helper methods to get categories with balances
+    getCategoriesWithBalances(year: number, month: number): CategoryResponse[] {
+      return this.categories.map(category => {
+        // Find balance for specified month
+        const balance = this.categoryBalances.find(b =>
+          b.category_id === category.id &&
+          b.year === year &&
+          b.month === month
+        );
+
+        return {
+          ...category,
+          assigned: balance?.assigned || 0,
+          activity: balance?.activity || 0,
+          available: balance?.available || 0
+        };
+      });
+    },
+
+    getCategoriesByGroupWithBalances(groupId: string, year: number, month: number): CategoryResponse[] {
+      return this.getCategoriesWithBalances(year, month)
+        .filter(category => category.category_group_id === groupId)
+        .sort((a, b) => a.display_order - b.display_order);
+    },
+
+    getGroupTotalsWithBalances(groupId: string, year: number, month: number) {
+      const groupCategories = this.getCategoriesByGroupWithBalances(groupId, year, month);
+
+      return {
+        assigned: groupCategories.reduce((sum, category) => sum + (category.assigned || 0), 0),
+        activity: groupCategories.reduce((sum, category) => sum + (category.activity || 0), 0),
+        available: groupCategories.reduce((sum, category) => sum + (category.available || 0), 0)
+      };
     }
   }
 });

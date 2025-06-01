@@ -53,6 +53,9 @@ onMounted(async () => {
     if (mainData?.categories) {
       categoryStore.setCategories(mainData.categories)
     }
+    if (mainData?.categoryBalances) {
+      categoryStore.setCategoryBalances(mainData.categoryBalances)
+    }
 
     // Set loading to false for both stores
     budgetStore.setIsLoading(false)

@@ -68,13 +68,29 @@ export const useBudgetStore = defineStore('budgetStore', {
         },
         navigateMonth(direction: 'prev' | 'next') {
             if (direction === 'next') {
-                if (this.currentMonth === 12) {
-                    this.currentMonth = 1
-                    this.currentYear += 1
-                } else {
-                    this.currentMonth += 1
+                // Check if we can go forward (max 2 months into future)
+                const now = new Date()
+                const currentRealYear = now.getFullYear()
+                const currentRealMonth = now.getMonth() + 1
+
+                let nextYear = this.currentYear
+                let nextMonth = this.currentMonth + 1
+
+                if (nextMonth > 12) {
+                    nextMonth = 1
+                    nextYear += 1
+                }
+
+                // Calculate months difference from current real month
+                const monthsDiff = (nextYear - currentRealYear) * 12 + (nextMonth - currentRealMonth)
+
+                // Only allow up to 2 months into the future
+                if (monthsDiff <= 2) {
+                    this.currentYear = nextYear
+                    this.currentMonth = nextMonth
                 }
             } else {
+                // No restriction on going backwards
                 if (this.currentMonth === 1) {
                     this.currentMonth = 12
                     this.currentYear -= 1
