@@ -268,8 +268,8 @@ watch(() => budgetStore.currentBudget?.id, (newBudgetId) => {
     // Clear the current set
     expandedGroups.value.clear()
 
-    // If we have saved expanded groups, use them
-    if (savedExpandedGroups.length > 0) {
+    // If we have saved state (even if empty), use it
+    if (savedExpandedGroups !== null) {
       savedExpandedGroups.forEach(groupId => {
         // Only add if the group exists in the current budget
         if (sortedCategoryGroups.value.some(group => group.id === groupId)) {
@@ -293,8 +293,8 @@ onMounted(() => {
     // Load expanded groups from local storage
     const savedExpandedGroups = loadExpandedGroups(budgetId)
 
-    // If we have saved expanded groups, use them
-    if (savedExpandedGroups.length > 0) {
+    // If we have saved state (even if empty), use it
+    if (savedExpandedGroups !== null) {
       // Clear the current set and add the saved groups
       expandedGroups.value.clear()
       savedExpandedGroups.forEach(groupId => {
