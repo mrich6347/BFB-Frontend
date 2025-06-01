@@ -1,11 +1,11 @@
-import type { AccountResponse, CreateAccountDto } from "../types/DTO/account.dto"
+import type { AccountResponse, CreateAccountDto, AccountWithReadyToAssignResponse } from "../types/DTO/account.dto"
 import api from "./common/api"
 
 export class AccountService {
 
     private static readonly BASE_PATH = '/accounts'
 
-    static async createAccount(request: CreateAccountDto): Promise<AccountResponse> {
+    static async createAccount(request: CreateAccountDto): Promise<AccountWithReadyToAssignResponse> {
         const response = await api.post(this.BASE_PATH, request)
         return response.data
     }

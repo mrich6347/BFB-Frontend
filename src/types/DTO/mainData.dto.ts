@@ -10,4 +10,5 @@ export interface MainDataResponse {
     categoryGroups?: CategoryGroupResponse[];
     categories?: CategoryResponse[];
     categoryBalances?: CategoryBalanceResponse[];
+    readyToAssign?: number;
 }

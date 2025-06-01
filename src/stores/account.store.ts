@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
-import type { CreateAccountDto, AccountResponse, AccountType } from "@/types/DTO/account.dto";
+import type { CreateAccountDto, AccountResponse, AccountType, AccountWithReadyToAssignResponse } from "@/types/DTO/account.dto";
 import { AccountService } from "@/services/account.service";
 import { useAccounts } from "@/composables/accounts/useCreateAccount";
+import { useBudgetStore } from "./budget.store";
 
 export const useAccountStore = defineStore('accountStore', {
     state: () => ({
@@ -24,9 +25,15 @@ export const useAccountStore = defineStore('accountStore', {
             const { prepareAccountCreation } = useAccounts();
             const preparedAccount = prepareAccountCreation(request);
 
-            const response = await AccountService.createAccount(preparedAccount) as AccountResponse;
-            this.accounts.push(response);
-            return response;
+            const response = await AccountService.createAccount(preparedAccount);
+
+            // Update Ready to Assign in budget store
+            const budgetStore = useBudgetStore();
+            budgetStore.setReadyToAssign(response.readyToAssign);
+
+            // Add the account to the accounts list
+            this.accounts.push(response.account);
+            return response.account;
         },
         reset() {
             this.accounts = []

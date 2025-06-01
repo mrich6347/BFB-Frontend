@@ -2,8 +2,9 @@ import { defineStore } from 'pinia';
 import CategoryGroupService from '@/services/category-group.service';
 import CategoryService from '@/services/category.service';
 import type { CategoryGroupResponse, CreateCategoryGroupDto, UpdateCategoryGroupDto } from '@/types/DTO/category-group.dto';
-import type { CategoryResponse, CreateCategoryDto, UpdateCategoryDto } from '@/types/DTO/category.dto';
+import type { CategoryResponse, CreateCategoryDto, UpdateCategoryDto, CategoryWithReadyToAssignResponse } from '@/types/DTO/category.dto';
 import type { CategoryBalanceResponse } from '@/types/DTO/category-balance.dto';
+import { useBudgetStore } from './budget.store';
 
 export const useCategoryStore = defineStore('categoryStore', {
   state: () => ({
@@ -221,15 +222,19 @@ export const useCategoryStore = defineStore('categoryStore', {
         // Make the actual API call in the background
         const response = await CategoryService.createCategory(createRequest);
 
+        // Update Ready to Assign in budget store
+        const budgetStore = useBudgetStore();
+        budgetStore.setReadyToAssign(response.readyToAssign);
+
         // Replace the temporary category with the real one
         const tempIndex = this.categories.findIndex(category => category.id === tempId);
         if (tempIndex !== -1) {
-          this.categories[tempIndex] = response;
+          this.categories[tempIndex] = response.category;
         }
 
         // After successful creation, reorder all categories in this group on the server to match our optimistic update
         const categoryIds = this.categories
-          .filter(category => category.category_group_id === response.category_group_id)
+          .filter(category => category.category_group_id === response.category.category_group_id)
           .sort((a, b) => a.display_order - b.display_order)
           .map(category => category.id);
 
@@ -237,7 +242,7 @@ export const useCategoryStore = defineStore('categoryStore', {
         CategoryService.reorderCategories({ category_ids: categoryIds })
           .catch(error => console.error('Failed to reorder categories after creation:', error));
 
-        return response;
+        return response.category;
       } catch (error) {
         // If the API call fails, revert to the original state
         console.error('Failed to create category:', error);
@@ -355,7 +360,11 @@ export const useCategoryStore = defineStore('categoryStore', {
 
       try {
         // Send update to backend - only update assigned, let backend calculate available
-        await CategoryService.updateCategoryBalance(categoryId, { assigned }, year, month, currentUserYear, currentUserMonth);
+        const response = await CategoryService.updateCategoryBalance(categoryId, { assigned }, year, month, currentUserYear, currentUserMonth);
+
+        // Update Ready to Assign in budget store
+        const budgetStore = useBudgetStore();
+        budgetStore.setReadyToAssign(response.readyToAssign);
       } catch (error) {
         // If the backend update fails, revert to the original values
         console.error('Failed to update category balance:', error);

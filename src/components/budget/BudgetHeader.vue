@@ -45,7 +45,7 @@
         <div class="flex items-stretch rounded-lg shadow-sm overflow-hidden max-w-full">
           <div class="flex flex-col justify-center px-4 py-1.5 bg-green-600">
             <div class="text-xs font-medium text-white">Ready to Assign</div>
-            <div class="text-base font-bold text-white whitespace-nowrap">{{ formatCurrency(readyToAssign) }}</div>
+            <div class="text-base font-bold text-white whitespace-nowrap">{{ formatCurrency(budgetStore.readyToAssign) }}</div>
           </div>
           <div class="w-px bg-green-600"></div>
           <button class="flex items-center px-4 bg-green-600 cursor-pointer  text-white font-medium transition-colors whitespace-nowrap">
@@ -86,8 +86,6 @@ import { useBudgetStore } from '@/stores/budget.store'
 
 const budgetStore = useBudgetStore()
 
-// Mock data with a large dollar amount to test display
-const readyToAssign = ref(1754329.87)
 const selectedFilter = ref('all')
 
 const filters = [

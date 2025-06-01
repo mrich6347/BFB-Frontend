@@ -3,7 +3,8 @@ import type {
   CategoryResponse,
   CreateCategoryDto,
   UpdateCategoryDto,
-  ReorderCategoriesDto
+  ReorderCategoriesDto,
+  CategoryWithReadyToAssignResponse
 } from '@/types/DTO/category.dto';
 
 export default class CategoryService {
@@ -17,7 +18,7 @@ export default class CategoryService {
     return response.data;
   }
 
-  static async createCategory(request: CreateCategoryDto): Promise<CategoryResponse> {
+  static async createCategory(request: CreateCategoryDto): Promise<CategoryWithReadyToAssignResponse> {
     const response = await api.post('/categories', request);
     return response.data;
   }
@@ -35,7 +36,7 @@ export default class CategoryService {
     await api.post('/categories/reorder', request);
   }
 
-  static async updateCategoryBalance(categoryId: string, balanceData: { assigned?: number; activity?: number; available?: number }, year: number, month: number, currentUserYear?: number, currentUserMonth?: number): Promise<CategoryResponse> {
+  static async updateCategoryBalance(categoryId: string, balanceData: { assigned?: number; activity?: number; available?: number }, year: number, month: number, currentUserYear?: number, currentUserMonth?: number): Promise<CategoryWithReadyToAssignResponse> {
     let url = `/categories/${categoryId}?year=${year}&month=${month}`;
     if (currentUserYear && currentUserMonth) {
       url += `&currentUserYear=${currentUserYear}&currentUserMonth=${currentUserMonth}`;

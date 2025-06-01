@@ -10,7 +10,8 @@ export const useBudgetStore = defineStore('budgetStore', {
         currentBudget: null as BudgetResponse | null,
         isLoading: true,
         currentYear: new Date().getFullYear(),
-        currentMonth: new Date().getMonth() + 1
+        currentMonth: new Date().getMonth() + 1,
+        readyToAssign: 0
     }),
 
     getters: {
@@ -85,6 +86,10 @@ export const useBudgetStore = defineStore('budgetStore', {
             this.budgets = []
             this.currentBudget = null
             this.isLoading = true
+            this.readyToAssign = 0
+        },
+        setReadyToAssign(amount: number) {
+            this.readyToAssign = amount
         },
         setCurrentMonth(year: number, month: number) {
             this.currentYear = year

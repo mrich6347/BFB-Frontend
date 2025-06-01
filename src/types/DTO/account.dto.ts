@@ -10,7 +10,7 @@ export interface CreateAccountDto {
     name: string;
     account_type: AccountType;
     current_balance: number;
-    interest_rate: number | null;   
+    interest_rate: number | null;
     minimum_monthly_payment: number | null;
     budget_id: string;
 }
@@ -26,4 +26,9 @@ export interface AccountResponse {
     uncleared_balance: number;
     working_balance: number;
     is_active: boolean;
+}
+
+export interface AccountWithReadyToAssignResponse {
+    account: AccountResponse;
+    readyToAssign: number;
 }
