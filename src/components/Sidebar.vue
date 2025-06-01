@@ -175,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import ThemeToggle from './common/ThemeToggle.vue'
 import {
   BarChart2Icon,
@@ -201,6 +201,7 @@ import { DatabaseService } from '@/services/database.service'
 import { useToast } from 'vue-toast-notification'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shadcn-ui'
 import Button from '@/components/shadcn-ui/button.vue'
+import { saveExpandedAccounts, loadExpandedAccounts } from '@/utils/expandedAccountsStorage'
 
 const budgetStore = useBudgetStore()
 
@@ -254,6 +255,12 @@ const expandedSections = ref<Record<SectionTitle, boolean>>({
 
 const toggleSection = (sectionTitle: SectionTitle) => {
   expandedSections.value[sectionTitle] = !expandedSections.value[sectionTitle]
+
+  // Save the updated expanded sections to local storage
+  const budgetId = budgetStore.currentBudget?.id
+  if (budgetId) {
+    saveExpandedAccounts(budgetId, expandedSections.value)
+  }
 }
 
 const isSettingsExpanded = ref(false)
@@ -270,6 +277,31 @@ const toggleSettings = () => {
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
 }
+
+// Load expanded sections from local storage when budget changes
+const loadExpandedSectionsFromStorage = () => {
+  const budgetId = budgetStore.currentBudget?.id
+  if (budgetId) {
+    const savedExpandedSections = loadExpandedAccounts(budgetId)
+    if (savedExpandedSections !== null) {
+      // Update the expandedSections with saved state
+      Object.assign(expandedSections.value, savedExpandedSections)
+    }
+    // If no saved state, keep the default values (all false)
+  }
+}
+
+// Watch for changes in the current budget ID to load the appropriate expanded sections
+watch(() => budgetStore.currentBudget?.id, (newBudgetId) => {
+  if (newBudgetId) {
+    loadExpandedSectionsFromStorage()
+  }
+})
+
+// Load expanded sections on component mount
+onMounted(() => {
+  loadExpandedSectionsFromStorage()
+})
 
 const nukeDatabase = async () => {
   try {
