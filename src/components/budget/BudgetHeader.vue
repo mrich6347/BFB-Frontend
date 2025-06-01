@@ -5,20 +5,38 @@
       <div class="flex items-center space-x-1 md:w-1/4 justify-start">
         <button
           @click="budgetStore.navigateMonth('prev')"
-          class="p-1.5 rounded-full transition-colors hover:bg-accent"
+          :disabled="!budgetStore.canNavigatePrev"
+          :class="[
+            'p-2 rounded-lg transition-all duration-200 ease-in-out',
+            budgetStore.canNavigatePrev
+              ? 'hover:scale-110 cursor-pointer'
+              : 'opacity-40 cursor-not-allowed'
+          ]"
         >
-          <ChevronLeft class="w-4 h-4 text-muted-foreground" />
+          <ChevronLeft :class="[
+            'w-4 h-4 transition-colors duration-200',
+            budgetStore.canNavigatePrev ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground'
+          ]" />
         </button>
-        <div class="flex flex-col items-start">
-          <div class="flex items-center">
-            <h2 class="text-lg font-semibold text-foreground">{{ budgetStore.currentMonthName }}</h2>
+        <div class="flex flex-col items-center px-2 w-48">
+          <div class="flex items-center justify-center w-full">
+            <h2 class="text-lg font-semibold text-foreground text-center">{{ budgetStore.currentMonthName }}</h2>
           </div>
         </div>
         <button
           @click="budgetStore.navigateMonth('next')"
-          class="p-1.5 rounded-full transition-colors hover:bg-accent"
+          :disabled="!budgetStore.canNavigateNext"
+          :class="[
+            'p-2 rounded-lg transition-all duration-200 ease-in-out',
+            budgetStore.canNavigateNext
+              ? 'hover:scale-110 cursor-pointer'
+              : 'opacity-40 cursor-not-allowed'
+          ]"
         >
-          <ChevronRight class="w-4 h-4 text-muted-foreground" />
+          <ChevronRight :class="[
+            'w-4 h-4 transition-colors duration-200',
+            budgetStore.canNavigateNext ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground'
+          ]" />
         </button>
       </div>
 
