@@ -51,10 +51,14 @@
             <div class="text-base font-bold text-white whitespace-nowrap">{{ formatCurrency(budgetStore.readyToAssign) }}</div>
           </div>
           <div :class="['w-px', readyToAssignColorClass]"></div>
-          <button :class="[
-            'flex items-center px-4 cursor-pointer text-white font-medium transition-colors whitespace-nowrap',
-            readyToAssignColorClass
-          ]">
+          <button
+            @click="handleAssignClick"
+            :disabled="budgetStore.readyToAssign <= 0"
+            :class="[
+              'flex items-center px-4 cursor-pointer text-white font-medium transition-colors whitespace-nowrap',
+              readyToAssignColorClass,
+              budgetStore.readyToAssign <= 0 ? 'opacity-50 cursor-not-allowed' : ''
+            ]">
             Assign
             <ChevronDown class="w-3.5 h-3.5 ml-1" />
           </button>
@@ -82,6 +86,16 @@
       </button>
     </div>
   </div>
+
+  <!-- Assign Money Modal -->
+  <AssignMoneyModal
+    :is-open="showAssignModal"
+    :available-categories="availableCategories"
+    :position="assignModalPosition"
+    :max-amount="budgetStore.readyToAssign"
+    @close="showAssignModal = false"
+    @assign="handleAssignMoney"
+  />
 </template>
 
 <script setup lang="ts">
@@ -89,8 +103,12 @@ import { ref, computed } from 'vue'
 import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-vue-next'
 import { formatCurrency } from '../../utils/currencyUtil'
 import { useBudgetStore } from '@/stores/budget.store'
+import { useCategoryStore } from '@/stores/category.store'
+import AssignMoneyModal from './AssignMoneyModal.vue'
+import type { CategoryResponse } from '@/types/DTO/category.dto'
 
 const budgetStore = useBudgetStore()
+const categoryStore = useCategoryStore()
 
 const selectedFilter = ref('all')
 
@@ -99,6 +117,15 @@ const filters = [
   { id: 'overspent', name: 'Overspent' },
   { id: 'moneyAvailable', name: 'Money Available' }
 ]
+
+// Assign money modal state
+const showAssignModal = ref(false)
+const assignModalPosition = ref({ x: 0, y: 0 })
+
+// Computed property for available categories
+const availableCategories = computed(() => {
+  return categoryStore.categories
+})
 
 // Computed property for Ready to Assign color based on value
 const readyToAssignColorClass = computed(() => {
@@ -111,5 +138,51 @@ const readyToAssignColorClass = computed(() => {
     return 'bg-green-600' // Green for positive
   }
 })
+
+// Event handlers
+const handleAssignClick = (event: MouseEvent) => {
+  if (budgetStore.readyToAssign <= 0) return
+
+  // Get the position of the clicked element for modal positioning
+  const rect = (event.target as HTMLElement).getBoundingClientRect()
+  assignModalPosition.value = {
+    x: rect.left + rect.width / 2,
+    y: rect.bottom
+  }
+
+  showAssignModal.value = true
+}
+
+const handleAssignMoney = async (categoryId: string, amount: number) => {
+  try {
+    // Get the real current month (not the selected month)
+    const now = new Date()
+    const realCurrentYear = now.getFullYear()
+    const realCurrentMonth = now.getMonth() + 1
+
+    // Find the current assigned amount for this category in the selected month
+    const existingBalance = categoryStore.categoryBalances.find(b =>
+      b.category_id === categoryId &&
+      b.year === budgetStore.currentYear &&
+      b.month === budgetStore.currentMonth
+    )
+
+    const currentAssigned = existingBalance?.assigned || 0
+    const newTotalAssigned = currentAssigned + amount
+
+    await categoryStore.updateCategoryBalance(
+      categoryId,
+      newTotalAssigned, // Total assigned amount (existing + new)
+      budgetStore.currentYear, // Assignment month year
+      budgetStore.currentMonth, // Assignment month
+      realCurrentYear, // Real current year
+      realCurrentMonth // Real current month
+    )
+
+    showAssignModal.value = false
+  } catch (error) {
+    console.error('Failed to assign money:', error)
+  }
+}
 
 </script>
