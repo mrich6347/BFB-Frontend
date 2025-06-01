@@ -344,9 +344,10 @@ export const useCategoryStore = defineStore('categoryStore', {
       }
 
       // YNAB Logic: Update available balances for all future months
-      // Use current user month if provided, otherwise use the assignment month
-      const userYear = currentUserYear || year;
-      const userMonth = currentUserMonth || month;
+      // Use current user month if provided, otherwise use real current month
+      const now = new Date();
+      const userYear = currentUserYear || now.getFullYear();
+      const userMonth = currentUserMonth || (now.getMonth() + 1);
 
       if (assignedDifference !== 0) {
         this.updateFutureMonthsAvailable(categoryId, year, month, assignedDifference, userYear, userMonth);
@@ -458,16 +459,24 @@ export const useCategoryStore = defineStore('categoryStore', {
       let checkYear = fromYear;
       let checkMonth = fromMonth + 1;
 
+      // Calculate the maximum month we should update (2 months from user's current month)
+      let maxYear = currentRealYear;
+      let maxMonth = currentRealMonth + 2;
+      if (maxMonth > 12) {
+        maxMonth = maxMonth - 12;
+        maxYear += 1;
+      }
+
       // Generate list of future months to check/create
+      // Go from the assignment month forward until we reach the 2-month limit from user's current month
       while (true) {
         if (checkMonth > 12) {
           checkMonth = 1;
           checkYear += 1;
         }
 
-        // Check if this month is within the 2-month future limit
-        const monthsDiff = (checkYear - currentRealYear) * 12 + (checkMonth - currentRealMonth);
-        if (monthsDiff > 2) {
+        // Check if we've reached the maximum month (2 months from user's current month)
+        if (checkYear > maxYear || (checkYear === maxYear && checkMonth > maxMonth)) {
           break;
         }
 
@@ -521,16 +530,24 @@ export const useCategoryStore = defineStore('categoryStore', {
       let checkYear = fromYear;
       let checkMonth = fromMonth + 1;
 
+      // Calculate the maximum month we should revert (2 months from user's current month)
+      let maxYear = currentRealYear;
+      let maxMonth = currentRealMonth + 2;
+      if (maxMonth > 12) {
+        maxMonth = maxMonth - 12;
+        maxYear += 1;
+      }
+
       // Generate list of future months to revert
+      // Go from the assignment month forward until we reach the 2-month limit from user's current month
       while (true) {
         if (checkMonth > 12) {
           checkMonth = 1;
           checkYear += 1;
         }
 
-        // Check if this month is within the 2-month future limit
-        const monthsDiff = (checkYear - currentRealYear) * 12 + (checkMonth - currentRealMonth);
-        if (monthsDiff > 2) {
+        // Check if we've reached the maximum month (2 months from user's current month)
+        if (checkYear > maxYear || (checkYear === maxYear && checkMonth > maxMonth)) {
           break;
         }
 

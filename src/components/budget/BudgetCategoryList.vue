@@ -520,13 +520,18 @@ const handleCategoryDeleted = (categoryId: string) => {
 
 const updateCategoryAssigned = async (categoryId: string, assignedValue: number) => {
   try {
+    // Get the real current month (not the selected month)
+    const now = new Date()
+    const realCurrentYear = now.getFullYear()
+    const realCurrentMonth = now.getMonth() + 1
+
     await categoryStore.updateCategoryBalance(
       categoryId,
       assignedValue,
-      budgetStore.currentYear,
-      budgetStore.currentMonth,
-      budgetStore.currentYear, // Pass current user year
-      budgetStore.currentMonth // Pass current user month
+      budgetStore.currentYear, // Assignment month year
+      budgetStore.currentMonth, // Assignment month
+      realCurrentYear, // Real current year
+      realCurrentMonth // Real current month
     )
   } catch (error) {
     console.error('Failed to update category assigned value:', error)
