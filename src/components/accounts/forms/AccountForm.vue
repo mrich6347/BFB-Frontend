@@ -12,8 +12,8 @@
       name="name"
       label="Account Name"
       :validation-visibility="props.mode === 'edit' ? 'live' : 'blur'"
-      :validation-rules="{ 
-        uniqueAccountName: uniqueAccountNameRule 
+      :validation-rules="{
+        uniqueAccountName: uniqueAccountNameRule
       }"
       :validation-messages="{
         uniqueAccountName: 'Account already exists with this name'
@@ -44,12 +44,17 @@
     />
 
     <FormKit
-      type="number" 
+      type="text"
       name="current_balance"
       label="Current Balance"
-      step="0.01" 
-      validation="required|number"
-      placeholder="0.00"
+      :validation-rules="{
+        validBalance: validBalanceRule
+      }"
+      :validation-messages="{
+        validBalance: 'Please enter a valid number (e.g., 500, +500, -500, 1,234.56)'
+      }"
+      validation="required|validBalance"
+      placeholder="0.00 (use +500 for positive credit balance)"
       :classes="{
         input: 'w-full px-3 py-2 border rounded-md bg-background dark:bg-background border-input dark:border-input',
         label: 'text-sm font-medium text-foreground dark:text-foreground',
@@ -57,7 +62,7 @@
         message: 'text-red-500 dark:text-red-400 text-sm mt-1'
       }"
     />
-    
+
     <div class="flex justify-end gap-3 mt-6">
       <button
         type="button"
@@ -83,6 +88,7 @@ import { useAccountStore } from '@/stores/account.store';
 import { AccountType } from '@/types/DTO/account.dto';
 import type { CreateAccountDto } from '@/types/DTO/account.dto';
 import type { FormKitNode } from '@formkit/core';
+import { parseFormattedNumberToDecimal } from '@/utils/numberFormatUtil';
 
 const accountStore = useAccountStore();
 
@@ -105,7 +111,7 @@ const emit = defineEmits<{
 
 // Format AccountType enum for select options
 const formatAccountTypeDisplay = (type: AccountType): string => {
-  return type.split('_').map(word => 
+  return type.split('_').map(word =>
     word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
   ).join(' ');
 };
@@ -121,14 +127,31 @@ const accountTypeOptions = computed(() => {
 const uniqueAccountNameRule = (node: FormKitNode): boolean => {
   const value = node.value as string;
   if (!value) return true;
-  
+
   // If we're in edit mode and the name hasn't changed, it's valid
   if (props.mode === 'edit' && value === props.initialValues?.name) {
     return true;
   }
-  
+
   // Check against the store, case-insensitive
   return !accountStore.accountExistsByName(value);
+};
+
+// Custom validation rule for valid balance format
+const validBalanceRule = (node: FormKitNode): boolean => {
+  const value = node.value as string;
+  if (!value) return true;
+
+  try {
+    // Try to parse the value using our number format utility
+    const decimalStr = parseFormattedNumberToDecimal(value);
+    const parsed = parseFloat(decimalStr);
+
+    // Check if the parsed value is a valid number
+    return !isNaN(parsed) && isFinite(parsed);
+  } catch (error) {
+    return false;
+  }
 };
 
 const handleSubmit = async (formData: Omit<CreateAccountDto, 'budget_id' | 'id'>) => {
@@ -142,4 +165,4 @@ const handleSubmit = async (formData: Omit<CreateAccountDto, 'budget_id' | 'id'>
   };
   emit('submit', completeFormData);
 };
-</script> 
+</script>
