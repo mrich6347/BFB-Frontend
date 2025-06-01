@@ -524,7 +524,9 @@ const updateCategoryAssigned = async (categoryId: string, assignedValue: number)
       categoryId,
       assignedValue,
       budgetStore.currentYear,
-      budgetStore.currentMonth
+      budgetStore.currentMonth,
+      budgetStore.currentYear, // Pass current user year
+      budgetStore.currentMonth // Pass current user month
     )
   } catch (error) {
     console.error('Failed to update category assigned value:', error)

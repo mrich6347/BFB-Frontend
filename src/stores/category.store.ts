@@ -297,20 +297,21 @@ export const useCategoryStore = defineStore('categoryStore', {
       }
     },
 
-    async updateCategoryBalance(categoryId: string, assigned: number, year: number, month: number) {
+    async updateCategoryBalance(categoryId: string, assigned: number, year: number, month: number, currentUserYear?: number, currentUserMonth?: number) {
       // Find existing balance or create a new one
       let balanceIndex = this.categoryBalances.findIndex(b =>
         b.category_id === categoryId && b.year === year && b.month === month
       );
 
       let originalBalance: CategoryBalanceResponse | null = null;
+      let assignedDifference = 0;
 
       if (balanceIndex !== -1) {
         // Store original for rollback
         originalBalance = { ...this.categoryBalances[balanceIndex] };
 
         // Calculate the difference in assigned amount
-        const assignedDifference = assigned - originalBalance.assigned;
+        assignedDifference = assigned - originalBalance.assigned;
 
         // Update assigned amount
         this.categoryBalances[balanceIndex].assigned = assigned;
@@ -321,6 +322,8 @@ export const useCategoryStore = defineStore('categoryStore', {
         // Create new balance record optimistically
         const category = this.categories.find(c => c.id === categoryId);
         if (category) {
+          assignedDifference = assigned; // New record, so difference is the full assigned amount
+
           const newBalance: CategoryBalanceResponse = {
             id: 'temp-' + Date.now(),
             category_id: categoryId,
@@ -340,9 +343,18 @@ export const useCategoryStore = defineStore('categoryStore', {
         }
       }
 
+      // YNAB Logic: Update available balances for all future months
+      // Use current user month if provided, otherwise use the assignment month
+      const userYear = currentUserYear || year;
+      const userMonth = currentUserMonth || month;
+
+      if (assignedDifference !== 0) {
+        this.updateFutureMonthsAvailable(categoryId, year, month, assignedDifference, userYear, userMonth);
+      }
+
       try {
         // Send update to backend - only update assigned, let backend calculate available
-        await CategoryService.updateCategoryBalance(categoryId, { assigned }, year, month);
+        await CategoryService.updateCategoryBalance(categoryId, { assigned }, year, month, currentUserYear, currentUserMonth);
       } catch (error) {
         // If the backend update fails, revert to the original values
         console.error('Failed to update category balance:', error);
@@ -353,6 +365,11 @@ export const useCategoryStore = defineStore('categoryStore', {
         } else {
           // Remove the newly created balance
           this.categoryBalances.splice(balanceIndex, 1);
+        }
+
+        // Revert future months changes
+        if (assignedDifference !== 0) {
+          this.revertFutureMonthsAvailable(categoryId, year, month, assignedDifference, userYear, userMonth);
         }
 
         throw error;
@@ -428,6 +445,118 @@ export const useCategoryStore = defineStore('categoryStore', {
         }
 
         throw error;
+      }
+    },
+
+    // Helper method to update available balances for all future months (YNAB logic)
+    updateFutureMonthsAvailable(categoryId: string, fromYear: number, fromMonth: number, difference: number, currentUserYear: number, currentUserMonth: number) {
+      // Calculate all future months up to 2 months from current user month
+      const currentRealYear = currentUserYear;
+      const currentRealMonth = currentUserMonth;
+
+      const futureMonths = [];
+      let checkYear = fromYear;
+      let checkMonth = fromMonth + 1;
+
+      // Generate list of future months to check/create
+      while (true) {
+        if (checkMonth > 12) {
+          checkMonth = 1;
+          checkYear += 1;
+        }
+
+        // Check if this month is within the 2-month future limit
+        const monthsDiff = (checkYear - currentRealYear) * 12 + (checkMonth - currentRealMonth);
+        if (monthsDiff > 2) {
+          break;
+        }
+
+        futureMonths.push({ year: checkYear, month: checkMonth });
+        checkMonth += 1;
+      }
+
+      // For each future month, either update existing balance or create new one
+      const category = this.categories.find(c => c.id === categoryId);
+      if (!category) return;
+
+      for (const { year, month } of futureMonths) {
+        // Check if balance exists for this month
+        let existingBalanceIndex = this.categoryBalances.findIndex(b =>
+          b.category_id === categoryId &&
+          b.year === year &&
+          b.month === month
+        );
+
+        if (existingBalanceIndex !== -1) {
+          // Update existing balance
+          this.categoryBalances[existingBalanceIndex].available += difference;
+        } else {
+          // Create new balance record optimistically
+          const newBalance: CategoryBalanceResponse = {
+            id: 'temp-' + Date.now() + '-' + year + '-' + month,
+            category_id: categoryId,
+            budget_id: category.budget_id,
+            user_id: '', // Will be set by backend
+            year,
+            month,
+            assigned: 0,
+            activity: 0,
+            available: difference,
+            created_at: new Date(),
+            updated_at: new Date()
+          };
+
+          this.categoryBalances.push(newBalance);
+        }
+      }
+    },
+
+    // Helper method to revert future months changes on error
+    revertFutureMonthsAvailable(categoryId: string, fromYear: number, fromMonth: number, originalDifference: number, currentUserYear: number, currentUserMonth: number) {
+      // Calculate all future months up to 2 months from current user month
+      const currentRealYear = currentUserYear;
+      const currentRealMonth = currentUserMonth;
+
+      const futureMonths = [];
+      let checkYear = fromYear;
+      let checkMonth = fromMonth + 1;
+
+      // Generate list of future months to revert
+      while (true) {
+        if (checkMonth > 12) {
+          checkMonth = 1;
+          checkYear += 1;
+        }
+
+        // Check if this month is within the 2-month future limit
+        const monthsDiff = (checkYear - currentRealYear) * 12 + (checkMonth - currentRealMonth);
+        if (monthsDiff > 2) {
+          break;
+        }
+
+        futureMonths.push({ year: checkYear, month: checkMonth });
+        checkMonth += 1;
+      }
+
+      // For each future month, either revert existing balance or remove newly created one
+      for (const { year, month } of futureMonths) {
+        let existingBalanceIndex = this.categoryBalances.findIndex(b =>
+          b.category_id === categoryId &&
+          b.year === year &&
+          b.month === month
+        );
+
+        if (existingBalanceIndex !== -1) {
+          const balance = this.categoryBalances[existingBalanceIndex];
+
+          // If this was a newly created balance (temp ID), remove it
+          if (balance.id.startsWith('temp-')) {
+            this.categoryBalances.splice(existingBalanceIndex, 1);
+          } else {
+            // Otherwise, revert the available amount
+            balance.available -= originalDifference;
+          }
+        }
       }
     },
 
