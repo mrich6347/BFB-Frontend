@@ -14,27 +14,56 @@
     </td>
 
     <!-- Date -->
-    <td class="p-3 text-sm text-foreground">
+    <td class="p-3 text-sm text-foreground w-24">
       {{ formatDate(transaction.date, budgetStore.currentBudget?.date_format || DateFormat.ISO) }}
     </td>
 
     <!-- Payee -->
-    <td class="p-3 text-sm text-foreground">
-      {{ transaction.payee || '-' }}
+    <td class="p-3 text-sm text-foreground w-40 max-w-40">
+      <div class="truncate">
+        {{ transaction.payee || '-' }}
+      </div>
     </td>
 
     <!-- Category -->
-    <td class="p-3 text-sm text-foreground">
-      {{ getCategoryName(transaction.category_id) }}
+    <td class="p-3 text-sm text-foreground w-40 max-w-40">
+      <div class="truncate">
+        {{ getCategoryName(transaction.category_id) }}
+      </div>
     </td>
 
     <!-- Memo -->
-    <td class="p-3 text-sm text-muted-foreground">
-      {{ transaction.memo || '-' }}
+    <td class="p-3 text-sm text-muted-foreground w-40 max-w-40">
+      <div v-if="transaction.memo" class="space-y-1">
+        <div class="flex items-start gap-2">
+          <div
+            :class="[
+              'flex-1 min-w-0',
+              isMemoExpanded ? 'whitespace-normal break-words' : 'truncate'
+            ]"
+          >
+            {{ transaction.memo }}
+          </div>
+          <button
+            v-if="isMemoLong"
+            @click="toggleMemoExpansion"
+            class="flex-shrink-0 p-1 rounded hover:bg-muted transition-colors"
+            :title="isMemoExpanded ? 'Collapse memo' : 'Expand memo'"
+          >
+            <ChevronDownIcon
+              :class="[
+                'w-3 h-3 text-muted-foreground transition-transform',
+                isMemoExpanded ? 'rotate-180' : ''
+              ]"
+            />
+          </button>
+        </div>
+      </div>
+      <span v-else>-</span>
     </td>
 
     <!-- Outflow -->
-    <td class="p-3 text-sm text-right tabular-nums">
+    <td class="p-3 text-sm text-right tabular-nums w-32">
       <span v-if="transaction.amount < 0" class="text-destructive">
         {{ formatCurrency(Math.abs(transaction.amount)) }}
       </span>
@@ -42,7 +71,7 @@
     </td>
 
     <!-- Inflow -->
-    <td class="p-3 text-sm text-right tabular-nums">
+    <td class="p-3 text-sm text-right tabular-nums w-32">
       <span v-if="transaction.amount > 0" class="text-green-600">
         {{ formatCurrency(transaction.amount) }}
       </span>
@@ -72,8 +101,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { CheckIcon, EditIcon, TrashIcon } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { CheckIcon, EditIcon, TrashIcon, ChevronDownIcon } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import { formatDate } from '@/utils/dateFormatUtil'
 import { useCategoryStore } from '@/stores/category.store'
@@ -93,6 +122,18 @@ defineEmits<{
 
 const categoryStore = useCategoryStore()
 const budgetStore = useBudgetStore()
+
+// Memo expansion state
+const isMemoExpanded = ref(false)
+
+// Check if memo is long enough to need expansion (more than ~50 characters)
+const isMemoLong = computed(() => {
+  return props.transaction.memo && props.transaction.memo.length > 50
+})
+
+const toggleMemoExpansion = () => {
+  isMemoExpanded.value = !isMemoExpanded.value
+}
 
 const getCategoryName = (categoryId?: string) => {
   if (!categoryId) return 'Uncategorized'

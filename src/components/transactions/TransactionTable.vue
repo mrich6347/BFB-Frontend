@@ -26,12 +26,12 @@
               <th class="text-left p-3 text-sm font-medium text-muted-foreground w-12">
                 <CheckIcon class="w-4 h-4" />
               </th>
-              <th class="text-left p-3 text-sm font-medium text-muted-foreground">Date</th>
+              <th class="text-left p-3 text-sm font-medium text-muted-foreground w-24">Date</th>
               <th class="text-left p-3 text-sm font-medium text-muted-foreground">Payee</th>
-              <th class="text-left p-3 text-sm font-medium text-muted-foreground">Category</th>
-              <th class="text-left p-3 text-sm font-medium text-muted-foreground">Memo</th>
-              <th class="text-right p-3 text-sm font-medium text-muted-foreground">Outflow</th>
-              <th class="text-right p-3 text-sm font-medium text-muted-foreground">Inflow</th>
+              <th class="text-left p-3 text-sm font-medium text-muted-foreground w-32">Category</th>
+              <th class="text-left p-3 text-sm font-medium text-muted-foreground w-56">Memo</th>
+              <th class="text-right p-3 text-sm font-medium text-muted-foreground w-32">Outflow</th>
+              <th class="text-right p-3 text-sm font-medium text-muted-foreground w-32">Inflow</th>
               <th class="w-12"></th>
             </tr>
           </thead>
