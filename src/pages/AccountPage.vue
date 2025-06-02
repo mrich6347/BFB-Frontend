@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import AccountHeader from '@/components/transactions/AccountHeader.vue'
 import TransactionTable from '@/components/transactions/TransactionTable.vue'
@@ -34,21 +34,22 @@ const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
 const transactionStore = useTransactionStore()
 
-const accountId = route.params.accountId as string
-const budgetId = route.params.budgetId as string
+// Make route parameters reactive
+const accountId = computed(() => route.params.accountId as string)
+const budgetId = computed(() => route.params.budgetId as string)
 const isLoading = ref(true)
 
 const account = computed(() => {
-  return accountStore.accounts.find(acc => acc.id === accountId)
+  return accountStore.accounts.find(acc => acc.id === accountId.value)
 })
 
-onMounted(async () => {
+const loadMainData = async () => {
   isLoading.value = true
 
   try {
     // Load main data if we don't have it or if it's for a different budget
-    if (!budgetStore.currentBudget || budgetStore.currentBudget.id !== budgetId) {
-      const mainData = await MainDataService.getMainData(budgetId)
+    if (!budgetStore.currentBudget || budgetStore.currentBudget.id !== budgetId.value) {
+      const mainData = await MainDataService.getMainData(budgetId.value)
 
       if (mainData?.budget) {
         budgetStore.setCurrentBudget(mainData.budget)
@@ -77,5 +78,10 @@ onMounted(async () => {
   } finally {
     isLoading.value = false
   }
-})
+}
+
+onMounted(loadMainData)
+
+// Watch for route changes and reload data if needed
+watch([budgetId], loadMainData)
 </script>
