@@ -7,6 +7,7 @@ import NotFoundPage from '../pages/util-pages/NotFoundPage.vue'
 import BannedPage from '../pages/util-pages/BannedPage.vue'
 import BudgetPage from '../pages/BudgetPage.vue'
 import ReportsPage from '../pages/ReportsPage.vue'
+import AccountPage from '../pages/AccountPage.vue'
 import { supabase } from '../lib/supabaseClient'
 
 const routes = [
@@ -45,6 +46,14 @@ const routes = [
     path: '/reports',
     name: 'Reports',
     component: ReportsPage,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/budget/:budgetId/account/:accountId',
+    name: 'Account',
+    component: AccountPage,
     meta: {
       requiresAuth: true
     }

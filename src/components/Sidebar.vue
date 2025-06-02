@@ -68,7 +68,7 @@
             <router-link
               v-for="account in section.accounts"
               :key="account.id"
-              :to="'/account/' + account.id"
+              :to="`/budget/${props.budgetId}/account/${account.id}`"
               class="flex items-center justify-between px-3 py-2 text-sm rounded-lg ml-2 min-w-0"
             >
               <span class="text-foreground truncate flex-shrink min-w-0 mr-4">{{ account.name }}</span>
@@ -211,10 +211,10 @@ const props = defineProps<{
 
 type SectionTitle = AccountType | 'CLOSED'
 
-const mainNavItems = [
-  { name: 'Budget', to: '/budget', icon: BarChart2Icon },
+const mainNavItems = computed(() => [
+  { name: 'Budget', to: `/budget/${props.budgetId}`, icon: BarChart2Icon },
   { name: 'Reports', to: '/reports', icon: PieChartIcon },
-]
+])
 
 const accountStore = useAccountStore()
 

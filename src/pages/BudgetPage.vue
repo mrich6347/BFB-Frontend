@@ -27,6 +27,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { MainDataService } from '@/services/common/mainData.service'
 import { useAccountStore } from '@/stores/account.store'
 import { useCategoryStore } from '@/stores/category.store'
+import { useTransactionStore } from '@/stores/transaction.store'
 import BudgetCategoryList from '@/components/budget/BudgetCategoryList.vue'
 
 const route = useRoute()
@@ -34,6 +35,7 @@ const router = useRouter()
 const budgetStore = useBudgetStore()
 const accountStore = useAccountStore()
 const categoryStore = useCategoryStore()
+const transactionStore = useTransactionStore()
 const budgetId = route.params.budgetId as string
 
 onMounted(async () => {
@@ -58,6 +60,9 @@ onMounted(async () => {
     }
     if (mainData?.readyToAssign !== undefined) {
       budgetStore.setReadyToAssign(mainData.readyToAssign)
+    }
+    if (mainData?.transactions?.length) {
+      transactionStore.setTransactions(mainData.transactions)
     }
 
     // Set loading to false for both stores
