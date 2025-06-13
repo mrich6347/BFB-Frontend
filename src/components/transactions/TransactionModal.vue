@@ -38,6 +38,7 @@
           name="payee"
           label="Payee"
           placeholder="Enter payee name"
+          ref="payeeField"
           :classes="{
             input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
             label: 'text-sm font-medium text-foreground',
@@ -143,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
 import Button from '@/components/shadcn-ui/button.vue'
 import { useCategoryStore } from '@/stores/category.store'
@@ -162,6 +163,7 @@ const emit = defineEmits<{
 
 const categoryStore = useCategoryStore()
 const amountType = ref<'inflow' | 'outflow'>('outflow')
+const payeeField = ref(null)
 
 // Prevent future dates - max date is today
 const maxDate = computed(() => {
@@ -206,6 +208,19 @@ watch(() => props.transaction, (transaction) => {
     amountType.value = transaction.amount < 0 ? 'outflow' : 'inflow'
   }
 }, { immediate: true })
+
+// Focus payee field when modal opens
+watch(() => props.isOpen, (isOpen) => {
+  if (isOpen) {
+    nextTick(() => {
+      // Find the payee input field and focus it
+      const payeeInput = document.querySelector('input[name="payee"]') as HTMLInputElement
+      if (payeeInput) {
+        payeeInput.focus()
+      }
+    })
+  }
+})
 
 const handleSubmit = (data: any) => {
   const amount = amountType.value === 'outflow' ? -Math.abs(data.amount) : Math.abs(data.amount)
