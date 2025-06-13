@@ -18,7 +18,11 @@
           type="date"
           name="date"
           label="Date"
-          validation="required"
+          :validation="[['required'], ['date_max', maxDate]]"
+          validation-messages="{
+            date_max: 'Future dates are not allowed'
+          }"
+          validation-visibility="live"
           :max="maxDate"
           :classes="{
             input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
