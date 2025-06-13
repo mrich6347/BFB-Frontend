@@ -163,6 +163,7 @@
     :position="moveMoneyModalPosition"
     @close="showMoveMoneyModal = false"
     @move="handleMoveMoney"
+    @move-to-ready-to-assign="handleMoveToReadyToAssign"
   />
 
   <PullMoneyModal
@@ -604,6 +605,22 @@ const handleMoveMoney = async (destinationCategoryId: string, amount: number) =>
     showMoveMoneyModal.value = false
   } catch (error) {
     console.error('Failed to move money:', error)
+  }
+}
+
+const handleMoveToReadyToAssign = async (amount: number) => {
+  if (!selectedSourceCategory.value) return
+
+  try {
+    await categoryStore.moveMoneyToReadyToAssign(
+      selectedSourceCategory.value.id,
+      amount,
+      budgetStore.currentYear,
+      budgetStore.currentMonth
+    )
+    showMoveMoneyModal.value = false
+  } catch (error) {
+    console.error('Failed to move money to Ready to Assign:', error)
   }
 }
 

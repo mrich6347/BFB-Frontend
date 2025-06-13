@@ -61,9 +61,30 @@
 
             <!-- Custom dropdown -->
             <div
-              v-if="showDropdown && filteredCategories.length > 0"
+              v-if="showDropdown && (showReadyToAssign || filteredCategories.length > 0)"
               class="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto"
             >
+              <!-- Ready to Assign option -->
+              <div v-if="showReadyToAssign" class="border-b border-border">
+                <div class="px-3 py-2 text-xs font-medium text-muted-foreground bg-muted/50">
+                  Special
+                </div>
+                <button
+                  :ref="el => setCategoryRef(el, -1, 0)"
+                  @click="selectReadyToAssign"
+                  @keydown.enter="selectReadyToAssignAndFocusMove"
+                  :class="[
+                    'w-full px-4 py-2 text-left text-sm focus:outline-none',
+                    isHighlighted(-1, 0)
+                      ? 'bg-accent text-accent-foreground'
+                      : 'hover:bg-accent hover:text-accent-foreground'
+                  ]"
+                >
+                  Ready to Assign
+                </button>
+              </div>
+
+              <!-- Regular categories -->
               <div
                 v-for="(group, groupIndex) in filteredCategories"
                 :key="group.groupId"
@@ -134,6 +155,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'move', destinationCategoryId: string, amount: number): void
+  (e: 'moveToReadyToAssign', amount: number): void
 }>()
 
 const categoryStore = useCategoryStore()
@@ -204,12 +226,22 @@ const filteredCategories = computed(() => {
 const selectedCategoryName = computed(() => {
   if (!selectedDestinationId.value) return ''
 
+  // Check if Ready to Assign is selected
+  if (selectedDestinationId.value === 'ready-to-assign') {
+    return 'Ready to Assign'
+  }
+
   for (const group of groupedCategories.value) {
     const category = group.categories.find(c => c.id === selectedDestinationId.value)
     if (category) return category.name
   }
 
   return ''
+})
+
+const showReadyToAssign = computed(() => {
+  // Show Ready to Assign option if search is empty or matches "ready"
+  return !searchQuery.value || 'ready to assign'.includes(searchQuery.value.toLowerCase())
 })
 
 // Display value for the input (either search query or selected category name)
@@ -322,7 +354,12 @@ const handleMove = () => {
   amountError.value = ''
   destinationError.value = ''
 
-  emit('move', selectedDestinationId.value, numAmount)
+  // Check if moving to Ready to Assign
+  if (selectedDestinationId.value === 'ready-to-assign') {
+    emit('moveToReadyToAssign', numAmount)
+  } else {
+    emit('move', selectedDestinationId.value, numAmount)
+  }
 }
 
 const setCategoryRef = (el: HTMLElement | null, groupIndex: number, categoryIndex: number) => {
@@ -360,8 +397,22 @@ const selectCategory = (category: CategoryResponse) => {
   showDropdown.value = false
 }
 
+const selectReadyToAssign = () => {
+  selectedDestinationId.value = 'ready-to-assign'
+  searchQuery.value = ''
+  isSearching.value = false
+  showDropdown.value = false
+}
+
 const selectCategoryAndFocusMove = (category: CategoryResponse) => {
   selectCategory(category)
+  nextTick(() => {
+    moveButton.value?.focus()
+  })
+}
+
+const selectReadyToAssignAndFocusMove = () => {
+  selectReadyToAssign()
   nextTick(() => {
     moveButton.value?.focus()
   })
@@ -396,9 +447,17 @@ const handleCategoryKeydown = (event: KeyboardEvent) => {
 const navigateDown = (categories: typeof filteredCategories.value) => {
   const { group, category } = highlightedIndex.value
 
-  if (category < categories[group].categories.length - 1) {
+  // If we're on Ready to Assign (-1, 0) and there are categories, move to first category
+  if (group === -1 && categories.length > 0) {
+    highlightedIndex.value.group = 0
+    highlightedIndex.value.category = 0
+  }
+  // If we're in a category group and can move down within the group
+  else if (group >= 0 && category < categories[group].categories.length - 1) {
     highlightedIndex.value.category++
-  } else if (group < categories.length - 1) {
+  }
+  // If we're at the end of a group and can move to next group
+  else if (group >= 0 && group < categories.length - 1) {
     highlightedIndex.value.group++
     highlightedIndex.value.category = 0
   }
@@ -409,11 +468,19 @@ const navigateDown = (categories: typeof filteredCategories.value) => {
 const navigateUp = (categories: typeof filteredCategories.value) => {
   const { group, category } = highlightedIndex.value
 
-  if (category > 0) {
+  // If we're in a category and can move up within the group
+  if (group >= 0 && category > 0) {
     highlightedIndex.value.category--
-  } else if (group > 0) {
+  }
+  // If we're at the start of a group and can move to previous group
+  else if (group > 0) {
     highlightedIndex.value.group--
     highlightedIndex.value.category = categories[highlightedIndex.value.group].categories.length - 1
+  }
+  // If we're at the first category and Ready to Assign is available, move to it
+  else if (group === 0 && category === 0 && showReadyToAssign.value) {
+    highlightedIndex.value.group = -1
+    highlightedIndex.value.category = 0
   }
 
   scrollToHighlighted()
@@ -421,7 +488,13 @@ const navigateUp = (categories: typeof filteredCategories.value) => {
 
 const selectHighlightedCategory = (categories: typeof filteredCategories.value) => {
   const { group, category } = highlightedIndex.value
-  if (categories[group]?.categories[category]) {
+
+  // Handle Ready to Assign selection
+  if (group === -1 && category === 0) {
+    selectReadyToAssignAndFocusMove()
+  }
+  // Handle regular category selection
+  else if (categories[group]?.categories[category]) {
     selectCategoryAndFocusMove(categories[group].categories[category])
   }
 }
@@ -457,7 +530,8 @@ watch(() => props.isOpen, (isOpen) => {
     showDropdown.value = false
     isSearching.value = false
     hasInteracted.value = false
-    highlightedIndex.value = { group: 0, category: 0 }
+    // Start with Ready to Assign if available, otherwise start with first category
+    highlightedIndex.value = showReadyToAssign.value ? { group: -1, category: 0 } : { group: 0, category: 0 }
     categoryRefs.value = []
     amountError.value = ''
     destinationError.value = ''
@@ -471,7 +545,12 @@ watch(() => props.isOpen, (isOpen) => {
 
 // Reset highlighted index when search changes
 watch(searchQuery, () => {
-  highlightedIndex.value = { group: 0, category: 0 }
+  // Start with Ready to Assign if it's available, otherwise start with first category
+  if (showReadyToAssign.value) {
+    highlightedIndex.value = { group: -1, category: 0 }
+  } else {
+    highlightedIndex.value = { group: 0, category: 0 }
+  }
 })
 
 // Add/remove event listeners for clicking outside

@@ -458,6 +458,46 @@ export const useCategoryStore = defineStore('categoryStore', {
       }
     },
 
+    async moveMoneyToReadyToAssign(sourceCategoryId: string, amount: number, year: number, month: number) {
+      // Find the balance record for the specified month
+      let sourceBalanceIndex = this.categoryBalances.findIndex(b =>
+        b.category_id === sourceCategoryId && b.year === year && b.month === month
+      );
+
+      if (sourceBalanceIndex === -1) {
+        throw new Error('Source category balance not found for the specified month');
+      }
+
+      // Store original balance for rollback
+      const originalSourceBalance = { ...this.categoryBalances[sourceBalanceIndex] };
+
+      // Validate that source has enough available money
+      if ((originalSourceBalance.available || 0) < amount) {
+        throw new Error('Insufficient available balance in source category');
+      }
+
+      // Update source balance optimistically (subtract amount from both available and assigned)
+      this.categoryBalances[sourceBalanceIndex].available -= amount;
+      this.categoryBalances[sourceBalanceIndex].assigned -= amount;
+
+      try {
+        // Send update to backend
+        await CategoryService.moveMoneyToReadyToAssign(sourceCategoryId, amount, year, month);
+
+        // Update Ready to Assign in budget store
+        const budgetStore = useBudgetStore();
+        budgetStore.setReadyToAssign(budgetStore.readyToAssign + amount);
+      } catch (error) {
+        // If the backend update fails, revert to the original values
+        console.error('Failed to move money to Ready to Assign:', error);
+
+        // Restore source balance (both available and assigned)
+        this.categoryBalances[sourceBalanceIndex] = originalSourceBalance;
+
+        throw error;
+      }
+    },
+
     // Helper method to update available balances for all future months (YNAB logic)
     updateFutureMonthsAvailable(categoryId: string, fromYear: number, fromMonth: number, difference: number, currentUserYear: number, currentUserMonth: number) {
       // Calculate all future months up to 2 months from current user month

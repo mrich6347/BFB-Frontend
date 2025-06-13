@@ -54,4 +54,13 @@ export default class CategoryService {
       month
     });
   }
+
+  static async moveMoneyToReadyToAssign(sourceCategoryId: string, amount: number, year: number, month: number): Promise<void> {
+    await api.post('/categories/move-money-to-ready-to-assign', {
+      sourceCategoryId,
+      amount,
+      year,
+      month
+    });
+  }
 }
