@@ -24,30 +24,6 @@ export const useBudgetStore = defineStore('budgetStore', {
                 'July', 'August', 'September', 'October', 'November', 'December'
             ]
             return `${monthNames[state.currentMonth - 1]} ${state.currentYear}`
-        },
-        canNavigateNext: (state) => {
-            // Check if we can go forward (max 2 months into future)
-            const now = new Date()
-            const currentRealYear = now.getFullYear()
-            const currentRealMonth = now.getMonth() + 1
-
-            let nextYear = state.currentYear
-            let nextMonth = state.currentMonth + 1
-
-            if (nextMonth > 12) {
-                nextMonth = 1
-                nextYear += 1
-            }
-
-            // Calculate months difference from current real month
-            const monthsDiff = (nextYear - currentRealYear) * 12 + (nextMonth - currentRealMonth)
-
-            // Only allow up to 2 months into the future
-            return monthsDiff <= 2
-        },
-        canNavigatePrev: () => {
-            // No restriction on going backwards
-            return true
         }
     },
 
@@ -91,42 +67,25 @@ export const useBudgetStore = defineStore('budgetStore', {
         setReadyToAssign(amount: number) {
             this.readyToAssign = amount
         },
-        setCurrentMonth(year: number, month: number) {
-            this.currentYear = year
-            this.currentMonth = month
+        // Ensure we're always showing the current month
+        ensureCurrentMonth() {
+            const now = new Date()
+            this.currentYear = now.getFullYear()
+            this.currentMonth = now.getMonth() + 1
         },
-        navigateMonth(direction: 'prev' | 'next') {
-            if (direction === 'next') {
-                // Check if we can go forward (max 2 months into future)
-                const now = new Date()
-                const currentRealYear = now.getFullYear()
-                const currentRealMonth = now.getMonth() + 1
 
-                let nextYear = this.currentYear
-                let nextMonth = this.currentMonth + 1
+        // Check if we need to roll over to a new month and handle it
+        async checkAndHandleMonthRollover() {
+            const now = new Date()
+            const realYear = now.getFullYear()
+            const realMonth = now.getMonth() + 1
 
-                if (nextMonth > 12) {
-                    nextMonth = 1
-                    nextYear += 1
-                }
+            // Update our current month to the real current month
+            this.currentYear = realYear
+            this.currentMonth = realMonth
 
-                // Calculate months difference from current real month
-                const monthsDiff = (nextYear - currentRealYear) * 12 + (nextMonth - currentRealMonth)
-
-                // Only allow up to 2 months into the future
-                if (monthsDiff <= 2) {
-                    this.currentYear = nextYear
-                    this.currentMonth = nextMonth
-                }
-            } else {
-                // No restriction on going backwards
-                if (this.currentMonth === 1) {
-                    this.currentMonth = 12
-                    this.currentYear -= 1
-                } else {
-                    this.currentMonth -= 1
-                }
-            }
+            // The backend will handle creating new month balances when needed
+            // This is just to ensure the frontend is showing the current month
         }
     },
 })

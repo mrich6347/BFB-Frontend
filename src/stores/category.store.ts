@@ -302,11 +302,14 @@ export const useCategoryStore = defineStore('categoryStore', {
       }
     },
 
-    async updateCategoryBalance(categoryId: string, assigned: number, year: number, month: number, currentUserYear?: number, currentUserMonth?: number) {
-      // Find existing balance or create a new one
-      let balanceIndex = this.categoryBalances.findIndex(b =>
-        b.category_id === categoryId && b.year === year && b.month === month
-      );
+    async updateCategoryBalance(categoryId: string, assigned: number) {
+      // Get current month
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+
+      // Find existing balance or create a new one (all balances are current month)
+      let balanceIndex = this.categoryBalances.findIndex(b => b.category_id === categoryId);
 
       let originalBalance: CategoryBalanceResponse | null = null;
       let assignedDifference = 0;
@@ -348,19 +351,9 @@ export const useCategoryStore = defineStore('categoryStore', {
         }
       }
 
-      // YNAB Logic: Update available balances for all future months
-      // Use current user month if provided, otherwise use real current month
-      const now = new Date();
-      const userYear = currentUserYear || now.getFullYear();
-      const userMonth = currentUserMonth || (now.getMonth() + 1);
-
-      if (assignedDifference !== 0) {
-        this.updateFutureMonthsAvailable(categoryId, year, month, assignedDifference, userYear, userMonth);
-      }
-
       try {
         // Send update to backend - only update assigned, let backend calculate available
-        const response = await CategoryService.updateCategoryBalance(categoryId, { assigned }, year, month, currentUserYear, currentUserMonth);
+        const response = await CategoryService.updateCategoryBalance(categoryId, { assigned }, year, month);
 
         // Update Ready to Assign in budget store
         const budgetStore = useBudgetStore();
@@ -377,26 +370,22 @@ export const useCategoryStore = defineStore('categoryStore', {
           this.categoryBalances.splice(balanceIndex, 1);
         }
 
-        // Revert future months changes
-        if (assignedDifference !== 0) {
-          this.revertFutureMonthsAvailable(categoryId, year, month, assignedDifference, userYear, userMonth);
-        }
-
         throw error;
       }
     },
 
-    async moveMoney(sourceCategoryId: string, destinationCategoryId: string, amount: number, year: number, month: number) {
-      // Find the balance records for the specified month
-      let sourceBalanceIndex = this.categoryBalances.findIndex(b =>
-        b.category_id === sourceCategoryId && b.year === year && b.month === month
-      );
-      let destinationBalanceIndex = this.categoryBalances.findIndex(b =>
-        b.category_id === destinationCategoryId && b.year === year && b.month === month
-      );
+    async moveMoney(sourceCategoryId: string, destinationCategoryId: string, amount: number) {
+      // Get current month
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+
+      // Find the balance records (all balances are current month)
+      let sourceBalanceIndex = this.categoryBalances.findIndex(b => b.category_id === sourceCategoryId);
+      let destinationBalanceIndex = this.categoryBalances.findIndex(b => b.category_id === destinationCategoryId);
 
       if (sourceBalanceIndex === -1) {
-        throw new Error('Source category balance not found for the specified month');
+        throw new Error('Source category balance not found');
       }
 
       // Store original values for rollback
@@ -458,14 +447,17 @@ export const useCategoryStore = defineStore('categoryStore', {
       }
     },
 
-    async moveMoneyToReadyToAssign(sourceCategoryId: string, amount: number, year: number, month: number) {
-      // Find the balance record for the specified month
-      let sourceBalanceIndex = this.categoryBalances.findIndex(b =>
-        b.category_id === sourceCategoryId && b.year === year && b.month === month
-      );
+    async moveMoneyToReadyToAssign(sourceCategoryId: string, amount: number) {
+      // Get current month
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+
+      // Find the balance record (all balances are current month)
+      let sourceBalanceIndex = this.categoryBalances.findIndex(b => b.category_id === sourceCategoryId);
 
       if (sourceBalanceIndex === -1) {
-        throw new Error('Source category balance not found for the specified month');
+        throw new Error('Source category balance not found');
       }
 
       // Store original balance for rollback
@@ -498,133 +490,7 @@ export const useCategoryStore = defineStore('categoryStore', {
       }
     },
 
-    // Helper method to update available balances for all future months (YNAB logic)
-    updateFutureMonthsAvailable(categoryId: string, fromYear: number, fromMonth: number, difference: number, currentUserYear: number, currentUserMonth: number) {
-      // Calculate all future months up to 2 months from current user month
-      const currentRealYear = currentUserYear;
-      const currentRealMonth = currentUserMonth;
 
-      const futureMonths = [];
-      let checkYear = fromYear;
-      let checkMonth = fromMonth + 1;
-
-      // Calculate the maximum month we should update (2 months from user's current month)
-      let maxYear = currentRealYear;
-      let maxMonth = currentRealMonth + 2;
-      if (maxMonth > 12) {
-        maxMonth = maxMonth - 12;
-        maxYear += 1;
-      }
-
-      // Generate list of future months to check/create
-      // Go from the assignment month forward until we reach the 2-month limit from user's current month
-      while (true) {
-        if (checkMonth > 12) {
-          checkMonth = 1;
-          checkYear += 1;
-        }
-
-        // Check if we've reached the maximum month (2 months from user's current month)
-        if (checkYear > maxYear || (checkYear === maxYear && checkMonth > maxMonth)) {
-          break;
-        }
-
-        futureMonths.push({ year: checkYear, month: checkMonth });
-        checkMonth += 1;
-      }
-
-      // For each future month, either update existing balance or create new one
-      const category = this.categories.find(c => c.id === categoryId);
-      if (!category) return;
-
-      for (const { year, month } of futureMonths) {
-        // Check if balance exists for this month
-        let existingBalanceIndex = this.categoryBalances.findIndex(b =>
-          b.category_id === categoryId &&
-          b.year === year &&
-          b.month === month
-        );
-
-        if (existingBalanceIndex !== -1) {
-          // Update existing balance
-          this.categoryBalances[existingBalanceIndex].available += difference;
-        } else {
-          // Create new balance record optimistically
-          const newBalance: CategoryBalanceResponse = {
-            id: 'temp-' + Date.now() + '-' + year + '-' + month,
-            category_id: categoryId,
-            budget_id: category.budget_id,
-            user_id: '', // Will be set by backend
-            year,
-            month,
-            assigned: 0,
-            activity: 0,
-            available: difference,
-            created_at: new Date(),
-            updated_at: new Date()
-          };
-
-          this.categoryBalances.push(newBalance);
-        }
-      }
-    },
-
-    // Helper method to revert future months changes on error
-    revertFutureMonthsAvailable(categoryId: string, fromYear: number, fromMonth: number, originalDifference: number, currentUserYear: number, currentUserMonth: number) {
-      // Calculate all future months up to 2 months from current user month
-      const currentRealYear = currentUserYear;
-      const currentRealMonth = currentUserMonth;
-
-      const futureMonths = [];
-      let checkYear = fromYear;
-      let checkMonth = fromMonth + 1;
-
-      // Calculate the maximum month we should revert (2 months from user's current month)
-      let maxYear = currentRealYear;
-      let maxMonth = currentRealMonth + 2;
-      if (maxMonth > 12) {
-        maxMonth = maxMonth - 12;
-        maxYear += 1;
-      }
-
-      // Generate list of future months to revert
-      // Go from the assignment month forward until we reach the 2-month limit from user's current month
-      while (true) {
-        if (checkMonth > 12) {
-          checkMonth = 1;
-          checkYear += 1;
-        }
-
-        // Check if we've reached the maximum month (2 months from user's current month)
-        if (checkYear > maxYear || (checkYear === maxYear && checkMonth > maxMonth)) {
-          break;
-        }
-
-        futureMonths.push({ year: checkYear, month: checkMonth });
-        checkMonth += 1;
-      }
-
-      // For each future month, either revert existing balance or remove newly created one
-      for (const { year, month } of futureMonths) {
-        let existingBalanceIndex = this.categoryBalances.findIndex(b =>
-          b.category_id === categoryId &&
-          b.year === year &&
-          b.month === month
-        );
-
-        if (existingBalanceIndex !== -1) {
-          const balance = this.categoryBalances[existingBalanceIndex];
-
-          // If this was a newly created balance (temp ID), remove it
-          if (balance.id.startsWith('temp-')) {
-            this.categoryBalances.splice(existingBalanceIndex, 1);
-          } else {
-            // Otherwise, revert the available amount
-            balance.available -= originalDifference;
-          }
-        }
-      }
-    },
 
     setCategoryGroups(categoryGroups: CategoryGroupResponse[]) {
       this.categoryGroups = categoryGroups;
@@ -649,15 +515,11 @@ export const useCategoryStore = defineStore('categoryStore', {
       this.isLoading = true;
     },
 
-    // Helper methods to get categories with balances
-    getCategoriesWithBalances(year: number, month: number): CategoryResponse[] {
+    // Helper methods to get categories with balances (all balances are current month now)
+    getCategoriesWithBalances(): CategoryResponse[] {
       return this.categories.map(category => {
-        // Find balance for specified month
-        const balance = this.categoryBalances.find(b =>
-          b.category_id === category.id &&
-          b.year === year &&
-          b.month === month
-        );
+        // Find balance for this category (all balances are current month)
+        const balance = this.categoryBalances.find(b => b.category_id === category.id);
 
         return {
           ...category,
@@ -668,14 +530,14 @@ export const useCategoryStore = defineStore('categoryStore', {
       });
     },
 
-    getCategoriesByGroupWithBalances(groupId: string, year: number, month: number): CategoryResponse[] {
-      return this.getCategoriesWithBalances(year, month)
+    getCategoriesByGroupWithBalances(groupId: string): CategoryResponse[] {
+      return this.getCategoriesWithBalances()
         .filter(category => category.category_group_id === groupId)
         .sort((a, b) => a.display_order - b.display_order);
     },
 
-    getGroupTotalsWithBalances(groupId: string, year: number, month: number) {
-      const groupCategories = this.getCategoriesByGroupWithBalances(groupId, year, month);
+    getGroupTotalsWithBalances(groupId: string) {
+      const groupCategories = this.getCategoriesByGroupWithBalances(groupId);
 
       return {
         assigned: groupCategories.reduce((sum, category) => sum + (category.assigned || 0), 0),

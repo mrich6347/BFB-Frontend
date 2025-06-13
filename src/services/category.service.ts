@@ -36,11 +36,8 @@ export default class CategoryService {
     await api.post('/categories/reorder', request);
   }
 
-  static async updateCategoryBalance(categoryId: string, balanceData: { assigned?: number; activity?: number; available?: number }, year: number, month: number, currentUserYear?: number, currentUserMonth?: number): Promise<CategoryWithReadyToAssignResponse> {
-    let url = `/categories/${categoryId}?year=${year}&month=${month}`;
-    if (currentUserYear && currentUserMonth) {
-      url += `&currentUserYear=${currentUserYear}&currentUserMonth=${currentUserMonth}`;
-    }
+  static async updateCategoryBalance(categoryId: string, balanceData: { assigned?: number; activity?: number; available?: number }, year: number, month: number): Promise<CategoryWithReadyToAssignResponse> {
+    const url = `/categories/${categoryId}?year=${year}&month=${month}`;
     const response = await api.patch(url, balanceData);
     return response.data;
   }

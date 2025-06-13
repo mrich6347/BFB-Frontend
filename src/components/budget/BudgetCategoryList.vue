@@ -212,7 +212,7 @@ watch(() => sortedCategoryGroups.value, (newGroups) => {
 
 // Get categories for a specific group
 const getCategoriesForGroup = (groupId: string) => {
-  return categoryStore.getCategoriesByGroupWithBalances(groupId, budgetStore.currentYear, budgetStore.currentMonth)
+  return categoryStore.getCategoriesByGroupWithBalances(groupId)
 }
 
 // Get categories from the reactive categoryLists
@@ -225,7 +225,7 @@ const getReactiveCategoriesForGroup = (groupId: string) => {
 
 // Get totals for a specific group
 const getGroupTotals = (groupId: string) => {
-  return categoryStore.getGroupTotalsWithBalances(groupId, budgetStore.currentYear, budgetStore.currentMonth)
+  return categoryStore.getGroupTotalsWithBalances(groupId)
 }
 
 // Initialize category lists for each group
@@ -237,12 +237,7 @@ const initializeCategoryLists = () => {
 }
 
 // Watch for changes in categories and update the categoryLists
-watch(() => categoryStore.getCategoriesWithBalances(budgetStore.currentYear, budgetStore.currentMonth), () => {
-  initializeCategoryLists()
-}, { deep: true })
-
-// Watch for changes in budget month and update the categoryLists
-watch(() => [budgetStore.currentYear, budgetStore.currentMonth], () => {
+watch(() => categoryStore.getCategoriesWithBalances(), () => {
   initializeCategoryLists()
 }, { deep: true })
 
@@ -521,19 +516,7 @@ const handleCategoryDeleted = (categoryId: string) => {
 
 const updateCategoryAssigned = async (categoryId: string, assignedValue: number) => {
   try {
-    // Get the real current month (not the selected month)
-    const now = new Date()
-    const realCurrentYear = now.getFullYear()
-    const realCurrentMonth = now.getMonth() + 1
-
-    await categoryStore.updateCategoryBalance(
-      categoryId,
-      assignedValue,
-      budgetStore.currentYear, // Assignment month year
-      budgetStore.currentMonth, // Assignment month
-      realCurrentYear, // Real current year
-      realCurrentMonth // Real current month
-    )
+    await categoryStore.updateCategoryBalance(categoryId, assignedValue)
   } catch (error) {
     console.error('Failed to update category assigned value:', error)
   }
@@ -543,7 +526,7 @@ const updateCategoryAssigned = async (categoryId: string, assignedValue: number)
 const availableDestinationCategories = computed(() => {
   if (!selectedSourceCategory.value) return []
 
-  return categoryStore.getCategoriesWithBalances(budgetStore.currentYear, budgetStore.currentMonth).filter(category =>
+  return categoryStore.getCategoriesWithBalances().filter(category =>
     category.id !== selectedSourceCategory.value?.id
   )
 })
@@ -598,9 +581,7 @@ const handleMoveMoney = async (destinationCategoryId: string, amount: number) =>
     await categoryStore.moveMoney(
       selectedSourceCategory.value.id,
       destinationCategoryId,
-      amount,
-      budgetStore.currentYear,
-      budgetStore.currentMonth
+      amount
     )
     showMoveMoneyModal.value = false
   } catch (error) {
@@ -614,9 +595,7 @@ const handleMoveToReadyToAssign = async (amount: number) => {
   try {
     await categoryStore.moveMoneyToReadyToAssign(
       selectedSourceCategory.value.id,
-      amount,
-      budgetStore.currentYear,
-      budgetStore.currentMonth
+      amount
     )
     showMoveMoneyModal.value = false
   } catch (error) {
@@ -631,9 +610,7 @@ const handlePullMoney = async (sourceCategoryId: string, amount: number) => {
     await categoryStore.moveMoney(
       sourceCategoryId,
       selectedDestinationCategory.value.id,
-      amount,
-      budgetStore.currentYear,
-      budgetStore.currentMonth
+      amount
     )
     showPullMoneyModal.value = false
   } catch (error) {

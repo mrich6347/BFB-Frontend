@@ -41,6 +41,9 @@ const budgetId = route.params.budgetId as string
 onMounted(async () => {
   budgetStore.setIsLoading(true)
 
+  // Ensure we're showing the current month
+  budgetStore.ensureCurrentMonth()
+
   try {
     const mainData = await MainDataService.getMainData(route.params.budgetId as string)
     if (mainData?.budget) {
