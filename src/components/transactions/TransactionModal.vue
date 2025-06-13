@@ -19,6 +19,7 @@
           name="date"
           label="Date"
           validation="required"
+          :max="maxDate"
           :classes="{
             input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
             label: 'text-sm font-medium text-foreground',
@@ -158,6 +159,11 @@ const emit = defineEmits<{
 const categoryStore = useCategoryStore()
 const amountType = ref<'inflow' | 'outflow'>('outflow')
 
+// Prevent future dates - max date is today
+const maxDate = computed(() => {
+  return new Date().toISOString().split('T')[0]
+})
+
 const categoryOptions = computed(() => {
   return [
     { label: 'Uncategorized', value: '' },
@@ -179,7 +185,7 @@ const formData = computed(() => {
       is_cleared: props.transaction.is_cleared
     }
   }
-  
+
   return {
     date: new Date().toISOString().split('T')[0],
     payee: '',
@@ -199,7 +205,7 @@ watch(() => props.transaction, (transaction) => {
 
 const handleSubmit = (data: any) => {
   const amount = amountType.value === 'outflow' ? -Math.abs(data.amount) : Math.abs(data.amount)
-  
+
   const transactionData = {
     ...data,
     amount,
