@@ -35,6 +35,55 @@ export const useAccountStore = defineStore('accountStore', {
             this.accounts.push(response.account);
             return response.account;
         },
+        updateAccountBalance(accountId: string, amount: number, isCleared: boolean) {
+            const accountIndex = this.accounts.findIndex(account => account.id === accountId)
+            if (accountIndex === -1) return
+
+            const account = this.accounts[accountIndex]
+
+            if (isCleared) {
+                account.cleared_balance += amount
+            } else {
+                account.uncleared_balance += amount
+            }
+
+            account.working_balance = account.cleared_balance + account.uncleared_balance
+        },
+
+        updateAccountBalanceOnClearedToggle(accountId: string, amount: number, newClearedStatus: boolean) {
+            const accountIndex = this.accounts.findIndex(account => account.id === accountId)
+            if (accountIndex === -1) return
+
+            const account = this.accounts[accountIndex]
+
+            if (newClearedStatus) {
+                // Moving from uncleared to cleared
+                account.uncleared_balance -= amount
+                account.cleared_balance += amount
+            } else {
+                // Moving from cleared to uncleared
+                account.cleared_balance -= amount
+                account.uncleared_balance += amount
+            }
+
+            // Working balance stays the same since we're just moving between cleared/uncleared
+        },
+
+        removeAccountBalance(accountId: string, amount: number, isCleared: boolean) {
+            const accountIndex = this.accounts.findIndex(account => account.id === accountId)
+            if (accountIndex === -1) return
+
+            const account = this.accounts[accountIndex]
+
+            if (isCleared) {
+                account.cleared_balance -= amount
+            } else {
+                account.uncleared_balance -= amount
+            }
+
+            account.working_balance = account.cleared_balance + account.uncleared_balance
+        },
+
         reset() {
             this.accounts = []
             this.isLoading = true
