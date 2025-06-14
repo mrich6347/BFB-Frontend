@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import type { CreateTransactionDto, UpdateTransactionDto, TransactionResponse } from '@/types/DTO/transaction.dto'
 import { TransactionService } from '@/services/transaction.service'
 import { useAccountStore } from './account.store'
+import { useBudgetStore } from './budget.store'
 
 export const useTransactionStore = defineStore('transactionStore', {
   state: () => ({
@@ -68,6 +69,8 @@ export const useTransactionStore = defineStore('transactionStore', {
           newTransaction.amount,
           newTransaction.is_cleared
         )
+
+
 
         return newTransaction
       } catch (error) {

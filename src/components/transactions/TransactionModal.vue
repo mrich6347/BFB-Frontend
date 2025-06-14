@@ -173,6 +173,7 @@ const maxDate = computed(() => {
 const categoryOptions = computed(() => {
   return [
     { label: 'Uncategorized', value: '' },
+    { label: 'Ready to Assign', value: 'ready-to-assign' },
     ...categoryStore.categories.map(category => ({
       label: category.name,
       value: category.id
@@ -185,7 +186,7 @@ const formData = computed(() => {
     return {
       date: props.transaction.date,
       payee: props.transaction.payee || '',
-      category_id: props.transaction.category_id || '',
+      category_id: props.transaction.category_id === null ? 'ready-to-assign' : (props.transaction.category_id || ''),
       memo: props.transaction.memo || '',
       amount: Math.abs(props.transaction.amount),
       is_cleared: props.transaction.is_cleared

@@ -135,7 +135,8 @@ const toggleMemoExpansion = () => {
   isMemoExpanded.value = !isMemoExpanded.value
 }
 
-const getCategoryName = (categoryId?: string) => {
+const getCategoryName = (categoryId?: string | null) => {
+  if (categoryId === null) return 'Ready to Assign'
   if (!categoryId) return 'Uncategorized'
   const category = categoryStore.categories.find(cat => cat.id === categoryId)
   return category?.name || 'Unknown Category'
