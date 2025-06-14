@@ -167,8 +167,6 @@ const handleSubmit = async (formData: any) => {
         ...formData,
         id: props.initialValues?.id || '', // Add id if in edit mode
         budget_id: props.budgetId,
-        interest_rate: props.initialValues?.interest_rate || null, // Add default null values if not provided
-        minimum_monthly_payment: props.initialValues?.minimum_monthly_payment || null,
     };
     emit('submit', completeFormData);
   }

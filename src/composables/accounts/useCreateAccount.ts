@@ -13,9 +13,9 @@ export function useAccounts() {
 
         let numericBalance = parseFloat(decimalBalanceStr);
 
-        // if the account is a loan or credit, we need to turn the balance into a negative number
+        // if the account is a credit, we need to turn the balance into a negative number
         // UNLESS it has a '+' in front of it
-        if (request.account_type === AccountType.LOAN || request.account_type === AccountType.CREDIT) {
+        if (request.account_type === AccountType.CREDIT) {
             if (inputBalanceStr.startsWith('+')) {
                 numericBalance = Math.abs(numericBalance);
             } else {

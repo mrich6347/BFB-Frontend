@@ -261,32 +261,11 @@ const accountSections = computed(() => [
     total: accountStore.getAccountsByType(AccountType.CASH)
       .reduce((sum, account) => sum + account.working_balance, 0),
     accounts: accountStore.getAccountsByType(AccountType.CASH)
-  },
-  {
-    title: AccountType.CREDIT,
-    total: accountStore.getAccountsByType(AccountType.CREDIT)
-      .reduce((sum, account) => sum + account.working_balance, 0),
-    accounts: accountStore.getAccountsByType(AccountType.CREDIT)
-  },
-  {
-    title: AccountType.TRACKING,
-    total: accountStore.getAccountsByType(AccountType.TRACKING)
-      .reduce((sum, account) => sum + account.working_balance, 0),
-    accounts: accountStore.getAccountsByType(AccountType.TRACKING)
-  },
-  {
-    title: AccountType.LOAN,
-    total: accountStore.getAccountsByType(AccountType.LOAN)
-      .reduce((sum, account) => sum + account.working_balance, 0),
-    accounts: accountStore.getAccountsByType(AccountType.LOAN)
   }
 ])
 
 const expandedSections = ref<Record<SectionTitle, boolean>>({
   [AccountType.CASH]: false,
-  [AccountType.CREDIT]: false,
-  [AccountType.TRACKING]: false,
-  [AccountType.LOAN]: false,
   'CLOSED': false
 })
 

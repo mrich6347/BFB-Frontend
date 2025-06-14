@@ -1,8 +1,5 @@
 export enum AccountType {
     CASH = 'CASH',
-    CREDIT = 'CREDIT',
-    LOAN = 'LOAN',
-    TRACKING = 'TRACKING',
 }
 
 export interface CreateAccountDto {
@@ -10,8 +7,6 @@ export interface CreateAccountDto {
     name: string;
     account_type: AccountType;
     account_balance: number;
-    interest_rate: number | null;
-    minimum_monthly_payment: number | null;
     budget_id: string;
 }
 
@@ -20,8 +15,6 @@ export interface AccountResponse {
     name: string;
     account_type: AccountType;
     budget_id: string;
-    interest_rate?: number;
-    minimum_monthly_payment?: number;
     account_balance: number;
     cleared_balance: number;
     uncleared_balance: number;
