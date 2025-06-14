@@ -24,7 +24,7 @@
           <thead class="bg-muted/50 border-b border-border">
             <tr>
               <th class="text-left p-3 text-sm font-medium text-muted-foreground w-12">
-                <CheckIcon class="w-4 h-4" />
+                C
               </th>
               <th class="text-left p-3 text-sm font-medium text-muted-foreground w-24">Date</th>
               <th class="text-left p-3 text-sm font-medium text-muted-foreground">Payee</th>
@@ -62,7 +62,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { PlusIcon, CheckIcon } from 'lucide-vue-next'
+import { PlusIcon } from 'lucide-vue-next'
 import Button from '@/components/shadcn-ui/button.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import TransactionRow from './TransactionRow.vue'

@@ -4,12 +4,12 @@
     <td class="p-3">
       <button
         @click="$emit('toggle-cleared', transaction)"
-        class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors"
+        class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors font-semibold text-xs"
         :class="transaction.is_cleared
           ? 'bg-green-500 border-green-500 text-white'
-          : 'border-muted-foreground hover:border-green-500'"
+          : 'border-muted-foreground hover:border-green-500 text-muted-foreground hover:text-green-500'"
       >
-        <CheckIcon v-if="transaction.is_cleared" class="w-3 h-3" />
+        C
       </button>
     </td>
 
@@ -102,7 +102,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { CheckIcon, EditIcon, TrashIcon, ChevronDownIcon } from 'lucide-vue-next'
+import { EditIcon, TrashIcon, ChevronDownIcon } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import { formatDate } from '@/utils/dateFormatUtil'
 import { useCategoryStore } from '@/stores/category.store'

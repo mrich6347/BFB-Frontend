@@ -13,7 +13,7 @@ export const useTransactionStore = defineStore('transactionStore', {
     getTransactionsByAccount: (state) => (accountId: string) => {
       return state.transactions.filter(transaction => transaction.account_id === accountId)
     },
-    
+
     getTransactionById: (state) => (id: string) => {
       return state.transactions.find(transaction => transaction.id === id)
     },
@@ -80,14 +80,25 @@ export const useTransactionStore = defineStore('transactionStore', {
     },
 
     async toggleCleared(id: string) {
+      const index = this.transactions.findIndex(t => t.id === id)
+      if (index === -1) {
+        throw new Error('Transaction not found')
+      }
+
+      // Store original state for rollback
+      const originalTransaction = { ...this.transactions[index] }
+
+      // Optimistically update the UI
+      this.transactions[index].is_cleared = !this.transactions[index].is_cleared
+
       try {
         const updatedTransaction = await TransactionService.toggleCleared(id)
-        const index = this.transactions.findIndex(t => t.id === id)
-        if (index !== -1) {
-          this.transactions[index] = updatedTransaction
-        }
+        // Update with the actual response from server (in case there are other fields updated)
+        this.transactions[index] = updatedTransaction
         return updatedTransaction
       } catch (error) {
+        // Rollback on error
+        this.transactions[index] = originalTransaction
         console.error('Failed to toggle cleared status:', error)
         throw error
       }
