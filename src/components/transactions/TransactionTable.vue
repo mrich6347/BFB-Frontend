@@ -1,8 +1,24 @@
 <template>
   <div class="space-y-4">
-    <!-- Add Transaction Button -->
+    <!-- Header with Add Transaction Button and Filters -->
     <div class="flex justify-between items-center">
-      <h2 class="text-lg font-semibold text-foreground">Transactions</h2>
+      <div class="flex items-center gap-4">
+        <h2 class="text-lg font-semibold text-foreground">Transactions</h2>
+
+        <!-- Show Reconciled Toggle -->
+        <div class="flex items-center gap-2 text-sm">
+          <input
+            id="show-reconciled"
+            type="checkbox"
+            v-model="showReconciled"
+            class="rounded border-input"
+          />
+          <label for="show-reconciled" class="text-muted-foreground cursor-pointer">
+            Show reconciled transactions
+          </label>
+        </div>
+      </div>
+
       <Button @click="showAddTransactionModal = true" class="flex items-center gap-2">
         <PlusIcon class="w-4 h-4" />
         Add Transaction
@@ -81,9 +97,17 @@ const $toast = useToast()
 const showAddTransactionModal = ref(false)
 const showEditTransactionModal = ref(false)
 const editingTransaction = ref<TransactionResponse | null>(null)
+const showReconciled = ref(false)
 
 const transactions = computed(() => {
-  return transactionStore.getTransactionsByAccount(props.accountId)
+  const allTransactions = transactionStore.getTransactionsByAccount(props.accountId)
+
+  if (showReconciled.value) {
+    return allTransactions
+  } else {
+    // Hide reconciled transactions by default
+    return allTransactions.filter(transaction => !transaction.is_reconciled)
+  }
 })
 
 const editTransaction = (transaction: TransactionResponse) => {

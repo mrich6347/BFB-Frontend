@@ -1,16 +1,31 @@
 <template>
-  <tr class="border-b border-border hover:bg-muted/30 transition-colors">
+  <tr
+    class="border-b border-border hover:bg-muted/30 transition-colors"
+    :class="{ 'opacity-60 bg-muted/20': transaction.is_reconciled }"
+  >
     <!-- Cleared Status -->
     <td class="p-3">
-      <button
-        @click="$emit('toggle-cleared', transaction)"
-        class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors font-semibold text-xs"
-        :class="transaction.is_cleared
-          ? 'bg-green-500 border-green-500 text-white'
-          : 'border-muted-foreground hover:border-green-500 text-muted-foreground hover:text-green-500'"
-      >
-        C
-      </button>
+      <div class="flex items-center gap-1">
+        <button
+          @click="$emit('toggle-cleared', transaction)"
+          class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors font-semibold text-xs"
+          :class="transaction.is_cleared
+            ? 'bg-green-500 border-green-500 text-white'
+            : 'border-muted-foreground hover:border-green-500 text-muted-foreground hover:text-green-500'"
+          :disabled="transaction.is_reconciled"
+          :title="transaction.is_reconciled ? 'Cannot modify reconciled transaction' : 'Toggle cleared status'"
+        >
+          C
+        </button>
+        <!-- Reconciled indicator -->
+        <div
+          v-if="transaction.is_reconciled"
+          class="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center"
+          title="Reconciled transaction"
+        >
+          <span class="text-white text-xs font-bold">R</span>
+        </div>
+      </div>
     </td>
 
     <!-- Date -->
@@ -84,14 +99,18 @@
         <button
           @click="$emit('edit', transaction)"
           class="p-1 rounded hover:bg-muted transition-colors"
-          title="Edit transaction"
+          :disabled="transaction.is_reconciled"
+          :title="transaction.is_reconciled ? 'Cannot edit reconciled transaction' : 'Edit transaction'"
+          :class="{ 'opacity-50 cursor-not-allowed': transaction.is_reconciled }"
         >
           <EditIcon class="w-4 h-4 text-muted-foreground" />
         </button>
         <button
           @click="$emit('delete', transaction)"
           class="p-1 rounded hover:bg-muted transition-colors"
-          title="Delete transaction"
+          :disabled="transaction.is_reconciled"
+          :title="transaction.is_reconciled ? 'Cannot delete reconciled transaction' : 'Delete transaction'"
+          :class="{ 'opacity-50 cursor-not-allowed': transaction.is_reconciled }"
         >
           <TrashIcon class="w-4 h-4 text-muted-foreground hover:text-destructive" />
         </button>

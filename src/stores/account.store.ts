@@ -84,6 +84,24 @@ export const useAccountStore = defineStore('accountStore', {
             account.working_balance = account.cleared_balance + account.uncleared_balance
         },
 
+        async reconcileAccount(accountId: string, actualBalance: number) {
+            try {
+                const response = await AccountService.reconcileAccount(accountId, actualBalance)
+
+                // Update the account balance optimistically
+                const accountIndex = this.accounts.findIndex(account => account.id === accountId)
+                if (accountIndex !== -1) {
+                    this.accounts[accountIndex].cleared_balance = actualBalance
+                    this.accounts[accountIndex].working_balance = actualBalance + this.accounts[accountIndex].uncleared_balance
+                }
+
+                return response
+            } catch (error) {
+                console.error('Failed to reconcile account:', error)
+                throw error
+            }
+        },
+
         reset() {
             this.accounts = []
             this.isLoading = true
