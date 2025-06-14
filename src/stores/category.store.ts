@@ -36,6 +36,12 @@ export const useCategoryStore = defineStore('categoryStore', {
       );
     },
 
+    categoryExistsByNameInBudget: (state) => (name: string, budgetId: string) => {
+      return state.categories.find(
+        category => category.name.toLowerCase() === name.toLowerCase() && category.budget_id === budgetId
+      );
+    },
+
     getTotalAssigned: (state) => {
       return state.categories.reduce((sum, category) => sum + (category.assigned || 0), 0);
     },

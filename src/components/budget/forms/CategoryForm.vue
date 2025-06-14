@@ -16,7 +16,7 @@
         uniqueCategoryName: uniqueCategoryNameRule
       }"
       :validation-messages="{
-        uniqueCategoryName: 'Category already exists with this name in this group'
+        uniqueCategoryName: 'Category already exists with this name'
       }"
       validation="required|uniqueCategoryName"
       placeholder="Enter category name"
@@ -74,7 +74,7 @@ const emit = defineEmits<{
   (e: 'cancel'): void
 }>()
 
-// Custom validation rule for unique category name within a group
+// Custom validation rule for unique category name across the entire budget
 const uniqueCategoryNameRule = (node: FormKitNode): boolean => {
   const value = node.value as string
   if (!value) return true
@@ -84,8 +84,8 @@ const uniqueCategoryNameRule = (node: FormKitNode): boolean => {
     return true
   }
 
-  // Check against the store, case-insensitive
-  return !categoryStore.categoryExistsByName(value, props.categoryGroupId)
+  // Check against the store across the entire budget, case-insensitive
+  return !categoryStore.categoryExistsByNameInBudget(value, props.budgetId)
 }
 
 const handleSubmit = (formData: { name: string, assigned?: number }) => {
