@@ -4,6 +4,7 @@ import type { CategoryGroupResponse } from "./category-group.dto";
 import type { CategoryResponse } from "./category.dto";
 import type { CategoryBalanceResponse } from "./category-balance.dto";
 import type { TransactionResponse } from "./transaction.dto";
+import type { AutoAssignConfigurationSummary } from "@/services/auto-assign.service";
 
 export interface MainDataResponse {
     budget?: BudgetResponse;
@@ -13,4 +14,5 @@ export interface MainDataResponse {
     categoryBalances?: CategoryBalanceResponse[];
     transactions?: TransactionResponse[];
     readyToAssign?: number;
+    autoAssignConfigurations?: AutoAssignConfigurationSummary[];
 }

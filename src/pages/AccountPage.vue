@@ -69,6 +69,11 @@ const loadMainData = async () => {
       if (mainData?.readyToAssign !== undefined) {
         budgetStore.setReadyToAssign(mainData.readyToAssign)
       }
+      if (mainData?.autoAssignConfigurations) {
+        const { useAutoAssignStore } = await import('@/stores/auto-assign.store')
+        const autoAssignStore = useAutoAssignStore()
+        autoAssignStore.setConfigurations(mainData.autoAssignConfigurations)
+      }
       if (mainData?.transactions) {
         transactionStore.setTransactions(mainData.transactions)
       }

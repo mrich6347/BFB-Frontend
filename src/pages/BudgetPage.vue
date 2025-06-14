@@ -13,6 +13,7 @@
           <BudgetCategoryList />
         </div>
       </div>
+      <AutoAssignPanel />
     </div>
   </div>
 </template>
@@ -28,7 +29,9 @@ import { MainDataService } from '@/services/common/mainData.service'
 import { useAccountStore } from '@/stores/account.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { useTransactionStore } from '@/stores/transaction.store'
+import { useAutoAssignStore } from '@/stores/auto-assign.store'
 import BudgetCategoryList from '@/components/budget/BudgetCategoryList.vue'
+import AutoAssignPanel from '@/components/budget/AutoAssignPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -36,6 +39,7 @@ const budgetStore = useBudgetStore()
 const accountStore = useAccountStore()
 const categoryStore = useCategoryStore()
 const transactionStore = useTransactionStore()
+const autoAssignStore = useAutoAssignStore()
 const budgetId = route.params.budgetId as string
 
 onMounted(async () => {
@@ -66,6 +70,9 @@ onMounted(async () => {
     }
     if (mainData?.transactions?.length) {
       transactionStore.setTransactions(mainData.transactions)
+    }
+    if (mainData?.autoAssignConfigurations) {
+      autoAssignStore.setConfigurations(mainData.autoAssignConfigurations)
     }
 
     // Set loading to false for both stores
