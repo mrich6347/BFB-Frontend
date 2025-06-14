@@ -3,6 +3,7 @@ import type { CreateAccountDto, AccountResponse, AccountType, AccountWithReadyTo
 import { AccountService } from "@/services/account.service";
 import { useAccounts } from "@/composables/accounts/useCreateAccount";
 import { useBudgetStore } from "./budget.store";
+import { useCategoryStore } from "./category.store";
 
 export const useAccountStore = defineStore('accountStore', {
     state: () => ({
@@ -33,6 +34,13 @@ export const useAccountStore = defineStore('accountStore', {
 
             // Add the account to the accounts list
             this.accounts.push(response.account);
+
+            // If this is a credit card account, refresh categories to show the new payment category
+            if (response.account.account_type === 'CREDIT') {
+                const categoryStore = useCategoryStore();
+                await categoryStore.fetchAllCategoryData(response.account.budget_id);
+            }
+
             return response.account;
         },
         updateAccountBalance(accountId: string, amount: number, isCleared: boolean) {

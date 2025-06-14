@@ -55,19 +55,32 @@
               @click="toggleGroup(group.id)"
             >
               <div class="flex items-center truncate">
-                <GripVertical class="h-4 w-4 mr-1 text-muted-foreground cursor-grab group-drag-handle opacity-0 group-hover:opacity-100 transition-opacity" />
+                <GripVertical
+                  v-if="!group.is_system_group"
+                  class="h-4 w-4 mr-1 text-muted-foreground cursor-grab group-drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
+                />
+                <div v-else class="h-4 w-4 mr-1"></div> <!-- Spacer for system groups -->
                 <ChevronDownIcon v-if="expandedGroups.has(group.id)" class="h-4 w-4 mr-1 flex-shrink-0" />
                 <ChevronRightIcon v-else class="h-4 w-4 mr-1 flex-shrink-0" />
                 <span class="flex items-center gap-1 truncate">
                   {{ group.name }}
                   <PlusIcon
+                    v-if="!group.is_system_group"
                     class="h-4 w-4 cursor-pointer hover:text-primary bg-primary/20 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                     @click.stop="openCreateCategoryModal(group.id)"
                   />
                   <Edit
+                    v-if="!group.is_system_group"
                     class="h-4 w-4 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
                     @click.stop="openEditCategoryGroupModal(group)"
                   />
+                  <span
+                    v-if="group.is_system_group"
+                    class="text-xs text-muted-foreground ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="System-managed category group"
+                  >
+                    (System)
+                  </span>
                 </span>
               </div>
               <div class="text-right text-sm">{{ formatCurrency(getGroupTotals(group.id).assigned) }}</div>
@@ -96,7 +109,11 @@
                     :data-category-id="category.id"
                   >
                     <div class="flex items-center truncate">
-                      <GripVertical class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <GripVertical
+                        v-if="!category.is_credit_card_payment"
+                        class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
+                      />
+                      <div v-else class="h-3.5 w-3.5 mr-2"></div> <!-- Spacer for credit card payment categories -->
                       <span class="truncate">{{ category.name }}</span>
                       <Edit
                         v-if="!category.is_credit_card_payment"
@@ -342,6 +359,15 @@ const onGroupChange = async (event: any) => {
     return
   }
 
+  // Prevent reordering of system groups
+  const movedGroup = event.moved.element
+  if (movedGroup.is_system_group) {
+    console.log('Cannot reorder system groups')
+    // Revert the change by resetting the list
+    categoryGroupsList.value = [...sortedCategoryGroups.value]
+    return
+  }
+
   console.log('Group drag event detected:', event)
 
   // Get the category group IDs in the new order
@@ -374,6 +400,15 @@ const onChange = async (event: any, groupId: string) => {
   // Only process if this is a moved event
   if (!event.moved) {
     console.log('Not a move event, ignoring', event)
+    return
+  }
+
+  // Prevent reordering of credit card payment categories
+  const movedCategory = event.moved.element
+  if (movedCategory.is_credit_card_payment) {
+    console.log('Cannot reorder credit card payment categories')
+    // Revert the change by resetting the list
+    categoryLists[groupId] = [...getCategoriesForGroup(groupId)]
     return
   }
 
