@@ -127,6 +127,11 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import AutoAssignConfigModal from './AutoAssignConfigModal.vue'
 import type { AutoAssignConfigurationSummary } from '@/services/auto-assign.service'
 
+// Define emits
+const emit = defineEmits<{
+  'categories-assigned': [categoryIds: string[]]
+}>()
+
 const autoAssignStore = useAutoAssignStore()
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
@@ -176,6 +181,10 @@ const applyConfiguration = async (config: AutoAssignConfigurationSummary) => {
       // Show applied categories with animation
       appliedCategories.value = result.appliedCategories
       applyingMessage.value = `Successfully applied to ${result.appliedCount} categories!`
+
+      // Emit event to trigger flash animation on category rows
+      const categoryIds = result.appliedCategories.map(cat => cat.category_id)
+      emit('categories-assigned', categoryIds)
 
       // Wait a bit to show the success animation
       await new Promise(resolve => setTimeout(resolve, 2000))

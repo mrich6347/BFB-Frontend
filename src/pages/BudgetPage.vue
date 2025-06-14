@@ -10,17 +10,17 @@
         <BudgetHeader />
         <div class="p-4">
           <!-- Budget content goes here -->
-          <BudgetCategoryList />
+          <BudgetCategoryList ref="categoryListRef" />
         </div>
       </div>
-      <AutoAssignPanel />
+      <AutoAssignPanel @categories-assigned="handleCategoriesAssigned" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import BudgetHeader from '@/components/budget/BudgetHeader.vue'
 import { useBudgetStore } from '@/stores/budget.store'
@@ -41,6 +41,9 @@ const categoryStore = useCategoryStore()
 const transactionStore = useTransactionStore()
 const autoAssignStore = useAutoAssignStore()
 const budgetId = route.params.budgetId as string
+
+// Reference to the category list component
+const categoryListRef = ref<InstanceType<typeof BudgetCategoryList> | null>(null)
 
 onMounted(async () => {
   budgetStore.setIsLoading(true)
@@ -85,4 +88,12 @@ onMounted(async () => {
     await router.push('/dashboard')
   }
 })
+
+// Handle categories assigned event from AutoAssignPanel
+const handleCategoriesAssigned = (categoryIds: string[]) => {
+  // Trigger flash animation on the category list
+  if (categoryListRef.value) {
+    categoryListRef.value.flashCategoriesWithMoney(categoryIds)
+  }
+}
 </script>

@@ -581,6 +581,29 @@ const handleCategoryCreated = (category: CategoryResponse) => {
   }, 100)
 }
 
+// Method to flash categories with green background when money is assigned
+const flashCategoriesWithMoney = (categoryIds: string[]) => {
+  categoryIds.forEach((categoryId, index) => {
+    // Stagger the animations slightly for a nice effect
+    setTimeout(() => {
+      const categoryElement = document.querySelector(`[data-category-id="${categoryId}"]`)
+      if (categoryElement) {
+        categoryElement.classList.add('flash-money-added')
+
+        // Remove the class after animation completes
+        setTimeout(() => {
+          categoryElement.classList.remove('flash-money-added')
+        }, 1000)
+      }
+    }, index * 100) // 100ms delay between each category flash
+  })
+}
+
+// Expose the flash method to parent components
+defineExpose({
+  flashCategoriesWithMoney
+})
+
 const handleCategoryUpdated = (category: CategoryResponse) => {
   showCategoryModal.value = false
   // Optimistic updates in the store will handle UI updates automatically
@@ -757,7 +780,23 @@ const handlePullFromReadyToAssign = async (amount: number) => {
   }
 }
 
+@keyframes flashMoneyAdded {
+  0% {
+    background-color: transparent;
+  }
+  30% {
+    background-color: rgba(34, 197, 94, 0.3); /* green-500 with opacity */
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
 .highlight-new {
   animation: highlight 2s ease-in-out;
+}
+
+.flash-money-added {
+  animation: flashMoneyAdded 1s ease-in-out;
 }
 </style>
