@@ -1,4 +1,4 @@
-import type { AccountResponse, CreateAccountDto, AccountWithReadyToAssignResponse } from "../types/DTO/account.dto"
+import type { AccountResponse, CreateAccountDto, AccountWithReadyToAssignResponse, UpdateAccountDto, CloseAccountResponse } from "../types/DTO/account.dto"
 import api from "./common/api"
 
 export class AccountService {
@@ -7,6 +7,21 @@ export class AccountService {
 
     static async createAccount(request: CreateAccountDto): Promise<AccountWithReadyToAssignResponse> {
         const response = await api.post(this.BASE_PATH, request)
+        return response.data
+    }
+
+    static async updateAccount(accountId: string, request: UpdateAccountDto): Promise<AccountWithReadyToAssignResponse> {
+        const response = await api.patch(`${this.BASE_PATH}/${accountId}`, request)
+        return response.data
+    }
+
+    static async closeAccount(accountId: string): Promise<CloseAccountResponse> {
+        const response = await api.delete(`${this.BASE_PATH}/${accountId}`)
+        return response.data
+    }
+
+    static async reopenAccount(accountId: string): Promise<AccountWithReadyToAssignResponse> {
+        const response = await api.post(`${this.BASE_PATH}/${accountId}/reopen`)
         return response.data
     }
 

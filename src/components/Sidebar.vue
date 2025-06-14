@@ -79,6 +79,43 @@
             </router-link>
           </div>
         </template>
+
+        <!-- Closed Accounts Section -->
+        <div v-if="accountStore.closedAccounts.length > 0">
+          <button
+            @click="toggleSection('CLOSED' as SectionTitle)"
+            class="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-muted-foreground cursor-pointer rounded-lg"
+          >
+            <div class="flex items-center">
+              <ChevronDownIcon
+                v-if="expandedSections['CLOSED' as SectionTitle]"
+                class="w-4 h-4 mr-1 transition-transform"
+              />
+              <ChevronRightIcon
+                v-else
+                class="w-4 h-4 mr-1 transition-transform"
+              />
+              <span>Closed Accounts</span>
+            </div>
+            <span class="text-xs text-muted-foreground">({{ accountStore.closedAccounts.length }})</span>
+          </button>
+          <div v-if="expandedSections['CLOSED' as SectionTitle]" class="mb-4">
+            <div
+              v-for="account in accountStore.closedAccounts"
+              :key="account.id"
+              class="flex items-center justify-between px-3 py-2 text-sm rounded-lg ml-2 min-w-0"
+            >
+              <span class="text-muted-foreground truncate flex-shrink min-w-0 mr-4">{{ account.name }}</span>
+              <button
+                @click="handleReopenAccount(account.id)"
+                class="text-xs text-primary hover:text-primary/80 flex-shrink-0"
+                :disabled="isReopeningAccount"
+              >
+                {{ isReopeningAccount ? 'Reopening...' : 'Reopen' }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Add Account Button -->
@@ -268,10 +305,32 @@ const isCreateAccountModalOpen = ref(false)
 const isCollapsed = ref(false)
 const showNukeDatabaseConfirm = ref(false)
 const isNuking = ref(false)
+const isReopeningAccount = ref(false)
 const toast = useToast()
 
 const toggleSettings = () => {
   isSettingsExpanded.value = !isSettingsExpanded.value
+}
+
+const openCreateAccountModal = () => {
+  isCreateAccountModalOpen.value = true
+}
+
+const closeCreateAccountModal = () => {
+  isCreateAccountModalOpen.value = false
+}
+
+const handleReopenAccount = async (accountId: string) => {
+  try {
+    isReopeningAccount.value = true
+    await accountStore.reopenAccount(accountId)
+    toast.success('Account reopened successfully')
+  } catch (error) {
+    console.error('Failed to reopen account:', error)
+    toast.error('Failed to reopen account')
+  } finally {
+    isReopeningAccount.value = false
+  }
 }
 
 const toggleCollapse = () => {

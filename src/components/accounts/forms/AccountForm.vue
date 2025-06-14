@@ -29,6 +29,7 @@
     />
 
     <FormKit
+      v-if="mode === 'create'"
       type="select"
       name="account_type"
       label="Account Type"
@@ -44,6 +45,7 @@
     />
 
     <FormKit
+      v-if="mode === 'create'"
       type="text"
       name="current_balance"
       label="Current Balance"
@@ -105,7 +107,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: 'submit', data: CreateAccountDto): void;
+  (e: 'submit', data: CreateAccountDto | { name: string }): void;
   (e: 'cancel'): void;
 }>();
 
@@ -133,8 +135,9 @@ const uniqueAccountNameRule = (node: FormKitNode): boolean => {
     return true;
   }
 
-  // Check against the store, case-insensitive
-  return !accountStore.accountExistsByName(value);
+  // Check against the store, case-insensitive, excluding current account in edit mode
+  const excludeAccountId = props.mode === 'edit' ? props.initialValues?.id : undefined;
+  return !accountStore.accountExistsByName(value, excludeAccountId);
 };
 
 // Custom validation rule for valid balance format
@@ -154,15 +157,20 @@ const validBalanceRule = (node: FormKitNode): boolean => {
   }
 };
 
-const handleSubmit = async (formData: Omit<CreateAccountDto, 'budget_id' | 'id'>) => {
-  // Add budget_id before emitting
-  const completeFormData: CreateAccountDto = {
-      ...formData,
-      id: props.initialValues?.id || '', // Add id if in edit mode
-      budget_id: props.budgetId,
-      interest_rate: props.initialValues?.interest_rate || null, // Add default null values if not provided
-      minimum_monthly_payment: props.initialValues?.minimum_monthly_payment || null,
-  };
-  emit('submit', completeFormData);
+const handleSubmit = async (formData: any) => {
+  if (props.mode === 'edit') {
+    // In edit mode, only emit the name
+    emit('submit', { name: formData.name });
+  } else {
+    // In create mode, emit the complete form data
+    const completeFormData: CreateAccountDto = {
+        ...formData,
+        id: props.initialValues?.id || '', // Add id if in edit mode
+        budget_id: props.budgetId,
+        interest_rate: props.initialValues?.interest_rate || null, // Add default null values if not provided
+        minimum_monthly_payment: props.initialValues?.minimum_monthly_payment || null,
+    };
+    emit('submit', completeFormData);
+  }
 };
 </script>

@@ -28,7 +28,17 @@ export interface AccountResponse {
     is_active: boolean;
 }
 
+export interface UpdateAccountDto {
+    name?: string;
+}
+
 export interface AccountWithReadyToAssignResponse {
     account: AccountResponse;
+    readyToAssign: number;
+}
+
+export interface CloseAccountResponse {
+    account: AccountResponse;
+    adjustmentTransaction?: any;
     readyToAssign: number;
 }

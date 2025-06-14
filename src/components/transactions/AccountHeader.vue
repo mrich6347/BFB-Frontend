@@ -34,19 +34,55 @@
             </div>
           </div>
 
-          <!-- Reconcile Button -->
-          <Button
-            @click="showReconcileModal = true"
-            variant="outline"
-            size="sm"
-            class="flex items-center gap-2"
-          >
-            <CheckCircle class="w-4 h-4" />
-            Reconcile
-          </Button>
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-2">
+            <Button
+              @click="showEditModal = true"
+              variant="outline"
+              size="sm"
+              class="flex items-center gap-2"
+            >
+              <Edit class="w-4 h-4" />
+              Edit
+            </Button>
+            <Button
+              @click="showCloseModal = true"
+              variant="outline"
+              size="sm"
+              class="flex items-center gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              <X class="w-4 h-4" />
+              Close
+            </Button>
+            <Button
+              @click="showReconcileModal = true"
+              variant="outline"
+              size="sm"
+              class="flex items-center gap-2"
+            >
+              <CheckCircle class="w-4 h-4" />
+              Reconcile
+            </Button>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Edit Account Modal -->
+    <EditAccountModal
+      :is-open="showEditModal"
+      :account="account"
+      @close="showEditModal = false"
+      @updated="handleAccountUpdated"
+    />
+
+    <!-- Close Account Modal -->
+    <CloseAccountModal
+      :is-open="showCloseModal"
+      :account="account"
+      @close="showCloseModal = false"
+      @closed="handleAccountClosed"
+    />
 
     <!-- Reconcile Modal -->
     <ReconcileModal
@@ -62,18 +98,24 @@
 import { ref, computed } from 'vue'
 import Badge from '@/components/shadcn-ui/Badge.vue'
 import Button from '@/components/shadcn-ui/button.vue'
-import { CheckCircle } from 'lucide-vue-next'
+import { CheckCircle, Edit, X } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { AccountResponse, AccountType } from '@/types/DTO/account.dto'
 import ReconcileModal from '@/components/accounts/ReconcileModal.vue'
+import EditAccountModal from '@/components/accounts/EditAccountModal.vue'
+import CloseAccountModal from '@/components/accounts/CloseAccountModal.vue'
 import { useTransactionStore } from '@/stores/transaction.store'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   account?: AccountResponse
 }>()
 
 const transactionStore = useTransactionStore()
+const router = useRouter()
 const showReconcileModal = ref(false)
+const showEditModal = ref(false)
+const showCloseModal = ref(false)
 
 const formatAccountType = (type?: AccountType) => {
   if (!type) return ''
@@ -93,6 +135,19 @@ const handleReconciled = () => {
   // Refresh transactions to show updated reconciled status
   if (props.account) {
     transactionStore.loadTransactionsByAccount(props.account.id)
+  }
+}
+
+const handleAccountUpdated = () => {
+  // Account will be automatically updated in the store due to reactivity
+  showEditModal.value = false
+}
+
+const handleAccountClosed = () => {
+  // Account has been closed, redirect to budget page
+  showCloseModal.value = false
+  if (props.account) {
+    router.push(`/budget/${props.account.budget_id}`)
   }
 }
 </script>
