@@ -70,6 +70,7 @@
       :is-open="showAddTransactionModal || showEditTransactionModal"
       :transaction="editingTransaction"
       :account-id="accountId"
+      :is-submitting="isSubmitting"
       @close="closeModal"
       @save="handleSaveTransaction"
     />
@@ -140,7 +141,12 @@ const closeModal = () => {
   editingTransaction.value = null
 }
 
+const isSubmitting = ref(false)
+
 const handleSaveTransaction = async (transactionData: CreateTransactionDto | UpdateTransactionDto) => {
+  if (isSubmitting.value) return // Prevent duplicate submissions
+
+  isSubmitting.value = true
   try {
     if (editingTransaction.value) {
       // Update existing transaction
@@ -154,6 +160,8 @@ const handleSaveTransaction = async (transactionData: CreateTransactionDto | Upd
     closeModal()
   } catch (error) {
     $toast.error('Failed to save transaction')
+  } finally {
+    isSubmitting.value = false
   }
 }
 

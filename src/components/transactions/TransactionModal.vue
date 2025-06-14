@@ -134,8 +134,9 @@
           <Button type="button" variant="outline" @click="$emit('close')">
             Cancel
           </Button>
-          <Button type="submit" :disabled="!state.valid">
-            {{ transaction ? 'Update' : 'Add' }} Transaction
+          <Button type="submit" :disabled="!state.valid || props.isSubmitting">
+            <span v-if="props.isSubmitting">{{ transaction ? 'Updating...' : 'Adding...' }}</span>
+            <span v-else>{{ transaction ? 'Update' : 'Add' }} Transaction</span>
           </Button>
         </div>
       </FormKit>
@@ -154,6 +155,7 @@ const props = defineProps<{
   isOpen: boolean
   transaction?: TransactionResponse | null
   accountId: string
+  isSubmitting?: boolean
 }>()
 
 const emit = defineEmits<{
