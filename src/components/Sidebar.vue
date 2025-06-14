@@ -261,11 +261,18 @@ const accountSections = computed(() => [
     total: accountStore.getAccountsByType(AccountType.CASH)
       .reduce((sum, account) => sum + account.working_balance, 0),
     accounts: accountStore.getAccountsByType(AccountType.CASH)
+  },
+  {
+    title: AccountType.TRACKING,
+    total: accountStore.getAccountsByType(AccountType.TRACKING)
+      .reduce((sum, account) => sum + account.working_balance, 0),
+    accounts: accountStore.getAccountsByType(AccountType.TRACKING)
   }
 ])
 
 const expandedSections = ref<Record<SectionTitle, boolean>>({
   [AccountType.CASH]: false,
+  [AccountType.TRACKING]: false,
   'CLOSED': false
 })
 
