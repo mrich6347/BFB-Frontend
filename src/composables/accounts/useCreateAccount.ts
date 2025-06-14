@@ -6,14 +6,14 @@ import { parseFormattedNumberToDecimal } from "@/utils/numberFormatUtil";
 export function useAccounts() {
     const prepareAccountCreation = (request: CreateAccountDto) => {
         const id = uuidv4();
-        const inputBalanceStr = String(request.current_balance).trim();
-        
+        const inputBalanceStr = String(request.account_balance).trim();
+
         // parsing the number to our DB format ex: 1,234.56 -> 1234.56
         const decimalBalanceStr = parseFormattedNumberToDecimal(inputBalanceStr);
-        
+
         let numericBalance = parseFloat(decimalBalanceStr);
 
-        // if the account is a loan or credit, we need to turn the balance into a negative number 
+        // if the account is a loan or credit, we need to turn the balance into a negative number
         // UNLESS it has a '+' in front of it
         if (request.account_type === AccountType.LOAN || request.account_type === AccountType.CREDIT) {
             if (inputBalanceStr.startsWith('+')) {
@@ -26,7 +26,7 @@ export function useAccounts() {
         return {
             ...request,
             id,
-            current_balance: numericBalance,
+            account_balance: numericBalance,
         };
     };
 

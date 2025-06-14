@@ -47,8 +47,8 @@
     <FormKit
       v-if="mode === 'create'"
       type="text"
-      name="current_balance"
-      label="Current Balance"
+      name="account_balance"
+      label="Starting Balance"
       :validation-rules="{
         validBalance: validBalanceRule
       }"
@@ -102,7 +102,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  initialValues: () => ({ account_type: AccountType.CASH, current_balance: 0 }), // Default starting balance
+  initialValues: () => ({ account_type: AccountType.CASH, account_balance: 0 }), // Default starting balance
   mode: 'create',
 });
 

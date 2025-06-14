@@ -181,6 +181,7 @@ export const useAccountStore = defineStore('accountStore', {
                 // Update the account balance optimistically
                 const accountIndex = this.accounts.findIndex(account => account.id === accountId)
                 if (accountIndex !== -1) {
+                    this.accounts[accountIndex].account_balance = actualBalance
                     this.accounts[accountIndex].cleared_balance = actualBalance
                     this.accounts[accountIndex].working_balance = actualBalance + this.accounts[accountIndex].uncleared_balance
                 }

@@ -9,7 +9,7 @@ export interface CreateAccountDto {
     id: string;
     name: string;
     account_type: AccountType;
-    current_balance: number;
+    account_balance: number;
     interest_rate: number | null;
     minimum_monthly_payment: number | null;
     budget_id: string;
@@ -22,6 +22,7 @@ export interface AccountResponse {
     budget_id: string;
     interest_rate?: number;
     minimum_monthly_payment?: number;
+    account_balance: number;
     cleared_balance: number;
     uncleared_balance: number;
     working_balance: number;

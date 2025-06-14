@@ -5,7 +5,7 @@
         <DialogTitle>Edit Account</DialogTitle>
       </DialogHeader>
 
-      <AccountForm 
+      <AccountForm
         :isLoading="isLoading"
         :budgetId="account?.budget_id || ''"
         mode="edit"
@@ -42,12 +42,12 @@ const $toast = useToast()
 
 const initialValues = computed(() => {
   if (!props.account) return {}
-  
+
   return {
     id: props.account.id,
     name: props.account.name,
     account_type: props.account.account_type,
-    current_balance: props.account.working_balance,
+    account_balance: props.account.account_balance,
     interest_rate: props.account.interest_rate,
     minimum_monthly_payment: props.account.minimum_monthly_payment,
     budget_id: props.account.budget_id
@@ -56,16 +56,16 @@ const initialValues = computed(() => {
 
 const handleFormSubmit = async (formData: { name: string }) => {
   if (!props.account) return
-  
+
   try {
     isLoading.value = true
-    
+
     const updateData: UpdateAccountDto = {
       name: formData.name
     }
-    
+
     await accountStore.updateAccount(props.account.id, updateData)
-    
+
     $toast.success('Account updated successfully')
     emit('updated')
     close()
