@@ -42,6 +42,8 @@ export interface CategoryResponse {
   activity: number;
   available: number;
   display_order: number;
+  is_credit_card_payment: boolean;
+  linked_account_id: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -49,4 +51,10 @@ export interface CategoryResponse {
 export interface CategoryWithReadyToAssignResponse {
   category: CategoryResponse;
   readyToAssign: number;
+}
+
+export interface CategoryUpdateWithAffectedCategoriesResponse {
+  category: CategoryResponse;
+  readyToAssign: number;
+  affectedCategories?: CategoryResponse[];
 }

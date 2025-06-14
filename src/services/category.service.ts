@@ -4,7 +4,8 @@ import type {
   CreateCategoryDto,
   UpdateCategoryDto,
   ReorderCategoriesDto,
-  CategoryWithReadyToAssignResponse
+  CategoryWithReadyToAssignResponse,
+  CategoryUpdateWithAffectedCategoriesResponse
 } from '@/types/DTO/category.dto';
 
 export default class CategoryService {
@@ -36,7 +37,7 @@ export default class CategoryService {
     await api.post('/categories/reorder', request);
   }
 
-  static async updateCategoryBalance(categoryId: string, balanceData: { assigned?: number; activity?: number; available?: number }, year: number, month: number): Promise<CategoryWithReadyToAssignResponse> {
+  static async updateCategoryBalance(categoryId: string, balanceData: { assigned?: number; activity?: number; available?: number }, year: number, month: number): Promise<CategoryUpdateWithAffectedCategoriesResponse> {
     const url = `/categories/${categoryId}?year=${year}&month=${month}`;
     const response = await api.patch(url, balanceData);
     return response.data;

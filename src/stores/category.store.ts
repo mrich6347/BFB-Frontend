@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia';
 import CategoryGroupService from '@/services/category-group.service';
 import CategoryService from '@/services/category.service';
+import { MainDataService } from '@/services/common/mainData.service';
 import type { CategoryGroupResponse, CreateCategoryGroupDto, UpdateCategoryGroupDto } from '@/types/DTO/category-group.dto';
-import type { CategoryResponse, CreateCategoryDto, UpdateCategoryDto, CategoryWithReadyToAssignResponse } from '@/types/DTO/category.dto';
+import type { CategoryResponse, CreateCategoryDto, UpdateCategoryDto, CategoryWithReadyToAssignResponse, CategoryUpdateWithAffectedCategoriesResponse } from '@/types/DTO/category.dto';
 import type { CategoryBalanceResponse } from '@/types/DTO/category-balance.dto';
 import { useBudgetStore } from './budget.store';
 
@@ -117,6 +118,24 @@ export const useCategoryStore = defineStore('categoryStore', {
         this.categories = categories;
       } finally {
         this.isLoading = false;
+      }
+    },
+
+    async fetchCategoryBalances(budgetId: string) {
+      if (!budgetId) {
+        console.error('Cannot fetch category balances: budgetId is undefined');
+        return;
+      }
+
+      try {
+        // Use the main data service to get fresh category balances
+        const mainData = await MainDataService.getMainData(budgetId);
+        if (mainData?.categoryBalances) {
+          this.setCategoryBalances(mainData.categoryBalances);
+        }
+      } catch (error) {
+        console.error('Failed to fetch category balances:', error);
+        throw error;
       }
     },
 
@@ -429,6 +448,42 @@ export const useCategoryStore = defineStore('categoryStore', {
         // Update Ready to Assign in budget store
         const budgetStore = useBudgetStore();
         budgetStore.setReadyToAssign(response.readyToAssign);
+
+        // Update affected payment categories immediately (optimistic update)
+        if (response.affectedCategories && response.affectedCategories.length > 0) {
+          console.log(`🎯 Updating ${response.affectedCategories.length} affected payment categories`);
+
+          for (const affectedCategory of response.affectedCategories) {
+            // Find and update the affected category balance
+            const affectedBalanceIndex = this.categoryBalances.findIndex(b => b.category_id === affectedCategory.id);
+
+            if (affectedBalanceIndex !== -1) {
+              // Update existing balance
+              this.categoryBalances[affectedBalanceIndex] = {
+                ...this.categoryBalances[affectedBalanceIndex],
+                assigned: affectedCategory.assigned,
+                activity: affectedCategory.activity,
+                available: affectedCategory.available
+              };
+            } else {
+              // Create new balance record
+              const newBalance: CategoryBalanceResponse = {
+                id: 'temp-affected-' + Date.now(),
+                category_id: affectedCategory.id,
+                budget_id: affectedCategory.budget_id,
+                user_id: affectedCategory.user_id,
+                year,
+                month,
+                assigned: affectedCategory.assigned,
+                activity: affectedCategory.activity,
+                available: affectedCategory.available,
+                created_at: new Date(),
+                updated_at: new Date()
+              };
+              this.categoryBalances.push(newBalance);
+            }
+          }
+        }
       } catch (error) {
         // If the backend update fails, revert to the original values
         console.error('Failed to update category balance:', error);
@@ -631,8 +686,6 @@ export const useCategoryStore = defineStore('categoryStore', {
         throw error;
       }
     },
-
-
 
     setCategoryGroups(categoryGroups: CategoryGroupResponse[]) {
       this.categoryGroups = categoryGroups;

@@ -3,6 +3,7 @@ import type { CreateTransactionDto, UpdateTransactionDto, TransactionResponse } 
 import { TransactionService } from '@/services/transaction.service'
 import { useAccountStore } from './account.store'
 import { useBudgetStore } from './budget.store'
+import { useCategoryStore } from './category.store'
 
 export const useTransactionStore = defineStore('transactionStore', {
   state: () => ({
@@ -157,6 +158,9 @@ export const useTransactionStore = defineStore('transactionStore', {
 
     async deleteTransaction(id: string) {
       const accountStore = useAccountStore()
+      const categoryStore = useCategoryStore()
+      const budgetStore = useBudgetStore()
+
       const transactionToDelete = this.transactions.find(t => t.id === id)
       if (!transactionToDelete) {
         throw new Error('Transaction not found')
@@ -172,6 +176,13 @@ export const useTransactionStore = defineStore('transactionStore', {
           transactionToDelete.amount,
           transactionToDelete.is_cleared
         )
+
+        // Refresh category balances to reflect any credit card debt reversals
+        if (budgetStore.currentBudgetId) {
+          // Small delay to ensure backend processing is complete
+          await new Promise(resolve => setTimeout(resolve, 100))
+          await categoryStore.fetchCategoryBalances(budgetStore.currentBudgetId)
+        }
       } catch (error) {
         console.error('Failed to delete transaction:', error)
         throw error
