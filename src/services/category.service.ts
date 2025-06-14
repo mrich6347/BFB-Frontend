@@ -29,8 +29,9 @@ export default class CategoryService {
     return response.data;
   }
 
-  static async deleteCategory(id: string): Promise<void> {
-    await api.delete(`/categories/${id}`);
+  static async deleteCategory(id: string): Promise<{ readyToAssign: number }> {
+    const response = await api.delete(`/categories/${id}`);
+    return response.data;
   }
 
   static async reorderCategories(request: ReorderCategoriesDto): Promise<void> {

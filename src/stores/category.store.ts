@@ -353,8 +353,43 @@ export const useCategoryStore = defineStore('categoryStore', {
     },
 
     async deleteCategory(id: string) {
-      await CategoryService.deleteCategory(id);
+      // Get the category being deleted to calculate the assigned amount that will be returned to Ready to Assign
+      const categoryToDelete = this.categories.find(category => category.id === id);
+      if (!categoryToDelete) {
+        throw new Error('Category not found');
+      }
+
+      // Get the current assigned amount for this category (optimistic calculation)
+      const categoryBalances = this.categoryBalances.filter(balance => balance.category_id === id);
+      const totalAssignedAmount = categoryBalances.reduce((sum, balance) => sum + (balance.assigned || 0), 0);
+
+      // Store original state for rollback
+      const originalCategories = [...this.categories];
+      const originalCategoryBalances = [...this.categoryBalances];
+
+      // Optimistically update the UI immediately
       this.categories = this.categories.filter(category => category.id !== id);
+      this.categoryBalances = this.categoryBalances.filter(balance => balance.category_id !== id);
+
+      // Optimistically update Ready to Assign
+      const budgetStore = useBudgetStore();
+      const originalReadyToAssign = budgetStore.readyToAssign;
+      budgetStore.setReadyToAssign(originalReadyToAssign + totalAssignedAmount);
+
+      try {
+        // Make the actual API call
+        const response = await CategoryService.deleteCategory(id);
+
+        // Update Ready to Assign with the accurate value from the backend
+        budgetStore.setReadyToAssign(response.readyToAssign);
+      } catch (error) {
+        // If the API call fails, revert to the original state
+        console.error('Failed to delete category:', error);
+        this.categories = originalCategories;
+        this.categoryBalances = originalCategoryBalances;
+        budgetStore.setReadyToAssign(originalReadyToAssign);
+        throw error;
+      }
     },
 
     async reorderCategoryGroups(groupIds: string[]) {
