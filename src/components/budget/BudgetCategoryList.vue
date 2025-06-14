@@ -259,19 +259,48 @@ const getGroupTotals = (groupId: string) => {
 // Initialize category lists for each group
 const initializeCategoryLists = () => {
   sortedCategoryGroups.value.forEach(group => {
-    // Create a reactive reference to the categories for this group
-    categoryLists[group.id] = [...getCategoriesForGroup(group.id)]
+    const newCategoriesForGroup = getCategoriesForGroup(group.id)
+
+    if (categoryLists[group.id]) {
+      // Update existing array in place to maintain reactivity
+      categoryLists[group.id].splice(0, categoryLists[group.id].length, ...newCategoriesForGroup)
+    } else {
+      // Create new array if it doesn't exist
+      categoryLists[group.id] = [...newCategoriesForGroup]
+    }
   })
 }
 
 // Watch for changes in categories and update the categoryLists
-watch(() => categoryStore.getCategoriesWithBalances(), () => {
-  initializeCategoryLists()
+watch(() => categoryStore.getCategoriesWithBalances(), (newCategories) => {
+  // Update existing arrays in place to maintain reactivity with draggable components
+  sortedCategoryGroups.value.forEach(group => {
+    const newCategoriesForGroup = getCategoriesForGroup(group.id)
+
+    if (categoryLists[group.id]) {
+      // Update existing array in place
+      categoryLists[group.id].splice(0, categoryLists[group.id].length, ...newCategoriesForGroup)
+    } else {
+      // Create new array if it doesn't exist
+      categoryLists[group.id] = [...newCategoriesForGroup]
+    }
+  })
 }, { deep: true })
 
 // Watch for changes in budget month and update the categoryLists
 watch(() => [budgetStore.currentYear, budgetStore.currentMonth], () => {
-  initializeCategoryLists()
+  // Update existing arrays in place to maintain reactivity with draggable components
+  sortedCategoryGroups.value.forEach(group => {
+    const newCategoriesForGroup = getCategoriesForGroup(group.id)
+
+    if (categoryLists[group.id]) {
+      // Update existing array in place
+      categoryLists[group.id].splice(0, categoryLists[group.id].length, ...newCategoriesForGroup)
+    } else {
+      // Create new array if it doesn't exist
+      categoryLists[group.id] = [...newCategoriesForGroup]
+    }
+  })
 }, { deep: true })
 
 // Watch for changes in category groups and update the categoryLists
@@ -554,10 +583,12 @@ const handleCategoryCreated = (category: CategoryResponse) => {
 
 const handleCategoryUpdated = (category: CategoryResponse) => {
   showCategoryModal.value = false
+  // Optimistic updates in the store will handle UI updates automatically
 }
 
 const handleCategoryDeleted = (categoryId: string) => {
   showCategoryModal.value = false
+  // Store deletion will handle UI updates automatically
 }
 
 const updateCategoryAssigned = async (categoryId: string, assignedValue: number) => {

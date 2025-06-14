@@ -178,14 +178,36 @@ export const useCategoryStore = defineStore('categoryStore', {
     },
 
     async updateCategoryGroup(id: string, request: UpdateCategoryGroupDto) {
-      const response = await CategoryGroupService.updateCategoryGroup(id, request);
       const index = this.categoryGroups.findIndex(group => group.id === id);
 
-      if (index !== -1) {
-        this.categoryGroups[index] = response;
+      if (index === -1) {
+        throw new Error('Category group not found');
       }
 
-      return response;
+      // Store original category group for potential rollback
+      const originalCategoryGroup = { ...this.categoryGroups[index] };
+
+      try {
+        // Optimistically update the UI immediately
+        this.categoryGroups[index] = {
+          ...this.categoryGroups[index],
+          ...request,
+          updated_at: new Date()
+        };
+
+        // Make the actual API call in the background
+        const response = await CategoryGroupService.updateCategoryGroup(id, request);
+
+        // Replace with the real response from the server
+        this.categoryGroups[index] = response;
+
+        return response;
+      } catch (error) {
+        // If the API call fails, revert to the original category group
+        console.error('Failed to update category group:', error);
+        this.categoryGroups[index] = originalCategoryGroup;
+        throw error;
+      }
     },
 
     async deleteCategoryGroup(id: string) {
@@ -267,14 +289,42 @@ export const useCategoryStore = defineStore('categoryStore', {
     },
 
     async updateCategory(id: string, request: UpdateCategoryDto) {
-      const response = await CategoryService.updateCategory(id, request);
       const index = this.categories.findIndex(category => category.id === id);
 
-      if (index !== -1) {
-        this.categories[index] = response;
+      if (index === -1) {
+        throw new Error('Category not found');
       }
 
-      return response;
+      // Store original category for potential rollback
+      const originalCategory = { ...this.categories[index] };
+
+      try {
+        // Optimistically update the UI immediately
+        this.categories[index] = {
+          ...this.categories[index],
+          ...request,
+          updated_at: new Date()
+        };
+
+        // Make the actual API call in the background
+        const response = await CategoryService.updateCategory(id, request);
+
+        // Update Ready to Assign in budget store if needed
+        if (response.readyToAssign !== undefined) {
+          const budgetStore = useBudgetStore();
+          budgetStore.setReadyToAssign(response.readyToAssign);
+        }
+
+        // Replace with the real response from the server
+        this.categories[index] = response.category;
+
+        return response.category;
+      } catch (error) {
+        // If the API call fails, revert to the original category
+        console.error('Failed to update category:', error);
+        this.categories[index] = originalCategory;
+        throw error;
+      }
     },
 
     async deleteCategory(id: string) {

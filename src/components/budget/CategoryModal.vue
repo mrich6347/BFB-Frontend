@@ -103,21 +103,27 @@ const close = () => {
 }
 
 const handleSubmit = async (formData: CreateCategoryDto | UpdateCategoryDto) => {
+  console.log('🚀 CategoryModal handleSubmit called:', { mode: props.mode, formData });
   isLoading.value = true
 
   try {
     if (props.mode === 'create') {
       const createData = formData as CreateCategoryDto
+      console.log('➕ Creating category:', createData);
       const response = await categoryStore.createCategory(createData)
+      console.log('✅ Category created, emitting event:', response);
       emit('created', response)
     } else if (props.mode === 'edit' && props.category) {
       const updateData = formData as UpdateCategoryDto
+      console.log('✏️ Updating category:', { id: props.category.id, from: props.category.name, to: updateData.name });
       const response = await categoryStore.updateCategory(props.category.id, updateData)
+      console.log('✅ Category updated, emitting event:', response);
       emit('updated', response)
     }
+    console.log('🔒 Closing modal');
     close()
   } catch (error) {
-    console.error(`Failed to ${props.mode} category:`, error)
+    console.error(`❌ Failed to ${props.mode} category:`, error)
   } finally {
     isLoading.value = false
   }
