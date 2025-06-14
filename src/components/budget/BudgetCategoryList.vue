@@ -173,6 +173,7 @@
     :position="pullMoneyModalPosition"
     @close="showPullMoneyModal = false"
     @pull="handlePullMoney"
+    @pull-from-ready-to-assign="handlePullFromReadyToAssign"
   />
 </template>
 
@@ -615,6 +616,20 @@ const handlePullMoney = async (sourceCategoryId: string, amount: number) => {
     showPullMoneyModal.value = false
   } catch (error) {
     console.error('Failed to pull money:', error)
+  }
+}
+
+const handlePullFromReadyToAssign = async (amount: number) => {
+  if (!selectedDestinationCategory.value) return
+
+  try {
+    await categoryStore.pullFromReadyToAssign(
+      selectedDestinationCategory.value.id,
+      amount
+    )
+    showPullMoneyModal.value = false
+  } catch (error) {
+    console.error('Failed to pull money from Ready to Assign:', error)
   }
 }
 

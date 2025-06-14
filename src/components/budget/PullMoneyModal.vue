@@ -53,6 +53,22 @@
               v-if="showDropdown"
               class="absolute z-10 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-48 overflow-y-auto"
             >
+              <!-- Ready to Assign option (only show if positive balance) -->
+              <div v-if="budgetStore.readyToAssign > 0" class="border-b border-border/50">
+                <button
+                  @click="selectReadyToAssignAndFocusPull"
+                  class="w-full px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground flex items-center justify-between"
+                  :class="[
+                    selectedSourceId === READY_TO_ASSIGN_ID
+                      ? 'bg-accent text-accent-foreground'
+                      : 'hover:bg-accent hover:text-accent-foreground'
+                  ]"
+                >
+                  <span class="font-medium">Ready to Assign</span>
+                  <span class="text-xs text-muted-foreground">{{ formatCurrency(budgetStore.readyToAssign) }}</span>
+                </button>
+              </div>
+
               <!-- Category list -->
               <div class="max-h-48 overflow-y-auto">
                 <div
@@ -116,6 +132,7 @@ import { X, ChevronDown } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 import { useCategoryStore } from '@/stores/category.store'
+import { useBudgetStore } from '@/stores/budget.store'
 
 interface Props {
   isOpen: boolean
@@ -129,14 +146,19 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'pull', sourceCategoryId: string, amount: number): void
+  (e: 'pull-from-ready-to-assign', amount: number): void
 }>()
 
 const categoryStore = useCategoryStore()
+const budgetStore = useBudgetStore()
 
 // Form state
 const selectedSourceId = ref('')
 const showDropdown = ref(false)
 const hasInteracted = ref(false)
+
+// Special ID for Ready to Assign option
+const READY_TO_ASSIGN_ID = 'ready-to-assign'
 
 // Error states
 const sourceError = ref('')
@@ -159,6 +181,11 @@ const setCategoryRef = (el: HTMLElement | null, groupIndex: number, categoryInde
 // Computed properties
 const selectedSourceName = computed(() => {
   if (!selectedSourceId.value) return ''
+
+  if (selectedSourceId.value === READY_TO_ASSIGN_ID) {
+    return `Ready to Assign (${formatCurrency(budgetStore.readyToAssign)})`
+  }
+
   const category = props.availableCategories.find(cat => cat.id === selectedSourceId.value)
   return category ? `${category.name} (${formatCurrency(category.available || 0)})` : ''
 })
@@ -166,9 +193,14 @@ const selectedSourceName = computed(() => {
 const pullAmount = computed(() => {
   if (!selectedSourceId.value || !props.destinationCategory) return 0
 
+  const neededAmount = Math.abs(props.destinationCategory.available || 0)
+
+  if (selectedSourceId.value === READY_TO_ASSIGN_ID) {
+    return Math.min(budgetStore.readyToAssign, neededAmount)
+  }
+
   const sourceCategory = props.availableCategories.find(cat => cat.id === selectedSourceId.value)
   const sourceAvailable = sourceCategory?.available || 0
-  const neededAmount = Math.abs(props.destinationCategory.available || 0)
 
   return Math.min(sourceAvailable, neededAmount)
 })
@@ -272,7 +304,11 @@ const handlePull = () => {
   // Clear errors on successful submission
   sourceError.value = ''
 
-  emit('pull', selectedSourceId.value, pullAmount.value)
+  if (selectedSourceId.value === READY_TO_ASSIGN_ID) {
+    emit('pull-from-ready-to-assign', pullAmount.value)
+  } else {
+    emit('pull', selectedSourceId.value, pullAmount.value)
+  }
 }
 
 // Navigation functions
@@ -309,6 +345,18 @@ const selectCategory = (category: CategoryResponse) => {
 
 const selectCategoryAndFocusPull = (category: CategoryResponse) => {
   selectCategory(category)
+  nextTick(() => {
+    pullButton.value?.focus()
+  })
+}
+
+const selectReadyToAssign = () => {
+  selectedSourceId.value = READY_TO_ASSIGN_ID
+  showDropdown.value = false
+}
+
+const selectReadyToAssignAndFocusPull = () => {
+  selectReadyToAssign()
   nextTick(() => {
     pullButton.value?.focus()
   })

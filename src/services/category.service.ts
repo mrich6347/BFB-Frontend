@@ -60,4 +60,13 @@ export default class CategoryService {
       month
     });
   }
+
+  static async pullFromReadyToAssign(destinationCategoryId: string, amount: number, year: number, month: number): Promise<void> {
+    await api.post('/categories/pull-from-ready-to-assign', {
+      destinationCategoryId,
+      amount,
+      year,
+      month
+    });
+  }
 }

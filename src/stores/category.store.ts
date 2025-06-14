@@ -490,6 +490,77 @@ export const useCategoryStore = defineStore('categoryStore', {
       }
     },
 
+    async pullFromReadyToAssign(destinationCategoryId: string, amount: number) {
+      // Get current month
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+
+      // Validate that Ready to Assign has enough money
+      const budgetStore = useBudgetStore();
+      if (budgetStore.readyToAssign < amount) {
+        throw new Error('Insufficient Ready to Assign balance');
+      }
+
+      // Find or create the destination balance record
+      let destinationBalanceIndex = this.categoryBalances.findIndex(b => b.category_id === destinationCategoryId);
+      let originalDestinationBalance: CategoryBalanceResponse | null = null;
+      let wasNewBalance = false;
+
+      if (destinationBalanceIndex === -1) {
+        // Create new balance record
+        const newBalance: CategoryBalanceResponse = {
+          id: `temp-${Date.now()}`, // Temporary ID
+          category_id: destinationCategoryId,
+          budget_id: budgetStore.currentBudget?.id || '',
+          user_id: '', // Will be set by backend
+          year,
+          month,
+          assigned: amount,
+          activity: 0,
+          available: amount,
+          created_at: new Date(),
+          updated_at: new Date()
+        };
+
+        this.categoryBalances.push(newBalance);
+        destinationBalanceIndex = this.categoryBalances.length - 1;
+        wasNewBalance = true;
+      } else {
+        // Store original balance for rollback
+        originalDestinationBalance = { ...this.categoryBalances[destinationBalanceIndex] };
+
+        // Update existing balance optimistically
+        this.categoryBalances[destinationBalanceIndex].assigned = (originalDestinationBalance.assigned || 0) + amount;
+        this.categoryBalances[destinationBalanceIndex].available = (originalDestinationBalance.available || 0) + amount;
+      }
+
+      // Update Ready to Assign optimistically
+      const originalReadyToAssign = budgetStore.readyToAssign;
+      budgetStore.setReadyToAssign(originalReadyToAssign - amount);
+
+      try {
+        // Send update to backend
+        await CategoryService.pullFromReadyToAssign(destinationCategoryId, amount, year, month);
+      } catch (error) {
+        // If the backend update fails, revert to the original values
+        console.error('Failed to pull money from Ready to Assign:', error);
+
+        if (wasNewBalance) {
+          // Remove the newly created balance
+          this.categoryBalances.splice(destinationBalanceIndex, 1);
+        } else if (originalDestinationBalance) {
+          // Restore original destination balance
+          this.categoryBalances[destinationBalanceIndex] = originalDestinationBalance;
+        }
+
+        // Restore Ready to Assign
+        budgetStore.setReadyToAssign(originalReadyToAssign);
+
+        throw error;
+      }
+    },
+
 
 
     setCategoryGroups(categoryGroups: CategoryGroupResponse[]) {
