@@ -144,7 +144,7 @@ const handleSubmit = async (data: any) => {
 
     await TrackingAccountService.updateBalance(props.account.id, {
       new_balance: newBalance,
-      memo: data.memo || `Balance updated to ${formatCurrency(Number(newBalance))}`
+      memo: data.memo || ''
     })
 
     // Update account in store
