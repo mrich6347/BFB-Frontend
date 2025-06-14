@@ -60,6 +60,21 @@ export const useCategoryStore = defineStore('categoryStore', {
 
     sortedCategoryGroups: (state) => {
       return [...state.categoryGroups].sort((a, b) => a.display_order - b.display_order);
+    },
+
+    // Get category groups with conditional display for Credit Card Payments
+    visibleCategoryGroups: (state) => (accounts: any[]) => {
+      const hasCreditCards = accounts.some(account => account.account_type === 'CREDIT');
+
+      return state.categoryGroups
+        .filter(group => {
+          // Hide Credit Card Payments group if no credit card accounts exist
+          if (group.name === 'Credit Card Payments' && !hasCreditCards) {
+            return false;
+          }
+          return true;
+        })
+        .sort((a, b) => a.display_order - b.display_order);
     }
   },
 

@@ -35,7 +35,8 @@
                 <Plus class="h-5 w-5 mr-2" />
                 New Budget
             </Button>
-            <Button variant="outline" class="ml-2">
+            <!-- TODO: Implement YNAB import -->
+            <Button variant="outline" class="ml-2" v-if="false">
               <Import class="h-5 w-5 mr-2" />
               Import From YNAB
             </Button>
@@ -51,8 +52,8 @@
           </div>
 
           <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card 
-              v-for="budget in budgetStore.budgets" 
+            <Card
+              v-for="budget in budgetStore.budgets"
               :key="budget.id"
               @click="goToBudget(budget.id)"
               class="hover:shadow-md transition-all duration-200 cursor-pointer relative group"

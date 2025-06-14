@@ -99,9 +99,17 @@
                       <GripVertical class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity" />
                       <span class="truncate">{{ category.name }}</span>
                       <Edit
+                        v-if="!category.is_credit_card_payment"
                         class="h-3.5 w-3.5 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
                         @click="openEditCategoryModal(category)"
                       />
+                      <span
+                        v-if="category.is_credit_card_payment"
+                        class="text-xs text-muted-foreground ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Auto-generated payment category"
+                      >
+                        (Auto)
+                      </span>
                     </div>
                     <div class="text-right text-xs">
                       <CalculationInput
@@ -184,6 +192,7 @@ import { formatCurrency } from '@/utils/currencyUtil'
 import Badge from '@/components/shadcn-ui/Badge.vue'
 import { useCategoryStore } from '@/stores/category.store'
 import { useBudgetStore } from '@/stores/budget.store'
+import { useAccountStore } from '@/stores/account.store'
 import type { CategoryGroupResponse } from '@/types/DTO/category-group.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 import CategoryGroupModal from './CategoryGroupModal.vue'
@@ -196,14 +205,15 @@ import { saveExpandedGroups, loadExpandedGroups } from '@/utils/expandedGroupsSt
 
 const categoryStore = useCategoryStore()
 const budgetStore = useBudgetStore()
+const accountStore = useAccountStore()
 
 const expandedGroups = ref<Set<string>>(new Set())
 const categoryLists = reactive<Record<string, CategoryResponse[]>>({})
 const categoryGroupsList = ref<CategoryGroupResponse[]>([])
 
-// Computed property to get sorted category groups
+// Computed property to get visible category groups (filtered based on credit card accounts)
 const sortedCategoryGroups = computed(() => {
-  return categoryStore.sortedCategoryGroups
+  return categoryStore.visibleCategoryGroups(accountStore.accounts)
 })
 
 // Update categoryGroupsList when sortedCategoryGroups changes
