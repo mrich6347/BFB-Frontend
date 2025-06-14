@@ -174,8 +174,19 @@ const reconcileWithAdjustment = async () => {
 
   isLoading.value = true
   try {
+    // Ensure actualBalance is a number
+    const balanceAsNumber = typeof actualBalance.value === 'string'
+      ? parseFloat(actualBalance.value)
+      : actualBalance.value
+
+    // Validate the number
+    if (isNaN(balanceAsNumber)) {
+      $toast.error('Please enter a valid number')
+      return
+    }
+
     // Reconcile with adjustment
-    await accountStore.reconcileAccount(props.account.id, actualBalance.value)
+    await accountStore.reconcileAccount(props.account.id, balanceAsNumber)
     step.value = 3
     emit('reconciled')
     $toast.success('Account reconciled successfully with adjustment')
