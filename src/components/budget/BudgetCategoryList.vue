@@ -193,7 +193,7 @@
                     <span class="truncate text-muted-foreground">{{ category.name }}</span>
                     <button
                       class="h-3.5 w-3.5 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-xs px-1 py-0.5 bg-primary/20 rounded text-primary"
-                      @click="unhideCategory(category.id)"
+                      @click="openUnhideCategoryModal(category)"
                       title="Unhide category"
                     >
                       ↑
@@ -262,6 +262,14 @@
     @pull="handlePullMoney"
     @pull-from-ready-to-assign="handlePullFromReadyToAssign"
   />
+
+  <UnhideCategoryModal
+    :is-open="showUnhideCategoryModal"
+    :category-id="selectedCategoryToUnhide?.id || ''"
+    :category-name="selectedCategoryToUnhide?.name || ''"
+    @close="showUnhideCategoryModal = false"
+    @unhidden="handleCategoryUnhidden"
+  />
 </template>
 
 <script setup lang="ts">
@@ -278,6 +286,7 @@ import CategoryGroupModal from './CategoryGroupModal.vue'
 import CategoryModal from './CategoryModal.vue'
 import MoveMoneyModal from './MoveMoneyModal.vue'
 import PullMoneyModal from './PullMoneyModal.vue'
+import UnhideCategoryModal from './UnhideCategoryModal.vue'
 import CalculationInput from './CalculationInput.vue'
 import draggable from 'vuedraggable'
 import { saveExpandedGroups, loadExpandedGroups } from '@/utils/expandedGroupsStorage'
@@ -561,10 +570,12 @@ const showCategoryGroupModal = ref(false)
 const showCategoryModal = ref(false)
 const showMoveMoneyModal = ref(false)
 const showPullMoneyModal = ref(false)
+const showUnhideCategoryModal = ref(false)
 const selectedCategoryGroup = ref<CategoryGroupResponse | undefined>(undefined)
 const selectedCategory = ref<CategoryResponse | undefined>(undefined)
 const selectedSourceCategory = ref<CategoryResponse | null>(null)
 const selectedDestinationCategory = ref<CategoryResponse | null>(null)
+const selectedCategoryToUnhide = ref<CategoryResponse | null>(null)
 const modalMode = ref<'create' | 'edit'>('create')
 const selectedGroupId = ref<string>('')
 const moveMoneyModalPosition = ref({ x: 0, y: 0 })
@@ -689,12 +700,15 @@ const handleCategoryHidden = (categoryId: string) => {
   // Store hide operation will handle UI updates automatically
 }
 
-const unhideCategory = async (categoryId: string) => {
-  try {
-    await categoryStore.unhideCategory(categoryId)
-  } catch (error) {
-    console.error('Failed to unhide category:', error)
-  }
+const openUnhideCategoryModal = (category: CategoryResponse) => {
+  selectedCategoryToUnhide.value = category
+  showUnhideCategoryModal.value = true
+}
+
+const handleCategoryUnhidden = (categoryId: string) => {
+  showUnhideCategoryModal.value = false
+  selectedCategoryToUnhide.value = null
+  // Store unhide operation will handle UI updates automatically
 }
 
 const updateCategoryAssigned = async (categoryId: string, assignedValue: number) => {

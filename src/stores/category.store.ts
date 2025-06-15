@@ -236,42 +236,45 @@ export const useCategoryStore = defineStore('categoryStore', {
     },
 
     async deleteCategoryGroup(id: string) {
-      await CategoryGroupService.deleteCategoryGroup(id);
+      const response = await CategoryGroupService.deleteCategoryGroup(id);
       this.categoryGroups = this.categoryGroups.filter(group => group.id !== id);
-      // Also remove all categories in this group
-      this.categories = this.categories.filter(category => category.category_group_id !== id);
+
+      // Update categories with the moved categories from the response
+      if (response.movedCategories && response.movedCategories.length > 0) {
+        // Remove the old categories and add the updated ones
+        this.categories = this.categories.filter(category =>
+          !response.movedCategories.some(moved => moved.id === category.id)
+        );
+        this.categories.push(...response.movedCategories);
+      } else {
+        // Fallback: remove all categories in this group if no moved categories returned
+        this.categories = this.categories.filter(category => category.category_group_id !== id);
+      }
     },
 
     async hideCategoryGroup(id: string) {
-      // Get the group being hidden
-      const groupToHide = this.categoryGroups.find(group => group.id === id);
-      if (!groupToHide) {
-        throw new Error('Category group not found');
-      }
-
-      // Find the Hidden Categories group
-      const hiddenGroup = this.categoryGroups.find(group =>
-        group.name === 'Hidden Categories' && group.is_system_group
-      );
-      if (!hiddenGroup) {
-        throw new Error('Hidden Categories group not found');
-      }
-
       // Store original state for rollback
       const originalCategories = [...this.categories];
       const originalGroups = [...this.categoryGroups];
 
-      // Optimistically update the UI - move all categories to Hidden Categories and remove the group
-      this.categories = this.categories.map(category =>
-        category.category_group_id === id
-          ? { ...category, category_group_id: hiddenGroup.id }
-          : category
-      );
-      this.categoryGroups = this.categoryGroups.filter(group => group.id !== id);
-
       try {
         // Make the actual API call
-        await CategoryGroupService.hideCategoryGroup(id);
+        const response = await CategoryGroupService.hideCategoryGroup(id);
+
+        // Remove the hidden group
+        this.categoryGroups = this.categoryGroups.filter(group => group.id !== id);
+
+        // Update categories with the moved categories from the response
+        if (response.movedCategories && response.movedCategories.length > 0) {
+          // Remove the old categories and add the updated ones
+          this.categories = this.categories.filter(category =>
+            !response.movedCategories.some(moved => moved.id === category.id)
+          );
+          this.categories.push(...response.movedCategories);
+        } else {
+          // Fallback: remove all categories in this group if no moved categories returned
+          this.categories = this.categories.filter(category => category.category_group_id !== id);
+        }
       } catch (error) {
         // If the API call fails, revert to the original state
         console.error('Failed to hide category group:', error);
@@ -467,7 +470,7 @@ export const useCategoryStore = defineStore('categoryStore', {
 
       try {
         // Make the actual API call
-        const response = await CategoryService.unhideCategory(id);
+        const response = await CategoryService.unhideCategory(id, targetGroup);
 
         // Update Ready to Assign with the accurate value from the backend
         const budgetStore = useBudgetStore();

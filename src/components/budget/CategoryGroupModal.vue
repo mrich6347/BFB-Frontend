@@ -20,7 +20,7 @@
           class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-destructive border border-destructive rounded-md hover:bg-destructive/10"
         >
           <Trash2 class="h-4 w-4" />
-          Delete Category Group
+          Delete Group & Hide Categories
         </button>
       </div>
     </DialogContent>
@@ -28,13 +28,35 @@
 
   <!-- Confirmation Dialog -->
   <Dialog :open="showConfirmation" @update:open="(value) => !value && cancelDelete()">
-    <DialogContent class="sm:max-w-md">
+    <DialogContent class="sm:max-w-lg">
       <DialogHeader>
-        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogTitle>Delete Category Group</DialogTitle>
         <DialogDescription>
-          Are you sure you want to delete this category group? This will also delete all categories within this group. This action cannot be undone.
+          Are you sure you want to delete the "{{ categoryGroup?.name }}" category group?
         </DialogDescription>
       </DialogHeader>
+
+      <div class="mt-4 p-4 bg-muted/50 rounded-lg border">
+        <h4 class="font-medium text-sm mb-2">What will happen:</h4>
+        <ul class="text-sm text-muted-foreground space-y-1">
+          <li class="flex items-start gap-2">
+            <span class="text-destructive mt-0.5">•</span>
+            <span>The "{{ categoryGroup?.name }}" group will be permanently deleted</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-primary mt-0.5">•</span>
+            <span>All categories in this group will be moved to "Hidden Categories"</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-green-600 mt-0.5">•</span>
+            <span>All transaction history and balances will be preserved</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-blue-600 mt-0.5">•</span>
+            <span>You can unhide categories later and move them to other groups</span>
+          </li>
+        </ul>
+      </div>
 
       <div class="flex justify-end gap-3 mt-6">
         <button
@@ -48,7 +70,7 @@
           :disabled="isDeleting"
           class="px-4 py-2 text-sm font-medium text-destructive-foreground bg-destructive rounded-md hover:bg-destructive/90 disabled:opacity-50"
         >
-          {{ isDeleting ? 'Deleting...' : 'Delete' }}
+          {{ isDeleting ? 'Delete Group & Hide Categories' : 'Delete Group & Hide Categories' }}
         </button>
       </div>
     </DialogContent>

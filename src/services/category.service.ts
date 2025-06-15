@@ -34,8 +34,8 @@ export default class CategoryService {
     return response.data;
   }
 
-  static async unhideCategory(id: string): Promise<{ readyToAssign: number }> {
-    const response = await api.patch(`/categories/${id}/unhide`);
+  static async unhideCategory(id: string, targetGroupId?: string): Promise<{ readyToAssign: number }> {
+    const response = await api.patch(`/categories/${id}/unhide`, { targetGroupId });
     return response.data;
   }
 

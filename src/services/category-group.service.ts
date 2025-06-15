@@ -3,7 +3,8 @@ import type {
   CategoryGroupResponse,
   CreateCategoryGroupDto,
   UpdateCategoryGroupDto,
-  ReorderCategoryGroupsDto
+  ReorderCategoryGroupsDto,
+  CategoryGroupDeleteResponse
 } from '@/types/DTO/category-group.dto';
 
 export default class CategoryGroupService {
@@ -22,12 +23,14 @@ export default class CategoryGroupService {
     return response.data;
   }
 
-  static async deleteCategoryGroup(id: string): Promise<void> {
-    await api.delete(`/category-groups/${id}`);
+  static async deleteCategoryGroup(id: string): Promise<CategoryGroupDeleteResponse> {
+    const response = await api.delete(`/category-groups/${id}`);
+    return response.data;
   }
 
-  static async hideCategoryGroup(id: string): Promise<void> {
-    await api.patch(`/category-groups/${id}/hide`);
+  static async hideCategoryGroup(id: string): Promise<CategoryGroupDeleteResponse> {
+    const response = await api.patch(`/category-groups/${id}/hide`);
+    return response.data;
   }
 
   static async reorderCategoryGroups(request: ReorderCategoryGroupsDto): Promise<void> {
