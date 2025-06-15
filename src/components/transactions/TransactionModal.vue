@@ -34,10 +34,11 @@
 
         <!-- Payee -->
         <FormKit
-          type="text"
+          type="select"
           name="payee"
           label="Payee"
-          placeholder="Enter payee name"
+          :options="payeeOptions"
+          placeholder="Select or enter payee"
           ref="payeeField"
           :classes="{
             input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
@@ -54,6 +55,7 @@
           label="Category"
           :options="categoryOptions"
           placeholder="Select a category"
+          :validation="isTransferTransaction ? 'required' : ''"
           :classes="{
             input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
             label: 'text-sm font-medium text-foreground',
@@ -145,11 +147,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
 import Button from '@/components/shadcn-ui/button.vue'
 import { useCategoryStore } from '@/stores/category.store'
+import { useAccountStore } from '@/stores/account.store'
+import { TransferService } from '@/services/transfer.service'
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
+import type { AccountResponse } from '@/types/DTO/account.dto'
 
 const props = defineProps<{
   isOpen: boolean
@@ -164,12 +169,36 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
+const accountStore = useAccountStore()
 const amountType = ref<'inflow' | 'outflow'>('outflow')
 const payeeField = ref(null)
+const transferOptions = ref<AccountResponse[]>([])
+const selectedPayee = ref('')
 
 // Prevent future dates - max date is today
 const maxDate = computed(() => {
   return new Date().toISOString().split('T')[0]
+})
+
+const payeeOptions = computed(() => {
+  const options = []
+
+  // Add transfer options at the top
+  if (transferOptions.value.length > 0) {
+    options.push({ label: '--- Transfers ---', value: '', disabled: true })
+    transferOptions.value.forEach(account => {
+      options.push({
+        label: TransferService.formatTransferPayee(account.name),
+        value: TransferService.formatTransferPayee(account.name)
+      })
+    })
+    options.push({ label: '--- Payees ---', value: '', disabled: true })
+  }
+
+  // Add regular payee option (allow custom input)
+  options.push({ label: 'Enter custom payee...', value: 'custom' })
+
+  return options
 })
 
 const categoryOptions = computed(() => {
@@ -181,6 +210,15 @@ const categoryOptions = computed(() => {
       value: category.id
     }))
   ]
+})
+
+const isTransferTransaction = computed(() => {
+  return TransferService.isTransferPayee(selectedPayee.value)
+})
+
+const shouldShowCategory = computed(() => {
+  // Always show category field - transfers from cash accounts require categories
+  return true
 })
 
 const formData = computed(() => {
@@ -205,12 +243,30 @@ const formData = computed(() => {
   }
 })
 
+// Load transfer options when component mounts
+onMounted(async () => {
+  try {
+    transferOptions.value = await accountStore.getTransferOptions(props.accountId)
+  } catch (error) {
+    console.error('Failed to load transfer options:', error)
+    // Don't throw - just continue without transfer options
+  }
+})
+
 // Set amount type based on transaction amount
 watch(() => props.transaction, (transaction) => {
   if (transaction) {
     amountType.value = transaction.amount < 0 ? 'outflow' : 'inflow'
   }
 }, { immediate: true })
+
+// Watch for payee changes to update selectedPayee
+watch(() => selectedPayee.value, (newPayee) => {
+  // For transfers, force outflow type
+  if (TransferService.isTransferPayee(newPayee)) {
+    amountType.value = 'outflow'
+  }
+})
 
 // Focus payee field when modal opens
 watch(() => props.isOpen, (isOpen) => {
@@ -226,7 +282,21 @@ watch(() => props.isOpen, (isOpen) => {
 })
 
 const handleSubmit = (data: any) => {
-  const amount = amountType.value === 'outflow' ? -Math.abs(data.amount) : Math.abs(data.amount)
+  // Update selectedPayee for transfer detection
+  selectedPayee.value = data.payee
+
+  const isTransfer = TransferService.isTransferPayee(data.payee)
+
+  // For transfers, validate that category is selected
+  if (isTransfer && !data.category_id) {
+    // This should be caught by form validation, but just in case
+    throw new Error('Transfer transactions require a category selection')
+  }
+
+  // For transfers, always use outflow (negative amount)
+  const amount = (isTransfer || amountType.value === 'outflow')
+    ? -Math.abs(data.amount)
+    : Math.abs(data.amount)
 
   const transactionData = {
     ...data,

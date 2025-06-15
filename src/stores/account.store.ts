@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import type { CreateAccountDto, AccountResponse, AccountType, AccountWithReadyToAssignResponse, UpdateAccountDto, CloseAccountResponse } from "@/types/DTO/account.dto";
 import { AccountService } from "@/services/account.service";
+import { TransferService } from "@/services/transfer.service";
 import { useAccounts } from "@/composables/accounts/useCreateAccount";
 import { useBudgetStore } from "./budget.store";
 import { useCategoryStore } from "./category.store";
@@ -189,6 +190,15 @@ export const useAccountStore = defineStore('accountStore', {
                 return response
             } catch (error) {
                 console.error('Failed to reconcile account:', error)
+                throw error
+            }
+        },
+
+        async getTransferOptions(accountId: string): Promise<AccountResponse[]> {
+            try {
+                return await TransferService.getTransferOptions(accountId)
+            } catch (error) {
+                console.error('Failed to get transfer options:', error)
                 throw error
             }
         },
