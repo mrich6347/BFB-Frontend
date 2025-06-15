@@ -242,6 +242,45 @@ export const useCategoryStore = defineStore('categoryStore', {
       this.categories = this.categories.filter(category => category.category_group_id !== id);
     },
 
+    async hideCategoryGroup(id: string) {
+      // Get the group being hidden
+      const groupToHide = this.categoryGroups.find(group => group.id === id);
+      if (!groupToHide) {
+        throw new Error('Category group not found');
+      }
+
+      // Find the Hidden Categories group
+      const hiddenGroup = this.categoryGroups.find(group =>
+        group.name === 'Hidden Categories' && group.is_system_group
+      );
+      if (!hiddenGroup) {
+        throw new Error('Hidden Categories group not found');
+      }
+
+      // Store original state for rollback
+      const originalCategories = [...this.categories];
+      const originalGroups = [...this.categoryGroups];
+
+      // Optimistically update the UI - move all categories to Hidden Categories and remove the group
+      this.categories = this.categories.map(category =>
+        category.category_group_id === id
+          ? { ...category, category_group_id: hiddenGroup.id }
+          : category
+      );
+      this.categoryGroups = this.categoryGroups.filter(group => group.id !== id);
+
+      try {
+        // Make the actual API call
+        await CategoryGroupService.hideCategoryGroup(id);
+      } catch (error) {
+        // If the API call fails, revert to the original state
+        console.error('Failed to hide category group:', error);
+        this.categories = originalCategories;
+        this.categoryGroups = originalGroups;
+        throw error;
+      }
+    },
+
     async createCategory(request: CreateCategoryDto) {
       // Create a temporary ID for optimistic updates
       const tempId = 'temp-' + Date.now();
@@ -352,42 +391,94 @@ export const useCategoryStore = defineStore('categoryStore', {
       }
     },
 
-    async deleteCategory(id: string) {
-      // Get the category being deleted to calculate the assigned amount that will be returned to Ready to Assign
-      const categoryToDelete = this.categories.find(category => category.id === id);
-      if (!categoryToDelete) {
+    async hideCategory(id: string) {
+      // Get the category being hidden
+      const categoryToHide = this.categories.find(category => category.id === id);
+      if (!categoryToHide) {
         throw new Error('Category not found');
       }
 
-      // Get the current assigned amount for this category (optimistic calculation)
-      const categoryBalances = this.categoryBalances.filter(balance => balance.category_id === id);
-      const totalAssignedAmount = categoryBalances.reduce((sum, balance) => sum + (balance.assigned || 0), 0);
+      // Find the Hidden Categories group
+      const hiddenGroup = this.categoryGroups.find(group =>
+        group.name === 'Hidden Categories' && group.is_system_group
+      );
+      if (!hiddenGroup) {
+        throw new Error('Hidden Categories group not found');
+      }
 
       // Store original state for rollback
-      const originalCategories = [...this.categories];
-      const originalCategoryBalances = [...this.categoryBalances];
+      const originalCategory = { ...categoryToHide };
 
-      // Optimistically update the UI immediately
-      this.categories = this.categories.filter(category => category.id !== id);
-      this.categoryBalances = this.categoryBalances.filter(balance => balance.category_id !== id);
-
-      // Optimistically update Ready to Assign
-      const budgetStore = useBudgetStore();
-      const originalReadyToAssign = budgetStore.readyToAssign;
-      budgetStore.setReadyToAssign(originalReadyToAssign + totalAssignedAmount);
+      // Optimistically update the UI immediately - move category to Hidden Categories group
+      const categoryIndex = this.categories.findIndex(cat => cat.id === id);
+      if (categoryIndex !== -1) {
+        this.categories[categoryIndex] = {
+          ...this.categories[categoryIndex],
+          category_group_id: hiddenGroup.id
+        };
+      }
 
       try {
         // Make the actual API call
-        const response = await CategoryService.deleteCategory(id);
+        const response = await CategoryService.hideCategory(id);
 
         // Update Ready to Assign with the accurate value from the backend
+        const budgetStore = useBudgetStore();
         budgetStore.setReadyToAssign(response.readyToAssign);
       } catch (error) {
         // If the API call fails, revert to the original state
-        console.error('Failed to delete category:', error);
-        this.categories = originalCategories;
-        this.categoryBalances = originalCategoryBalances;
-        budgetStore.setReadyToAssign(originalReadyToAssign);
+        console.error('Failed to hide category:', error);
+        const categoryIndex = this.categories.findIndex(cat => cat.id === id);
+        if (categoryIndex !== -1) {
+          this.categories[categoryIndex] = originalCategory;
+        }
+        throw error;
+      }
+    },
+
+    async unhideCategory(id: string, targetGroupId?: string) {
+      // Get the category being unhidden
+      const categoryToUnhide = this.categories.find(category => category.id === id);
+      if (!categoryToUnhide) {
+        throw new Error('Category not found');
+      }
+
+      // If no target group specified, use the first non-system group
+      let targetGroup = targetGroupId;
+      if (!targetGroup) {
+        const firstGroup = this.categoryGroups.find(group => !group.is_system_group);
+        if (!firstGroup) {
+          throw new Error('No available category group to move to');
+        }
+        targetGroup = firstGroup.id;
+      }
+
+      // Store original state for rollback
+      const originalCategory = { ...categoryToUnhide };
+
+      // Optimistically update the UI immediately - move category to target group
+      const categoryIndex = this.categories.findIndex(cat => cat.id === id);
+      if (categoryIndex !== -1) {
+        this.categories[categoryIndex] = {
+          ...this.categories[categoryIndex],
+          category_group_id: targetGroup
+        };
+      }
+
+      try {
+        // Make the actual API call
+        const response = await CategoryService.unhideCategory(id);
+
+        // Update Ready to Assign with the accurate value from the backend
+        const budgetStore = useBudgetStore();
+        budgetStore.setReadyToAssign(response.readyToAssign);
+      } catch (error) {
+        // If the API call fails, revert to the original state
+        console.error('Failed to unhide category:', error);
+        const categoryIndex = this.categories.findIndex(cat => cat.id === id);
+        if (categoryIndex !== -1) {
+          this.categories[categoryIndex] = originalCategory;
+        }
         throw error;
       }
     },

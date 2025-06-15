@@ -1,9 +1,9 @@
 import api from './common/api';
-import type { 
-  CategoryGroupResponse, 
-  CreateCategoryGroupDto, 
-  UpdateCategoryGroupDto, 
-  ReorderCategoryGroupsDto 
+import type {
+  CategoryGroupResponse,
+  CreateCategoryGroupDto,
+  UpdateCategoryGroupDto,
+  ReorderCategoryGroupsDto
 } from '@/types/DTO/category-group.dto';
 
 export default class CategoryGroupService {
@@ -24,6 +24,10 @@ export default class CategoryGroupService {
 
   static async deleteCategoryGroup(id: string): Promise<void> {
     await api.delete(`/category-groups/${id}`);
+  }
+
+  static async hideCategoryGroup(id: string): Promise<void> {
+    await api.patch(`/category-groups/${id}/hide`);
   }
 
   static async reorderCategoryGroups(request: ReorderCategoryGroupsDto): Promise<void> {

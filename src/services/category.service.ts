@@ -29,8 +29,13 @@ export default class CategoryService {
     return response.data;
   }
 
-  static async deleteCategory(id: string): Promise<{ readyToAssign: number }> {
-    const response = await api.delete(`/categories/${id}`);
+  static async hideCategory(id: string): Promise<{ readyToAssign: number }> {
+    const response = await api.patch(`/categories/${id}/hide`);
+    return response.data;
+  }
+
+  static async unhideCategory(id: string): Promise<{ readyToAssign: number }> {
+    const response = await api.patch(`/categories/${id}/unhide`);
     return response.data;
   }
 

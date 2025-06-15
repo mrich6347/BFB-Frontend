@@ -35,7 +35,7 @@
         <div class="text-right">AVAILABLE</div>
       </div>
 
-      <!-- Category Groups -->
+      <!-- Regular Category Groups -->
       <draggable
         v-model="categoryGroupsList"
         item-key="id"
@@ -110,23 +110,13 @@
                   >
                     <div class="flex items-center truncate">
                       <GripVertical
-                        v-if="!category.is_credit_card_payment"
                         class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
                       />
-                      <div v-else class="h-3.5 w-3.5 mr-2"></div> <!-- Spacer for credit card payment categories -->
                       <span class="truncate">{{ category.name }}</span>
                       <Edit
-                        v-if="!category.is_credit_card_payment"
                         class="h-3.5 w-3.5 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
                         @click="openEditCategoryModal(category)"
                       />
-                      <span
-                        v-if="category.is_credit_card_payment"
-                        class="text-xs text-muted-foreground ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Auto-generated payment category"
-                      >
-                        (Auto)
-                      </span>
                     </div>
                     <div class="text-right text-xs">
                       <CalculationInput
@@ -153,6 +143,78 @@
         </template>
       </draggable>
 
+      <!-- Hidden Categories Section -->
+      <div v-if="hasHiddenCategories && hiddenCategoriesGroup" class="border-t-2 border-muted mt-4">
+        <div class="border-b last:border-b-0 category-group-item opacity-75" :data-group-id="hiddenCategoriesGroup.id">
+          <!-- Hidden Group Header -->
+          <div
+            class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 font-semibold px-2 py-1.5 cursor-pointer hover:bg-muted/30 bg-muted/10"
+            @click="toggleGroup(hiddenCategoriesGroup.id)"
+          >
+            <div class="flex items-center truncate">
+              <ChevronDownIcon v-if="expandedGroups.has(hiddenCategoriesGroup.id)" class="h-4 w-4 mr-1 flex-shrink-0 text-muted-foreground" />
+              <ChevronRightIcon v-else class="h-4 w-4 mr-1 flex-shrink-0 text-muted-foreground" />
+              <span class="flex items-center gap-1 truncate text-muted-foreground">
+                {{ hiddenCategoriesGroup.name }}
+                <span class="text-xs text-muted-foreground ml-2">
+                  (Hidden)
+                </span>
+              </span>
+            </div>
+            <div class="text-right text-sm text-muted-foreground">{{ formatCurrency(getGroupTotals(hiddenCategoriesGroup.id).assigned) }}</div>
+            <div class="text-right text-sm text-muted-foreground">{{ formatCurrency(getGroupTotals(hiddenCategoriesGroup.id).activity) }}</div>
+            <div class="text-right text-sm text-muted-foreground">
+                {{ formatCurrency(getGroupTotals(hiddenCategoriesGroup.id).available) }}
+            </div>
+          </div>
+
+          <!-- Hidden Categories within Group -->
+          <div v-if="expandedGroups.has(hiddenCategoriesGroup.id)">
+            <draggable
+              v-model="categoryLists[hiddenCategoriesGroup.id]"
+              item-key="id"
+              :animation="150"
+              handle=".drag-handle"
+              ghost-class="ghost-item"
+              chosen-class="sortable-chosen"
+              drag-class="sortable-drag"
+              @change="onChange($event, hiddenCategoriesGroup.id)"
+              class="category-list"
+            >
+              <template #item="{ element: category }">
+                <div
+                  class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 text-sm pl-8 pr-2 py-1.5 hover:bg-muted/30 transition-colors border-b border-border/40 last:border-b-0 category-item opacity-75"
+                  :data-category-id="category.id"
+                >
+                  <div class="flex items-center truncate">
+                    <GripVertical
+                      class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
+                    />
+                    <span class="truncate text-muted-foreground">{{ category.name }}</span>
+                    <button
+                      class="h-3.5 w-3.5 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-xs px-1 py-0.5 bg-primary/20 rounded text-primary"
+                      @click="unhideCategory(category.id)"
+                      title="Unhide category"
+                    >
+                      ↑
+                    </button>
+                  </div>
+                  <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.assigned) }}</div>
+                  <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
+                  <div class="text-right">
+                    <Badge
+                      variant="neutral"
+                      class="opacity-75"
+                    >
+                      {{ formatCurrency(category.available) }}
+                    </Badge>
+                  </div>
+                </div>
+              </template>
+            </draggable>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -178,7 +240,7 @@
     @close="showCategoryModal = false"
     @created="handleCategoryCreated"
     @updated="handleCategoryUpdated"
-    @deleted="handleCategoryDeleted"
+    @hidden="handleCategoryHidden"
   />
 
   <MoveMoneyModal
@@ -233,8 +295,28 @@ const sortedCategoryGroups = computed(() => {
   return categoryStore.visibleCategoryGroups(accountStore.accounts)
 })
 
-// Update categoryGroupsList when sortedCategoryGroups changes
-watch(() => sortedCategoryGroups.value, (newGroups) => {
+// Computed property to separate regular groups from hidden categories group
+const regularCategoryGroups = computed(() => {
+  return sortedCategoryGroups.value.filter(group =>
+    !(group.name === 'Hidden Categories' && group.is_system_group)
+  )
+})
+
+const hiddenCategoriesGroup = computed(() => {
+  return sortedCategoryGroups.value.find(group =>
+    group.name === 'Hidden Categories' && group.is_system_group
+  )
+})
+
+// Check if hidden categories group has any categories
+const hasHiddenCategories = computed(() => {
+  if (!hiddenCategoriesGroup.value) return false
+  const hiddenCategories = getCategoriesForGroup(hiddenCategoriesGroup.value.id)
+  return hiddenCategories.length > 0
+})
+
+// Update categoryGroupsList when regularCategoryGroups changes
+watch(() => regularCategoryGroups.value, (newGroups) => {
   categoryGroupsList.value = [...newGroups]
 }, { immediate: true })
 
@@ -432,14 +514,7 @@ const onChange = async (event: any, groupId: string) => {
     return
   }
 
-  // Prevent reordering of credit card payment categories
-  const movedCategory = event.moved.element
-  if (movedCategory.is_credit_card_payment) {
-    console.log('Cannot reorder credit card payment categories')
-    // Revert the change by resetting the list
-    categoryLists[groupId] = [...getCategoriesForGroup(groupId)]
-    return
-  }
+  // Categories can be reordered freely now
 
   console.log('Drag event detected:', event)
 
@@ -609,9 +684,17 @@ const handleCategoryUpdated = (category: CategoryResponse) => {
   // Optimistic updates in the store will handle UI updates automatically
 }
 
-const handleCategoryDeleted = (categoryId: string) => {
+const handleCategoryHidden = (categoryId: string) => {
   showCategoryModal.value = false
-  // Store deletion will handle UI updates automatically
+  // Store hide operation will handle UI updates automatically
+}
+
+const unhideCategory = async (categoryId: string) => {
+  try {
+    await categoryStore.unhideCategory(categoryId)
+  } catch (error) {
+    console.error('Failed to unhide category:', error)
+  }
 }
 
 const updateCategoryAssigned = async (categoryId: string, assignedValue: number) => {
@@ -626,8 +709,14 @@ const updateCategoryAssigned = async (categoryId: string, assignedValue: number)
 const availableDestinationCategories = computed(() => {
   if (!selectedSourceCategory.value) return []
 
+  // Get the Hidden Categories group
+  const hiddenGroup = categoryStore.categoryGroups.find(group =>
+    group.name === 'Hidden Categories' && group.is_system_group
+  )
+
   return categoryStore.getCategoriesWithBalances().filter(category =>
-    category.id !== selectedSourceCategory.value?.id
+    category.id !== selectedSourceCategory.value?.id &&
+    (!hiddenGroup || category.category_group_id !== hiddenGroup.id) // Exclude hidden categories
   )
 })
 
@@ -635,10 +724,16 @@ const availableDestinationCategories = computed(() => {
 const availableSourceCategories = computed(() => {
   if (!selectedDestinationCategory.value) return []
 
+  // Get the Hidden Categories group
+  const hiddenGroup = categoryStore.categoryGroups.find(group =>
+    group.name === 'Hidden Categories' && group.is_system_group
+  )
+
   return categoryStore.getCategoriesWithBalances(budgetStore.currentYear, budgetStore.currentMonth).filter(category =>
     category.id !== selectedDestinationCategory.value?.id &&
     category.available &&
-    category.available > 0
+    category.available > 0 &&
+    (!hiddenGroup || category.category_group_id !== hiddenGroup.id) // Exclude hidden categories
   )
 })
 

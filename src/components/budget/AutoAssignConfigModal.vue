@@ -179,9 +179,14 @@ const canSave = computed(() => {
 })
 
 const availableCategories = computed(() => {
+  // Get the Hidden Categories group
+  const hiddenGroup = categoryStore.categoryGroups.find(group =>
+    group.name === 'Hidden Categories' && group.is_system_group
+  )
+
   return categoryStore.categories.filter(category =>
-    !category.is_credit_card_payment && // Exclude auto-generated payment categories
-    !selectedCategories.value.some(selected => selected.category_id === category.id)
+    !selectedCategories.value.some(selected => selected.category_id === category.id) &&
+    (!hiddenGroup || category.category_group_id !== hiddenGroup.id) // Exclude hidden categories
   )
 })
 
