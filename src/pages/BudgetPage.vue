@@ -32,6 +32,7 @@ import { useTransactionStore } from '@/stores/transaction.store'
 import { useAutoAssignStore } from '@/stores/auto-assign.store'
 import BudgetCategoryList from '@/components/budget/BudgetCategoryList.vue'
 import AutoAssignPanel from '@/components/budget/AutoAssignPanel.vue'
+import { saveLastVisitedBudget } from '@/utils/lastVisitedBudgetStorage'
 
 const route = useRoute()
 const router = useRouter()
@@ -81,6 +82,9 @@ onMounted(async () => {
     // Set loading to false for both stores
     budgetStore.setIsLoading(false)
     categoryStore.setIsLoading(false)
+
+    // Save this budget as the last visited budget
+    saveLastVisitedBudget(budgetId)
   } catch (error) {
     console.error("Error fetching main data:", error)
     budgetStore.reset()

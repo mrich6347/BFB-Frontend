@@ -9,6 +9,7 @@ import BudgetPage from '../pages/BudgetPage.vue'
 import ReportsPage from '../pages/ReportsPage.vue'
 import AccountPage from '../pages/AccountPage.vue'
 import { supabase } from '../lib/supabaseClient'
+import { getLastVisitedBudget } from '../utils/lastVisitedBudgetStorage'
 
 const routes = [
   {
@@ -77,15 +78,27 @@ const router = createRouter({
   routes,
 })
 
-// Navigation guard for protected routes
+// Navigation guard for protected routes and last visited budget redirect
 router.beforeEach(async (to, from, next) => {
-  if (to.meta.requiresAuth) {
-    const { data } = await supabase.auth.getSession()
-    if (!data.session) {
-      // User is not authenticated, redirect to landing page
-      return next({ path: '/' })
+  // Get current session
+  const { data } = await supabase.auth.getSession()
+  const isAuthenticated = !!data.session
+
+  // Handle protected routes
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    // User is not authenticated, redirect to landing page
+    return next({ path: '/' })
+  }
+
+  // Handle last visited budget redirect for landing page
+  if (to.path === '/' && isAuthenticated && !to.query.force) {
+    const lastVisitedBudget = getLastVisitedBudget()
+    if (lastVisitedBudget) {
+      // Redirect to last visited budget
+      return next({ path: `/budget/${lastVisitedBudget}` })
     }
   }
+
   // Proceed as normal
   next()
 })

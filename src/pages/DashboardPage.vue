@@ -119,6 +119,7 @@ import CardContent from '@/components/shadcn-ui/card-content.vue'
 import Section from '@/components/shadcn-ui/section.vue'
 import EditBudgetModal from '@/components/budget/EditBudgetModal.vue'
 import type { BudgetResponse } from '@/types/DTO/budget.dto'
+import { saveLastVisitedBudget } from '@/utils/lastVisitedBudgetStorage'
 
 const loading = ref(true)
 const showCreateModal = ref(false)
@@ -137,6 +138,8 @@ onMounted(async () => {
 })
 
 const goToBudget = (budgetId: string) => {
+  // Save this budget as the last visited budget
+  saveLastVisitedBudget(budgetId)
   router.push(`/budget/${budgetId}`)
 }
 
