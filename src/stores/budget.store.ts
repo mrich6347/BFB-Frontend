@@ -2,17 +2,21 @@ import { defineStore } from 'pinia'
 import BudgetService from '@/services/budget.service'
 import type { BudgetResponse, CreateBudgetDto } from '@/types/DTO/budget.dto'
 import { usePatchStoreBudget } from '@/composables/budgets/usePatchStoreBudget'
+import { getCurrentMonthYear } from '@/utils/dateContext'
 
 
 export const useBudgetStore = defineStore('budgetStore', {
-    state: () => ({
-        budgets: [] as BudgetResponse[],
-        currentBudget: null as BudgetResponse | null,
-        isLoading: true,
-        currentYear: new Date().getFullYear(),
-        currentMonth: new Date().getMonth() + 1,
-        readyToAssign: 0
-    }),
+    state: () => {
+        const { year, month } = getCurrentMonthYear()
+        return {
+            budgets: [] as BudgetResponse[],
+            currentBudget: null as BudgetResponse | null,
+            isLoading: true,
+            currentYear: year,
+            currentMonth: month,
+            readyToAssign: 0
+        }
+    },
 
     getters: {
         budgetExistsByName: (state) => (name: string) => {
@@ -67,22 +71,20 @@ export const useBudgetStore = defineStore('budgetStore', {
         setReadyToAssign(amount: number) {
             this.readyToAssign = amount
         },
-        // Ensure we're always showing the current month
+        // Ensure we're always showing the current month (using user's timezone)
         ensureCurrentMonth() {
-            const now = new Date()
-            this.currentYear = now.getFullYear()
-            this.currentMonth = now.getMonth() + 1
+            const { year, month } = getCurrentMonthYear()
+            this.currentYear = year
+            this.currentMonth = month
         },
 
         // Check if we need to roll over to a new month and handle it
         async checkAndHandleMonthRollover() {
-            const now = new Date()
-            const realYear = now.getFullYear()
-            const realMonth = now.getMonth() + 1
+            const { year, month } = getCurrentMonthYear()
 
-            // Update our current month to the real current month
-            this.currentYear = realYear
-            this.currentMonth = realMonth
+            // Update our current month to the real current month (user's timezone)
+            this.currentYear = year
+            this.currentMonth = month
 
             // The backend will handle creating new month balances when needed
             // This is just to ensure the frontend is showing the current month

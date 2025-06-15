@@ -1,4 +1,5 @@
 import api from './common/api';
+import { getCurrentUserDateContext } from '../utils/dateContext';
 
 export interface AutoAssignConfigurationItem {
   category_id: string;
@@ -81,7 +82,14 @@ export default class AutoAssignService {
   }
 
   static async applyConfiguration(request: ApplyAutoAssignConfigurationDto): Promise<ApplyAutoAssignResponse> {
-    const response = await api.post('/auto-assign/apply', request);
+    // Add user date context to the request
+    const userDateContext = getCurrentUserDateContext()
+    const requestWithContext = {
+      ...request,
+      ...userDateContext
+    }
+
+    const response = await api.post('/auto-assign/apply', requestWithContext);
     return response.data;
   }
 }

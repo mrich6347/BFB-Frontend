@@ -1,4 +1,5 @@
 import type { CreateTransactionDto, UpdateTransactionDto, TransactionResponse, TransactionWithAccountsResponse, TransactionDeleteResponse } from '../types/DTO/transaction.dto'
+import { getCurrentUserDateContext } from '../utils/dateContext'
 import api from './common/api'
 
 export class TransactionService {
@@ -8,7 +9,14 @@ export class TransactionService {
    * Create a new transaction
    */
   static async createTransaction(request: CreateTransactionDto): Promise<TransactionResponse | TransactionWithAccountsResponse> {
-    const response = await api.post<TransactionResponse | TransactionWithAccountsResponse>(this.BASE_PATH, request)
+    // Add user date context to the request
+    const userDateContext = getCurrentUserDateContext()
+    const requestWithContext = {
+      ...request,
+      ...userDateContext
+    }
+
+    const response = await api.post<TransactionResponse | TransactionWithAccountsResponse>(this.BASE_PATH, requestWithContext)
     return response.data
   }
 
@@ -32,7 +40,14 @@ export class TransactionService {
    * Update a transaction
    */
   static async updateTransaction(id: string, request: UpdateTransactionDto): Promise<TransactionResponse | TransactionWithAccountsResponse> {
-    const response = await api.patch<TransactionResponse | TransactionWithAccountsResponse>(`${this.BASE_PATH}/${id}`, request)
+    // Add user date context to the request
+    const userDateContext = getCurrentUserDateContext()
+    const requestWithContext = {
+      ...request,
+      ...userDateContext
+    }
+
+    const response = await api.patch<TransactionResponse | TransactionWithAccountsResponse>(`${this.BASE_PATH}/${id}`, requestWithContext)
     return response.data
   }
 

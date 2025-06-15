@@ -8,6 +8,10 @@ export interface CreateTransactionDto {
   is_cleared?: boolean;
   is_reconciled?: boolean;
   transfer_id?: string;
+  // User date context for timezone handling (added automatically by service)
+  userDate?: string;
+  userYear?: number;
+  userMonth?: number;
 }
 
 export interface UpdateTransactionDto {
@@ -19,6 +23,10 @@ export interface UpdateTransactionDto {
   is_cleared?: boolean;
   is_reconciled?: boolean;
   transfer_id?: string;
+  // User date context for timezone handling (added automatically by service)
+  userDate?: string;
+  userYear?: number;
+  userMonth?: number;
 }
 
 export interface TransactionResponse {
