@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { CreateTransactionDto, UpdateTransactionDto, TransactionResponse } from '@/types/DTO/transaction.dto'
+import type { CreateTransactionDto, UpdateTransactionDto, TransactionResponse, TransactionWithAccountsResponse, TransactionDeleteResponse } from '@/types/DTO/transaction.dto'
 import { TransactionService } from '@/services/transaction.service'
 import { useAccountStore } from './account.store'
 import { useBudgetStore } from './budget.store'
@@ -61,18 +61,36 @@ export const useTransactionStore = defineStore('transactionStore', {
       const accountStore = useAccountStore()
 
       try {
-        const newTransaction = await TransactionService.createTransaction(transactionData)
+        const result = await TransactionService.createTransaction(transactionData)
+
+        // Handle both regular transactions and transfer transactions
+        let newTransaction: TransactionResponse
+        if ('transaction' in result) {
+          // Transfer transaction - update both account balances using returned data
+          newTransaction = result.transaction
+
+          // Update source account balance with actual returned data
+          if (result.sourceAccount) {
+            accountStore.setAccountBalance(result.sourceAccount.id, result.sourceAccount)
+          }
+
+          // Update target account balance with actual returned data
+          if (result.targetAccount) {
+            accountStore.setAccountBalance(result.targetAccount.id, result.targetAccount)
+          }
+        } else {
+          // Regular transaction
+          newTransaction = result
+
+          // Update account balance optimistically
+          accountStore.updateAccountBalance(
+            newTransaction.account_id,
+            newTransaction.amount,
+            newTransaction.is_cleared
+          )
+        }
+
         this.transactions.unshift(newTransaction) // Add to beginning of array
-
-        // Update account balance optimistically
-        accountStore.updateAccountBalance(
-          newTransaction.account_id,
-          newTransaction.amount,
-          newTransaction.is_cleared
-        )
-
-
-
         return newTransaction
       } catch (error) {
         console.error('Failed to create transaction:', error)
@@ -90,21 +108,41 @@ export const useTransactionStore = defineStore('transactionStore', {
       const originalTransaction = { ...this.transactions[index] }
 
       try {
-        const updatedTransaction = await TransactionService.updateTransaction(id, transactionData)
+        const result = await TransactionService.updateTransaction(id, transactionData)
 
-        // Remove the old transaction's effect on account balance
-        accountStore.removeAccountBalance(
-          originalTransaction.account_id,
-          originalTransaction.amount,
-          originalTransaction.is_cleared
-        )
+        // Handle both regular transactions and transfer transactions
+        let updatedTransaction: TransactionResponse
+        if ('transaction' in result) {
+          // Transfer transaction - update both account balances using returned data
+          updatedTransaction = result.transaction
 
-        // Add the new transaction's effect on account balance
-        accountStore.updateAccountBalance(
-          updatedTransaction.account_id,
-          updatedTransaction.amount,
-          updatedTransaction.is_cleared
-        )
+          // Update source account balance with actual returned data
+          if (result.sourceAccount) {
+            accountStore.setAccountBalance(result.sourceAccount.id, result.sourceAccount)
+          }
+
+          // Update target account balance with actual returned data
+          if (result.targetAccount) {
+            accountStore.setAccountBalance(result.targetAccount.id, result.targetAccount)
+          }
+        } else {
+          // Regular transaction
+          updatedTransaction = result
+
+          // Remove the old transaction's effect on account balance
+          accountStore.removeAccountBalance(
+            originalTransaction.account_id,
+            originalTransaction.amount,
+            originalTransaction.is_cleared
+          )
+
+          // Add the new transaction's effect on account balance
+          accountStore.updateAccountBalance(
+            updatedTransaction.account_id,
+            updatedTransaction.amount,
+            updatedTransaction.is_cleared
+          )
+        }
 
         this.transactions[index] = updatedTransaction
         return updatedTransaction
@@ -167,15 +205,28 @@ export const useTransactionStore = defineStore('transactionStore', {
       }
 
       try {
-        await TransactionService.deleteTransaction(id)
+        const result = await TransactionService.deleteTransaction(id)
         this.transactions = this.transactions.filter(t => t.id !== id)
 
-        // Update account balance by removing the deleted transaction's effect
-        accountStore.removeAccountBalance(
-          transactionToDelete.account_id,
-          transactionToDelete.amount,
-          transactionToDelete.is_cleared
-        )
+        // Handle account balance updates
+        if (result && typeof result === 'object' && ('sourceAccount' in result || 'targetAccount' in result)) {
+          // Transfer transaction - update both account balances using returned data
+          if (result.sourceAccount) {
+            accountStore.setAccountBalance(result.sourceAccount.id, result.sourceAccount)
+          }
+
+          if (result.targetAccount) {
+            accountStore.setAccountBalance(result.targetAccount.id, result.targetAccount)
+          }
+        } else {
+          // Regular transaction
+          // Update account balance by removing the deleted transaction's effect
+          accountStore.removeAccountBalance(
+            transactionToDelete.account_id,
+            transactionToDelete.amount,
+            transactionToDelete.is_cleared
+          )
+        }
 
         // Refresh category balances to reflect any credit card debt reversals
         if (budgetStore.currentBudgetId) {

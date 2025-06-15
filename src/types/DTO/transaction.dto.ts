@@ -36,3 +36,14 @@ export interface TransactionResponse {
   created_at: string;
   updated_at: string;
 }
+
+export interface TransactionWithAccountsResponse {
+  transaction: TransactionResponse;
+  sourceAccount?: any; // AccountResponse from accounts module
+  targetAccount?: any; // AccountResponse from accounts module
+}
+
+export interface TransactionDeleteResponse {
+  sourceAccount?: any; // AccountResponse from accounts module
+  targetAccount?: any; // AccountResponse from accounts module
+}

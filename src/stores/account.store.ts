@@ -141,6 +141,20 @@ export const useAccountStore = defineStore('accountStore', {
             account.working_balance = account.cleared_balance + account.uncleared_balance
         },
 
+        setAccountBalance(accountId: string, accountData: any) {
+            const accountIndex = this.accounts.findIndex(account => account.id === accountId)
+            if (accountIndex === -1) return
+
+            // Update the account with the new balance data from the backend
+            this.accounts[accountIndex] = {
+                ...this.accounts[accountIndex],
+                account_balance: accountData.account_balance,
+                cleared_balance: accountData.cleared_balance,
+                uncleared_balance: accountData.uncleared_balance,
+                working_balance: accountData.working_balance
+            }
+        },
+
         updateAccountBalanceOnClearedToggle(accountId: string, amount: number, newClearedStatus: boolean) {
             const accountIndex = this.accounts.findIndex(account => account.id === accountId)
             if (accountIndex === -1) return
