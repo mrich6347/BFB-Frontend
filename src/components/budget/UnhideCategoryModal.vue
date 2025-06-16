@@ -71,7 +71,7 @@ const isLoading = ref(false)
 
 // Get available category groups (exclude system groups)
 const availableGroups = computed(() => {
-  return categoryStore.categoryGroups.filter(group => 
+  return categoryStore.categoryGroups.filter(group =>
     !group.is_system_group
   )
 })

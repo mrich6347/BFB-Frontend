@@ -45,74 +45,15 @@
         </div>
 
         <!-- Destination category dropdown -->
-        <div class="space-y-2">
-          <label class="text-sm font-medium">To Category</label>
-          <div class="relative">
-            <input
-              ref="categorySearchInput"
-              v-model="displayValue"
-              @focus="handleInputFocus"
-              @blur="handleInputBlur"
-              @keydown="handleCategoryKeydown"
-              :placeholder="'Search categories...'"
-              class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-            />
-            <ChevronDown class="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-
-            <!-- Custom dropdown -->
-            <div
-              v-if="showDropdown && (showReadyToAssign || filteredCategories.length > 0)"
-              class="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto"
-            >
-              <!-- Ready to Assign option -->
-              <div v-if="showReadyToAssign" class="border-b border-border">
-                <div class="px-3 py-2 text-xs font-medium text-muted-foreground bg-muted/50">
-                  Special
-                </div>
-                <button
-                  :ref="el => setCategoryRef(el, -1, 0)"
-                  @click="selectReadyToAssign"
-                  @keydown.enter="selectReadyToAssignAndFocusMove"
-                  :class="[
-                    'w-full px-4 py-2 text-left text-sm focus:outline-none',
-                    isHighlighted(-1, 0)
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-accent hover:text-accent-foreground'
-                  ]"
-                >
-                  Ready to Assign
-                </button>
-              </div>
-
-              <!-- Regular categories -->
-              <div
-                v-for="(group, groupIndex) in filteredCategories"
-                :key="group.groupId"
-                class="border-b border-border last:border-b-0"
-              >
-                <div class="px-3 py-2 text-xs font-medium text-muted-foreground bg-muted/50">
-                  {{ group.groupName }}
-                </div>
-                <button
-                  v-for="(category, categoryIndex) in group.categories"
-                  :key="category.id"
-                  :ref="el => setCategoryRef(el, groupIndex, categoryIndex)"
-                  @click="selectCategory(category)"
-                  @keydown.enter="selectCategoryAndFocusMove(category)"
-                  :class="[
-                    'w-full px-4 py-2 text-left text-sm focus:outline-none',
-                    isHighlighted(groupIndex, categoryIndex)
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-accent hover:text-accent-foreground'
-                  ]"
-                >
-                  {{ category.name }}
-                </button>
-              </div>
-            </div>
-          </div>
-          <div v-if="destinationError" class="text-sm text-red-500">{{ destinationError }}</div>
-        </div>
+        <CategorySelector
+          v-model="selectedDestinationId"
+          :available-categories="availableCategories"
+          label="To Category"
+          placeholder="Search categories..."
+          :include-ready-to-assign="true"
+          :error="destinationError"
+          @select="handleDestinationSelect"
+        />
 
         <!-- Action buttons -->
         <div class="flex gap-2 pt-2">
@@ -137,11 +78,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { X, ChevronDown } from 'lucide-vue-next'
+import { ref, computed, watch, nextTick } from 'vue'
+import { X } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
-import { useCategoryStore } from '@/stores/category.store'
+import CategorySelector from '@/components/shared/CategorySelector.vue'
 
 interface Props {
   isOpen: boolean
@@ -158,105 +99,24 @@ const emit = defineEmits<{
   (e: 'moveToReadyToAssign', amount: number): void
 }>()
 
-const categoryStore = useCategoryStore()
 const amountInput = ref<HTMLInputElement>()
-const categorySearchInput = ref<HTMLInputElement>()
 const moveButton = ref<HTMLButtonElement>()
 const amount = ref<number | string>('')
 const selectedDestinationId = ref('')
-const searchQuery = ref('')
-const showDropdown = ref(false)
-const isSearching = ref(false)
-const highlightedIndex = ref({ group: 0, category: 0 })
-const categoryRefs = ref<HTMLElement[][]>([])
 const amountError = ref('')
 const destinationError = ref('')
 const hasInteracted = ref(false)
 
-// Group categories by category group for better UX
-const groupedCategories = computed(() => {
-  const groups = new Map<string, { groupId: string; groupName: string; categories: CategoryResponse[] }>()
+// Destination selection handler
+const handleDestinationSelect = (category: CategoryResponse | null) => {
+  hasInteracted.value = true
+  validateDestination()
 
-  props.availableCategories.forEach(category => {
-    const group = categoryStore.categoryGroups.find(g => g.id === category.category_group_id)
-    const groupName = group?.name || 'Unknown Group'
-
-    if (!groups.has(category.category_group_id)) {
-      groups.set(category.category_group_id, {
-        groupId: category.category_group_id,
-        groupName,
-        categories: []
-      })
-    }
-
-    groups.get(category.category_group_id)?.categories.push(category)
+  // Focus move button after selection
+  nextTick(() => {
+    moveButton.value?.focus()
   })
-
-  // Sort groups by display order and categories by name
-  return Array.from(groups.values())
-    .sort((a, b) => {
-      const groupA = categoryStore.categoryGroups.find(g => g.id === a.groupId)
-      const groupB = categoryStore.categoryGroups.find(g => g.id === b.groupId)
-      return (groupA?.display_order || 0) - (groupB?.display_order || 0)
-    })
-    .map(group => ({
-      ...group,
-      categories: group.categories.sort((a, b) => a.name.localeCompare(b.name))
-    }))
-})
-
-// Filter categories based on search query
-const filteredCategories = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return groupedCategories.value
-  }
-
-  const query = searchQuery.value.toLowerCase()
-  return groupedCategories.value
-    .map(group => ({
-      ...group,
-      categories: group.categories.filter(category =>
-        category.name.toLowerCase().includes(query)
-      )
-    }))
-    .filter(group => group.categories.length > 0)
-})
-
-// Get the name of the selected category
-const selectedCategoryName = computed(() => {
-  if (!selectedDestinationId.value) return ''
-
-  // Check if Ready to Assign is selected
-  if (selectedDestinationId.value === 'ready-to-assign') {
-    return 'Ready to Assign'
-  }
-
-  for (const group of groupedCategories.value) {
-    const category = group.categories.find(c => c.id === selectedDestinationId.value)
-    if (category) return category.name
-  }
-
-  return ''
-})
-
-const showReadyToAssign = computed(() => {
-  // Show Ready to Assign option if search is empty or matches "ready"
-  return !searchQuery.value || 'ready to assign'.includes(searchQuery.value.toLowerCase())
-})
-
-// Display value for the input (either search query or selected category name)
-const displayValue = computed({
-  get: () => {
-    if (isSearching.value) {
-      return searchQuery.value
-    }
-    return selectedCategoryName.value
-  },
-  set: (value: string) => {
-    searchQuery.value = value
-    isSearching.value = true
-  }
-})
+}
 
 // Position the modal to the left of the clicked element
 const modalStyle = computed(() => {
@@ -362,163 +222,10 @@ const handleMove = () => {
   }
 }
 
-const setCategoryRef = (el: HTMLElement | null, groupIndex: number, categoryIndex: number) => {
-  if (!categoryRefs.value[groupIndex]) {
-    categoryRefs.value[groupIndex] = []
-  }
-  if (el) {
-    categoryRefs.value[groupIndex][categoryIndex] = el
-  }
-}
 
-const isHighlighted = (groupIndex: number, categoryIndex: number) => {
-  return highlightedIndex.value.group === groupIndex && highlightedIndex.value.category === categoryIndex
-}
-
-const handleInputFocus = () => {
-  hasInteracted.value = true
-  isSearching.value = true
-  showDropdown.value = true
-}
-
-const handleInputBlur = () => {
-  // Delay to allow click events on dropdown items
-  setTimeout(() => {
-    if (!showDropdown.value) {
-      isSearching.value = false
-    }
-  }, 150)
-}
-
-const selectCategory = (category: CategoryResponse) => {
-  selectedDestinationId.value = category.id
-  searchQuery.value = ''
-  isSearching.value = false
-  showDropdown.value = false
-}
-
-const selectReadyToAssign = () => {
-  selectedDestinationId.value = 'ready-to-assign'
-  searchQuery.value = ''
-  isSearching.value = false
-  showDropdown.value = false
-}
-
-const selectCategoryAndFocusMove = (category: CategoryResponse) => {
-  selectCategory(category)
-  nextTick(() => {
-    moveButton.value?.focus()
-  })
-}
-
-const selectReadyToAssignAndFocusMove = () => {
-  selectReadyToAssign()
-  nextTick(() => {
-    moveButton.value?.focus()
-  })
-}
-
-const handleCategoryKeydown = (event: KeyboardEvent) => {
-  if (!showDropdown.value) return
-
-  const categories = filteredCategories.value
-  if (categories.length === 0) return
-
-  switch (event.key) {
-    case 'ArrowDown':
-      event.preventDefault()
-      navigateDown(categories)
-      break
-    case 'ArrowUp':
-      event.preventDefault()
-      navigateUp(categories)
-      break
-    case 'Enter':
-      event.preventDefault()
-      selectHighlightedCategory(categories)
-      break
-    case 'Escape':
-      event.preventDefault()
-      showDropdown.value = false
-      break
-  }
-}
-
-const navigateDown = (categories: typeof filteredCategories.value) => {
-  const { group, category } = highlightedIndex.value
-
-  // If we're on Ready to Assign (-1, 0) and there are categories, move to first category
-  if (group === -1 && categories.length > 0) {
-    highlightedIndex.value.group = 0
-    highlightedIndex.value.category = 0
-  }
-  // If we're in a category group and can move down within the group
-  else if (group >= 0 && category < categories[group].categories.length - 1) {
-    highlightedIndex.value.category++
-  }
-  // If we're at the end of a group and can move to next group
-  else if (group >= 0 && group < categories.length - 1) {
-    highlightedIndex.value.group++
-    highlightedIndex.value.category = 0
-  }
-
-  scrollToHighlighted()
-}
-
-const navigateUp = (categories: typeof filteredCategories.value) => {
-  const { group, category } = highlightedIndex.value
-
-  // If we're in a category and can move up within the group
-  if (group >= 0 && category > 0) {
-    highlightedIndex.value.category--
-  }
-  // If we're at the start of a group and can move to previous group
-  else if (group > 0) {
-    highlightedIndex.value.group--
-    highlightedIndex.value.category = categories[highlightedIndex.value.group].categories.length - 1
-  }
-  // If we're at the first category and Ready to Assign is available, move to it
-  else if (group === 0 && category === 0 && showReadyToAssign.value) {
-    highlightedIndex.value.group = -1
-    highlightedIndex.value.category = 0
-  }
-
-  scrollToHighlighted()
-}
-
-const selectHighlightedCategory = (categories: typeof filteredCategories.value) => {
-  const { group, category } = highlightedIndex.value
-
-  // Handle Ready to Assign selection
-  if (group === -1 && category === 0) {
-    selectReadyToAssignAndFocusMove()
-  }
-  // Handle regular category selection
-  else if (categories[group]?.categories[category]) {
-    selectCategoryAndFocusMove(categories[group].categories[category])
-  }
-}
-
-const scrollToHighlighted = () => {
-  nextTick(() => {
-    const { group, category } = highlightedIndex.value
-    const element = categoryRefs.value[group]?.[category]
-    if (element) {
-      element.scrollIntoView({ block: 'nearest' })
-    }
-  })
-}
 
 const close = () => {
   emit('close')
-}
-
-// Close dropdown when clicking outside
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as HTMLElement
-  if (!target.closest('.relative')) {
-    showDropdown.value = false
-  }
 }
 
 // Reset form when modal opens
@@ -526,13 +233,7 @@ watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     amount.value = ''
     selectedDestinationId.value = ''
-    searchQuery.value = ''
-    showDropdown.value = false
-    isSearching.value = false
     hasInteracted.value = false
-    // Start with Ready to Assign if available, otherwise start with first category
-    highlightedIndex.value = showReadyToAssign.value ? { group: -1, category: 0 } : { group: 0, category: 0 }
-    categoryRefs.value = []
     amountError.value = ''
     destinationError.value = ''
 
@@ -541,25 +242,6 @@ watch(() => props.isOpen, (isOpen) => {
       amountInput.value?.focus()
     })
   }
-})
-
-// Reset highlighted index when search changes
-watch(searchQuery, () => {
-  // Start with Ready to Assign if it's available, otherwise start with first category
-  if (showReadyToAssign.value) {
-    highlightedIndex.value = { group: -1, category: 0 }
-  } else {
-    highlightedIndex.value = { group: 0, category: 0 }
-  }
-})
-
-// Add/remove event listeners for clicking outside
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
 })
 
 // Validate on input changes

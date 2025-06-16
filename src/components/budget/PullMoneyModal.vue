@@ -33,76 +33,16 @@
         </div>
 
         <!-- Source category dropdown -->
-        <div class="space-y-2">
-          <label class="text-sm font-medium">Pull From Category</label>
-          <div class="relative">
-            <button
-              ref="dropdownButton"
-              @click="showDropdown = !showDropdown"
-              @keydown="handleCategoryKeydown"
-              class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-left focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent flex items-center justify-between"
-            >
-              <span class="truncate">
-                {{ selectedSourceName || 'Select category...' }}
-              </span>
-              <ChevronDown class="h-4 w-4 text-muted-foreground" />
-            </button>
-
-            <!-- Dropdown -->
-            <div
-              v-if="showDropdown"
-              class="absolute z-10 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-48 overflow-y-auto"
-            >
-              <!-- Ready to Assign option (only show if positive balance) -->
-              <div v-if="budgetStore.readyToAssign > 0" class="border-b border-border/50">
-                <button
-                  @click="selectReadyToAssignAndFocusPull"
-                  class="w-full px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground flex items-center justify-between"
-                  :class="[
-                    selectedSourceId === READY_TO_ASSIGN_ID
-                      ? 'bg-accent text-accent-foreground'
-                      : 'hover:bg-accent hover:text-accent-foreground'
-                  ]"
-                >
-                  <span class="font-medium">Ready to Assign</span>
-                  <span class="text-xs text-muted-foreground">{{ formatCurrency(budgetStore.readyToAssign) }}</span>
-                </button>
-              </div>
-
-              <!-- Category list -->
-              <div class="max-h-48 overflow-y-auto">
-                <div
-                  v-for="(group, groupIndex) in groupedCategories"
-                  :key="group.id"
-                  class="border-b border-border/50 last:border-b-0"
-                >
-                  <div class="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted/30">
-                    {{ group.name }}
-                  </div>
-                  <div
-                    v-for="(category, categoryIndex) in group.categories"
-                    :key="category.id"
-                    :ref="el => setCategoryRef(el, groupIndex, categoryIndex)"
-                  >
-                    <button
-                      @click="selectCategoryAndFocusPull(category)"
-                      class="w-full px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground flex items-center justify-between"
-                      :class="[
-                        isHighlighted(groupIndex, categoryIndex)
-                          ? 'bg-accent text-accent-foreground'
-                          : 'hover:bg-accent hover:text-accent-foreground'
-                      ]"
-                    >
-                      <span>{{ category.name }}</span>
-                      <span class="text-xs text-muted-foreground">{{ formatCurrency(category.available || 0) }}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div v-if="sourceError" class="text-sm text-red-500">{{ sourceError }}</div>
-        </div>
+        <CategorySelector
+          ref="categorySelector"
+          v-model="selectedSourceId"
+          :available-categories="availableCategories"
+          label="Pull From Category"
+          placeholder="Select category..."
+          :include-ready-to-assign="budgetStore.readyToAssign > 0"
+          :error="sourceError"
+          @select="handleSourceSelect"
+        />
 
         <!-- Action buttons -->
         <div class="flex gap-2 pt-2">
@@ -127,12 +67,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { X, ChevronDown } from 'lucide-vue-next'
+import { ref, computed, watch, nextTick } from 'vue'
+import { X } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
-import { useCategoryStore } from '@/stores/category.store'
 import { useBudgetStore } from '@/stores/budget.store'
+import CategorySelector from '@/components/shared/CategorySelector.vue'
 
 interface Props {
   isOpen: boolean
@@ -149,12 +89,10 @@ const emit = defineEmits<{
   (e: 'pull-from-ready-to-assign', amount: number): void
 }>()
 
-const categoryStore = useCategoryStore()
 const budgetStore = useBudgetStore()
 
 // Form state
 const selectedSourceId = ref('')
-const showDropdown = ref(false)
 const hasInteracted = ref(false)
 
 // Special ID for Ready to Assign option
@@ -164,32 +102,10 @@ const READY_TO_ASSIGN_ID = 'ready-to-assign'
 const sourceError = ref('')
 
 // Refs
-const dropdownButton = ref<HTMLButtonElement>()
 const pullButton = ref<HTMLButtonElement>()
-const categoryRefs = ref<(HTMLElement | null)[][]>([])
-
-// Highlighted index for keyboard navigation
-const highlightedIndex = ref({ group: 0, category: 0 })
-
-const setCategoryRef = (el: HTMLElement | null, groupIndex: number, categoryIndex: number) => {
-  if (!categoryRefs.value[groupIndex]) {
-    categoryRefs.value[groupIndex] = []
-  }
-  categoryRefs.value[groupIndex][categoryIndex] = el
-}
+const categorySelector = ref()
 
 // Computed properties
-const selectedSourceName = computed(() => {
-  if (!selectedSourceId.value) return ''
-
-  if (selectedSourceId.value === READY_TO_ASSIGN_ID) {
-    return `Ready to Assign (${formatCurrency(budgetStore.readyToAssign)})`
-  }
-
-  const category = props.availableCategories.find(cat => cat.id === selectedSourceId.value)
-  return category ? `${category.name} (${formatCurrency(category.available || 0)})` : ''
-})
-
 const pullAmount = computed(() => {
   if (!selectedSourceId.value || !props.destinationCategory) return 0
 
@@ -205,41 +121,15 @@ const pullAmount = computed(() => {
   return Math.min(sourceAvailable, neededAmount)
 })
 
-const groupedCategories = computed(() => {
-  // Group categories by category group
-  const groupedCategories = new Map<string, { id: string; name: string; categories: CategoryResponse[] }>()
+// Source selection handler
+const handleSourceSelect = (category: CategoryResponse | null) => {
+  hasInteracted.value = true
+  validateSource()
 
-  props.availableCategories.forEach(category => {
-    const group = categoryStore.categoryGroups.find(g => g.id === category.category_group_id)
-    if (!group) return
-
-    if (!groupedCategories.has(group.id)) {
-      groupedCategories.set(group.id, {
-        id: group.id,
-        name: group.name,
-        categories: []
-      })
-    }
-
-    groupedCategories.get(group.id)!.categories.push(category)
+  // Focus pull button after selection
+  nextTick(() => {
+    pullButton.value?.focus()
   })
-
-  // Convert to array and filter out empty groups
-  return Array.from(groupedCategories.values())
-    .filter(group => group.categories.length > 0)
-    .map(group => ({
-      ...group,
-      categories: group.categories.sort((a, b) => a.display_order - b.display_order)
-    }))
-    .sort((a, b) => {
-      const groupA = categoryStore.categoryGroups.find(g => g.id === a.id)
-      const groupB = categoryStore.categoryGroups.find(g => g.id === b.id)
-      return (groupA?.display_order || 0) - (groupB?.display_order || 0)
-    })
-})
-
-const isHighlighted = (groupIndex: number, categoryIndex: number) => {
-  return highlightedIndex.value.group === groupIndex && highlightedIndex.value.category === categoryIndex
 }
 
 // Position the modal to the left of the clicked element
@@ -311,136 +201,26 @@ const handlePull = () => {
   }
 }
 
-// Navigation functions
-const navigateDown = (categories: typeof groupedCategories.value) => {
-  const { group, category } = highlightedIndex.value
 
-  if (category < categories[group].categories.length - 1) {
-    highlightedIndex.value.category++
-  } else if (group < categories.length - 1) {
-    highlightedIndex.value.group++
-    highlightedIndex.value.category = 0
-  }
-
-  scrollToHighlighted()
-}
-
-const navigateUp = (categories: typeof groupedCategories.value) => {
-  const { group, category } = highlightedIndex.value
-
-  if (category > 0) {
-    highlightedIndex.value.category--
-  } else if (group > 0) {
-    highlightedIndex.value.group--
-    highlightedIndex.value.category = categories[highlightedIndex.value.group].categories.length - 1
-  }
-
-  scrollToHighlighted()
-}
-
-const selectCategory = (category: CategoryResponse) => {
-  selectedSourceId.value = category.id
-  showDropdown.value = false
-}
-
-const selectCategoryAndFocusPull = (category: CategoryResponse) => {
-  selectCategory(category)
-  nextTick(() => {
-    pullButton.value?.focus()
-  })
-}
-
-const selectReadyToAssign = () => {
-  selectedSourceId.value = READY_TO_ASSIGN_ID
-  showDropdown.value = false
-}
-
-const selectReadyToAssignAndFocusPull = () => {
-  selectReadyToAssign()
-  nextTick(() => {
-    pullButton.value?.focus()
-  })
-}
-
-const handleCategoryKeydown = (event: KeyboardEvent) => {
-  if (!showDropdown.value) return
-
-  const categories = groupedCategories.value
-  if (categories.length === 0) return
-
-  switch (event.key) {
-    case 'ArrowDown':
-      event.preventDefault()
-      navigateDown(categories)
-      break
-    case 'ArrowUp':
-      event.preventDefault()
-      navigateUp(categories)
-      break
-    case 'Enter':
-      event.preventDefault()
-      selectHighlightedCategory(categories)
-      break
-    case 'Escape':
-      event.preventDefault()
-      showDropdown.value = false
-      break
-  }
-}
-
-const selectHighlightedCategory = (categories: typeof groupedCategories.value) => {
-  const { group, category } = highlightedIndex.value
-  if (categories[group]?.categories[category]) {
-    selectCategoryAndFocusPull(categories[group].categories[category])
-  }
-}
-
-const scrollToHighlighted = () => {
-  nextTick(() => {
-    const { group, category } = highlightedIndex.value
-    const element = categoryRefs.value[group]?.[category]
-    if (element) {
-      element.scrollIntoView({ block: 'nearest' })
-    }
-  })
-}
 
 const close = () => {
   emit('close')
-}
-
-// Close dropdown when clicking outside
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target as HTMLElement
-  if (!target.closest('.relative')) {
-    showDropdown.value = false
-  }
 }
 
 // Reset form when modal opens
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     selectedSourceId.value = ''
-    showDropdown.value = false
     hasInteracted.value = false
-    highlightedIndex.value = { group: 0, category: 0 }
-    categoryRefs.value = []
     sourceError.value = ''
 
-    // Focus the dropdown button
+    // Focus the category selector and trigger dropdown opening with a small delay
     nextTick(() => {
-      dropdownButton.value?.focus()
+      setTimeout(() => {
+        categorySelector.value?.focus()
+      }, 50)
     })
   }
-})
-
-// Add/remove event listeners for clicking outside
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
 })
 
 // Watch for validation

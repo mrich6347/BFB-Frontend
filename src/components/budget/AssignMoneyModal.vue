@@ -45,66 +45,15 @@
         </div>
 
         <!-- Category selection -->
-        <div class="space-y-2">
-          <label class="text-sm font-medium">Category</label>
-          <div class="relative">
-            <button
-              ref="categoryButton"
-              @click="toggleDropdown"
-              @keydown.enter="toggleDropdown"
-              @keydown.space.prevent="toggleDropdown"
-              @keydown.escape="showDropdown = false"
-              @keydown.arrow-down.prevent="focusFirstOption"
-              class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent flex items-center justify-between"
-            >
-              <span class="truncate">
-                {{ selectedCategory ? selectedCategory.name : 'Select category' }}
-              </span>
-              <ChevronDown class="h-4 w-4 text-muted-foreground" />
-            </button>
-
-            <!-- Dropdown -->
-            <div
-              v-if="showDropdown"
-              class="absolute z-10 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-48 overflow-y-auto"
-            >
-              <!-- Search input -->
-              <div class="p-2 border-b border-border">
-                <input
-                  ref="searchInput"
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="Search categories..."
-                  class="w-full px-2 py-1 text-sm border border-input rounded bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                  @keydown.escape="showDropdown = false"
-                  @keydown.arrow-down.prevent="focusFirstOption"
-                  @keydown.enter.prevent="selectFirstFilteredCategory"
-                />
-              </div>
-
-              <!-- Category options -->
-              <div class="py-1">
-                <button
-                  v-for="(category, index) in filteredCategories"
-                  :key="category.id"
-                  :ref="el => setOptionRef(el, index)"
-                  @click="selectCategoryAndFocusAssign(category)"
-                  @keydown.enter="selectCategoryAndFocusAssign(category)"
-                  @keydown.escape="showDropdown = false"
-                  @keydown.arrow-down.prevent="focusNextOption(index)"
-                  @keydown.arrow-up.prevent="focusPrevOption(index)"
-                  class="w-full px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none"
-                >
-                  {{ category.name }}
-                </button>
-                <div v-if="filteredCategories.length === 0" class="px-3 py-2 text-sm text-muted-foreground">
-                  No categories found
-                </div>
-              </div>
-            </div>
-          </div>
-          <div v-if="categoryError" class="text-sm text-red-500">{{ categoryError }}</div>
-        </div>
+        <CategorySelector
+          ref="categorySelector"
+          v-model="selectedCategoryId"
+          :available-categories="availableCategories"
+          label="Category"
+          placeholder="Select category..."
+          :error="categoryError"
+          @select="handleCategorySelect"
+        />
 
         <!-- Action buttons -->
         <div class="flex justify-end gap-2 pt-2">
@@ -134,9 +83,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { X, ChevronDown } from 'lucide-vue-next'
+import { ref, computed, watch, nextTick } from 'vue'
+import { X } from 'lucide-vue-next'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
+import CategorySelector from '@/components/shared/CategorySelector.vue'
 
 interface Props {
   isOpen: boolean
@@ -154,43 +104,24 @@ const emit = defineEmits<{
 
 // Form state
 const amount = ref<number | string>('')
+const selectedCategoryId = ref<string | null>(null)
 const selectedCategory = ref<CategoryResponse | null>(null)
 const hasInteracted = ref(false)
 const amountError = ref('')
 const categoryError = ref('')
 
-// Dropdown state
-const showDropdown = ref(false)
-const searchQuery = ref('')
-const isSearching = ref(false)
-
 // Refs
 const amountInput = ref<HTMLInputElement>()
-const categoryButton = ref<HTMLButtonElement>()
-const searchInput = ref<HTMLInputElement>()
 const assignButton = ref<HTMLButtonElement>()
-const optionRefs = ref<(HTMLElement | null)[]>([])
-
-const setOptionRef = (el: HTMLElement | null, index: number) => {
-  optionRefs.value[index] = el
-}
+const categorySelector = ref()
 
 // Computed properties
-const filteredCategories = computed(() => {
-  if (!searchQuery.value) {
-    return props.availableCategories
-  }
-  return props.availableCategories.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
-})
-
 const canAssign = computed(() => {
   const numAmount = typeof amount.value === 'string' ? parseFloat(amount.value) : amount.value
   return (
     numAmount > 0 &&
     numAmount <= props.maxAmount &&
-    selectedCategory.value &&
+    selectedCategoryId.value &&
     !amountError.value &&
     !categoryError.value
   )
@@ -255,12 +186,24 @@ const validateCategory = () => {
 
   categoryError.value = ''
 
-  if (!selectedCategory.value) {
+  if (!selectedCategoryId.value) {
     categoryError.value = 'Please select a category'
     return false
   }
 
   return true
+}
+
+// Category selection handler
+const handleCategorySelect = (category: CategoryResponse | null) => {
+  selectedCategory.value = category
+  hasInteracted.value = true
+  validateCategory()
+
+  // Focus assign button after selection
+  nextTick(() => {
+    assignButton.value?.focus()
+  })
 }
 
 // Event handlers
@@ -280,74 +223,21 @@ const handleAssign = () => {
   amountError.value = ''
   categoryError.value = ''
 
-  emit('assign', selectedCategory.value!.id, numAmount)
+  emit('assign', selectedCategoryId.value!, numAmount)
 }
 
-const toggleDropdown = () => {
-  showDropdown.value = !showDropdown.value
-  if (showDropdown.value) {
-    nextTick(() => {
-      searchInput.value?.focus()
-    })
-  }
-}
 
-const selectCategory = (category: CategoryResponse) => {
-  selectedCategory.value = category
-  searchQuery.value = ''
-  isSearching.value = false
-  showDropdown.value = false
-}
-
-const selectCategoryAndFocusAssign = (category: CategoryResponse) => {
-  selectCategory(category)
-  nextTick(() => {
-    assignButton.value?.focus()
-  })
-}
-
-const selectFirstFilteredCategory = () => {
-  if (filteredCategories.value.length > 0) {
-    selectCategoryAndFocusAssign(filteredCategories.value[0])
-  }
-}
-
-const focusFirstOption = () => {
-  if (optionRefs.value[0]) {
-    optionRefs.value[0].focus()
-  }
-}
-
-const focusNextOption = (currentIndex: number) => {
-  const nextIndex = currentIndex + 1
-  if (nextIndex < optionRefs.value.length && optionRefs.value[nextIndex]) {
-    optionRefs.value[nextIndex]!.focus()
-  }
-}
-
-const focusPrevOption = (currentIndex: number) => {
-  if (currentIndex > 0) {
-    const prevIndex = currentIndex - 1
-    if (optionRefs.value[prevIndex]) {
-      optionRefs.value[prevIndex]!.focus()
-    }
-  } else {
-    // Focus back to search input
-    searchInput.value?.focus()
-  }
-}
 
 // Watchers
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     // Reset form when modal opens
     amount.value = ''
+    selectedCategoryId.value = null
     selectedCategory.value = null
     hasInteracted.value = false
     amountError.value = ''
     categoryError.value = ''
-    searchQuery.value = ''
-    showDropdown.value = false
 
     // Focus amount input
     nextTick(() => {
@@ -360,22 +250,9 @@ watch([amount], () => {
   validateAmount()
 })
 
-watch([selectedCategory], () => {
+watch([selectedCategoryId], () => {
   validateCategory()
 })
 
-// Close dropdown when clicking outside
-const handleClickOutside = (event: MouseEvent) => {
-  if (showDropdown.value && !categoryButton.value?.contains(event.target as Node)) {
-    showDropdown.value = false
-  }
-}
 
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
 </script>
