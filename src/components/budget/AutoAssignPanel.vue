@@ -182,15 +182,15 @@ const applyConfiguration = async (config: AutoAssignConfigurationSummary) => {
       appliedCategories.value = result.appliedCategories
       applyingMessage.value = `Successfully applied to ${result.appliedCount} categories!`
 
-      // Emit event to trigger flash animation on category rows
+      // Refresh category data to show updated balances first
+      await categoryStore.fetchCategoryBalances(budgetStore.currentBudget!.id)
+
+      // THEN emit event to trigger flash animation on category rows (after server responds)
       const categoryIds = result.appliedCategories.map(cat => cat.category_id)
       emit('categories-assigned', categoryIds)
 
       // Wait a bit to show the success animation
       await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Refresh category data to show updated balances
-      await categoryStore.fetchCategoryBalances(budgetStore.currentBudget!.id)
     } else {
       applyingMessage.value = 'Failed to apply configuration'
       await new Promise(resolve => setTimeout(resolve, 1500))
