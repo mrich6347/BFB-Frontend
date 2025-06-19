@@ -59,13 +59,14 @@ export default class CategoryService {
     });
   }
 
-  static async moveMoneyToReadyToAssign(sourceCategoryId: string, amount: number, year: number, month: number): Promise<void> {
-    await api.post('/categories/move-money-to-ready-to-assign', {
+  static async moveMoneyToReadyToAssign(sourceCategoryId: string, amount: number, year: number, month: number): Promise<CategoryUpdateWithAffectedCategoriesResponse> {
+    const response = await api.post('/categories/move-money-to-ready-to-assign', {
       sourceCategoryId,
       amount,
       year,
       month
     });
+    return response.data;
   }
 
   static async pullFromReadyToAssign(destinationCategoryId: string, amount: number, year: number, month: number): Promise<void> {

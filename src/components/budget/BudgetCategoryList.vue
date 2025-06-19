@@ -809,13 +809,13 @@ const handleMoveMoney = async (destinationCategoryId: string, amount: number) =>
 
 const handleMoveToReadyToAssign = async (amount: number) => {
   if (!selectedSourceCategory.value) return
+  showMoveMoneyModal.value = false
 
   try {
     await moveMoneyToReadyToAssign(
       selectedSourceCategory.value.id,
       amount
     )
-    showMoveMoneyModal.value = false
   } catch (error) {
     console.error('Failed to move money to Ready to Assign:', error)
   }

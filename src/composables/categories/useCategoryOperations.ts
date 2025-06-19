@@ -5,6 +5,7 @@ import CategoryGroupService from '@/services/category-group.service'
 import CategoryService from '@/services/category.service'
 import { MainDataService } from '@/services/common/mainData.service'
 import { useUpdateCategoryBalance } from './optimistic/useUpdateCategoryBalance'
+import { useMoveMoneyToReadyToAssign } from './optimistic/useMoveMoneyToReadyToAssign'
 import type { CreateCategoryGroupDto, UpdateCategoryGroupDto } from '@/types/DTO/category-group.dto'
 import type { CreateCategoryDto, UpdateCategoryDto } from '@/types/DTO/category.dto'
 
@@ -12,6 +13,7 @@ export const useCategoryOperations = () => {
   const categoryStore = useCategoryStore()
   const budgetStore = useBudgetStore()
   const updateCategoryBalanceOptimistic = useUpdateCategoryBalance()
+  const moveMoneyToReadyToAssignOptimistic = useMoveMoneyToReadyToAssign()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -403,34 +405,33 @@ export const useCategoryOperations = () => {
   }
 
   const moveMoneyToReadyToAssign = async (sourceCategoryId: string, amount: number) => {
-    isLoading.value = true
-    error.value = null
+    console.log('Moving money to ready to assign with optimistic update:', sourceCategoryId, amount)
 
-    try {
-      // Get current month
-      const now = new Date()
-      const year = now.getFullYear()
-      const month = now.getMonth() + 1
+    // Use specific optimistic composable to handle optimistic updates and call server operation
+    await moveMoneyToReadyToAssignOptimistic.moveMoneyToReadyToAssignOptimistic(sourceCategoryId, amount, async () => {
+      // This is the actual server operation that gets called by the optimistic composable
+      isLoading.value = true
+      error.value = null
 
-      // Send update to backend
-      await CategoryService.moveMoneyToReadyToAssign(sourceCategoryId, amount, year, month)
+      try {
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = now.getMonth() + 1
 
-      // Composable responsibility: Coordinate cross-store updates
-      // Update Ready to Assign in budget store
-      budgetStore.setReadyToAssign(budgetStore.readyToAssign + amount)
+        const response = await CategoryService.moveMoneyToReadyToAssign(sourceCategoryId, amount, year, month)
 
-      // Refresh category balances to get updated data
-      const budgetId = categoryStore.categories.find(c => c.id === sourceCategoryId)?.budget_id
-      if (budgetId) {
-        await fetchCategoryBalances(budgetId)
+        // Update with server data
+        budgetStore.setReadyToAssign(response.readyToAssign)
+        categoryStore.updateCategoryBalance(sourceCategoryId, response.categoryBalance)
+
+      } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Failed to move money to Ready to Assign'
+        console.error('Error moving money to Ready to Assign:', err)
+        throw err
+      } finally {
+        isLoading.value = false
       }
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to move money to Ready to Assign'
-      console.error('Error moving money to Ready to Assign:', err)
-      throw err
-    } finally {
-      isLoading.value = false
-    }
+    })
   }
 
   const pullFromReadyToAssign = async (destinationCategoryId: string, amount: number) => {
