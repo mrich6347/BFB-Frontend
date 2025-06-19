@@ -212,12 +212,6 @@ export const useCategoryStore = defineStore('categoryStore', () => {
         ...updatedBalance,
         is_optimistic: false
       }
-    } else {
-      // If balance doesn't exist, add it (mark as not optimistic since it's from server)
-      categoryBalances.value.push({
-        ...updatedBalance,
-        is_optimistic: false
-      })
     }
   }
 
