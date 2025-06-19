@@ -148,6 +148,12 @@
           <DatabaseIcon class="w-5 h-5 mr-2" />
           Nuke Database
         </button>
+        <button @click="showPopulateDatabaseConfirm = true"
+          class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-600 bg-background dark:bg-background rounded-lg border border-border dark:border-border mb-2"
+        >
+          <DatabaseIcon class="w-5 h-5 mr-2" />
+          Populate Database
+        </button>
         <button @click="authService.logout()"
             class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground bg-background dark:bg-background rounded-lg border border-border dark:border-border"
         >
@@ -204,6 +210,32 @@
           <Button variant="destructive" :disabled="isNuking" @click="nukeDatabase">
             <Loader2Icon v-if="isNuking" class="mr-2 h-4 w-4 animate-spin" />
             {{ isNuking ? 'Nuking...' : 'Yes, Nuke Everything' }}
+          </Button>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
+
+  <!-- Populate Database Confirmation Dialog -->
+  <Dialog :open="showPopulateDatabaseConfirm" @update:open="(value) => !value && (showPopulateDatabaseConfirm = false)">
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle class="text-blue-600">Populate Database</DialogTitle>
+        <DialogDescription>
+          This will first wipe all existing data, then create a comprehensive sample budget with months of realistic activity including transactions, categories, and account balances.
+        </DialogDescription>
+      </DialogHeader>
+      <div class="flex flex-col gap-4">
+        <p class="text-sm text-muted-foreground">
+          This will give you a fully populated budget to explore the app's features. All existing data will be replaced.
+        </p>
+        <div class="flex justify-end gap-2">
+          <Button variant="outline" @click="showPopulateDatabaseConfirm = false">
+            Cancel
+          </Button>
+          <Button variant="default" :disabled="isPopulating" @click="populateDatabase" class="bg-blue-600 hover:bg-blue-700">
+            <Loader2Icon v-if="isPopulating" class="mr-2 h-4 w-4 animate-spin" />
+            {{ isPopulating ? 'Populating...' : 'Yes, Populate Database' }}
           </Button>
         </div>
       </div>
@@ -291,6 +323,8 @@ const isCreateAccountModalOpen = ref(false)
 const isCollapsed = ref(false)
 const showNukeDatabaseConfirm = ref(false)
 const isNuking = ref(false)
+const showPopulateDatabaseConfirm = ref(false)
+const isPopulating = ref(false)
 const isReopeningAccount = ref(false)
 const toast = useToast()
 
@@ -368,6 +402,29 @@ const nukeDatabase = async () => {
   } finally {
     isNuking.value = false
     showNukeDatabaseConfirm.value = false
+  }
+}
+
+const populateDatabase = async () => {
+  try {
+    isPopulating.value = true
+    isSettingsExpanded.value = false
+
+    const result = await DatabaseService.populateDatabase()
+
+    if (result.success) {
+      toast.success('Database has been successfully populated with sample data')
+      // Redirect to dashboard page
+      router.push('/dashboard')
+    } else {
+      toast.error('Failed to populate database: ' + result.message)
+    }
+  } catch (error) {
+    console.error('Error populating database:', error)
+    toast.error('An error occurred while populating the database')
+  } finally {
+    isPopulating.value = false
+    showPopulateDatabaseConfirm.value = false
   }
 }
 </script>
