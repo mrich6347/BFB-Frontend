@@ -57,8 +57,8 @@
               :key="transaction.id"
               :transaction="transaction"
               @edit="editTransaction"
-              @delete="deleteTransaction"
-              @toggle-cleared="toggleCleared"
+              @delete="deleteTransactionHandler"
+              @toggle-cleared="toggleClearedHandler"
             />
           </tbody>
         </table>
@@ -85,6 +85,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import TransactionRow from './TransactionRow.vue'
 import TransactionModal from './TransactionModal.vue'
 import { useTransactionStore } from '@/stores/transaction.store'
+import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
 import { useToast } from 'vue-toast-notification'
 
@@ -93,6 +94,14 @@ const props = defineProps<{
 }>()
 
 const transactionStore = useTransactionStore()
+const {
+  loadTransactionsByAccount,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+  toggleCleared,
+  isLoading
+} = useTransactionOperations()
 const $toast = useToast()
 
 const showAddTransactionModal = ref(false)
@@ -116,10 +125,10 @@ const editTransaction = (transaction: TransactionResponse) => {
   showEditTransactionModal.value = true
 }
 
-const deleteTransaction = async (transaction: TransactionResponse) => {
+const deleteTransactionHandler = async (transaction: TransactionResponse) => {
   if (confirm('Are you sure you want to delete this transaction?')) {
     try {
-      await transactionStore.deleteTransaction(transaction.id)
+      await deleteTransaction(transaction.id)
       $toast.success('Transaction deleted successfully')
     } catch (error) {
       $toast.error('Failed to delete transaction')
@@ -127,9 +136,9 @@ const deleteTransaction = async (transaction: TransactionResponse) => {
   }
 }
 
-const toggleCleared = async (transaction: TransactionResponse) => {
+const toggleClearedHandler = async (transaction: TransactionResponse) => {
   try {
-    await transactionStore.toggleCleared(transaction.id)
+    await toggleCleared(transaction.id)
   } catch (error) {
     $toast.error('Failed to update transaction status')
   }
@@ -150,11 +159,11 @@ const handleSaveTransaction = async (transactionData: CreateTransactionDto | Upd
   try {
     if (editingTransaction.value) {
       // Update existing transaction
-      await transactionStore.updateTransaction(editingTransaction.value.id, transactionData as UpdateTransactionDto)
+      await updateTransaction(editingTransaction.value.id, transactionData as UpdateTransactionDto)
       $toast.success('Transaction updated successfully')
     } else {
       // Create new transaction
-      await transactionStore.createTransaction(transactionData as CreateTransactionDto)
+      await createTransaction(transactionData as CreateTransactionDto)
       $toast.success('Transaction created successfully')
     }
     closeModal()

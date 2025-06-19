@@ -33,13 +33,13 @@ import { useAccountStore } from '@/stores/account.store'
 import { useBudgetStore } from '@/stores/budget.store'
 import { MainDataService } from '@/services/common/mainData.service'
 import { useCategoryStore } from '@/stores/category.store'
-import { useTransactionStore } from '@/stores/transaction.store'
+import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 
 const route = useRoute()
 const accountStore = useAccountStore()
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
-const transactionStore = useTransactionStore()
+const { setTransactions } = useTransactionOperations()
 
 // Make route parameters reactive
 const accountId = computed(() => route.params.accountId as string)
@@ -82,7 +82,7 @@ const loadMainData = async () => {
         autoAssignStore.setConfigurations(mainData.autoAssignConfigurations)
       }
       if (mainData?.transactions) {
-        transactionStore.setTransactions(mainData.transactions)
+        setTransactions(mainData.transactions)
       }
     }
   } catch (error) {

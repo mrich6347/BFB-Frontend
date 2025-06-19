@@ -104,14 +104,14 @@ import type { AccountResponse, AccountType } from '@/types/DTO/account.dto'
 import ReconcileModal from '@/components/accounts/ReconcileModal.vue'
 import EditAccountModal from '@/components/accounts/EditAccountModal.vue'
 import CloseAccountModal from '@/components/accounts/CloseAccountModal.vue'
-import { useTransactionStore } from '@/stores/transaction.store'
+import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   account?: AccountResponse
 }>()
 
-const transactionStore = useTransactionStore()
+const { loadTransactionsByAccount } = useTransactionOperations()
 const router = useRouter()
 const showReconcileModal = ref(false)
 const showEditModal = ref(false)
@@ -134,7 +134,7 @@ const handleReconciled = () => {
 
   // Refresh transactions to show updated reconciled status
   if (props.account) {
-    transactionStore.loadTransactionsByAccount(props.account.id)
+    loadTransactionsByAccount(props.account.id)
   }
 }
 
