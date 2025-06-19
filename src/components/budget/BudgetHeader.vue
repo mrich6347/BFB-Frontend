@@ -74,11 +74,13 @@ import { ChevronDown } from 'lucide-vue-next'
 import { formatCurrency } from '../../utils/currencyUtil'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
+import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
 import AssignMoneyModal from './AssignMoneyModal.vue'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
+const { updateCategoryBalance } = useCategoryOperations()
 
 const selectedFilter = ref('all')
 
@@ -140,7 +142,7 @@ const handleAssignMoney = async (categoryId: string, amount: number) => {
     const currentAssigned = existingBalance?.assigned || 0
     const newTotalAssigned = currentAssigned + amount
 
-    await categoryStore.updateCategoryBalance(categoryId, newTotalAssigned)
+    await updateCategoryBalance(categoryId, newTotalAssigned)
 
     showAssignModal.value = false
   } catch (error) {
