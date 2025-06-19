@@ -795,13 +795,14 @@ const handleAvailableClick = (category: CategoryResponse, event: MouseEvent) => 
 const handleMoveMoney = async (destinationCategoryId: string, amount: number) => {
   if (!selectedSourceCategory.value) return
 
+  showMoveMoneyModal.value = false
+
   try {
     await moveMoney(
       selectedSourceCategory.value.id,
       destinationCategoryId,
       amount
     )
-    showMoveMoneyModal.value = false
   } catch (error) {
     console.error('Failed to move money:', error)
   }

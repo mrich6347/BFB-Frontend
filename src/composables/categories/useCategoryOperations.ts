@@ -7,6 +7,7 @@ import { MainDataService } from '@/services/common/mainData.service'
 import { useUpdateCategoryBalance } from './optimistic/useUpdateCategoryBalance'
 import { useMoveMoneyToReadyToAssign } from './optimistic/useMoveMoneyToReadyToAssign'
 import { usePullFromReadyToAssign } from './optimistic/usePullFromReadyToAssign'
+import { useMoveMoney } from './optimistic/useMoveMoney'
 import type { CreateCategoryGroupDto, UpdateCategoryGroupDto } from '@/types/DTO/category-group.dto'
 import type { CreateCategoryDto, UpdateCategoryDto } from '@/types/DTO/category.dto'
 
@@ -16,6 +17,7 @@ export const useCategoryOperations = () => {
   const updateCategoryBalanceOptimistic = useUpdateCategoryBalance()
   const moveMoneyToReadyToAssignOptimistic = useMoveMoneyToReadyToAssign()
   const pullFromReadyToAssignOptimistic = usePullFromReadyToAssign()
+  const moveMoneyOptimistic = useMoveMoney()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -380,30 +382,34 @@ export const useCategoryOperations = () => {
   }
 
   const moveMoney = async (sourceCategoryId: string, destinationCategoryId: string, amount: number) => {
-    isLoading.value = true
-    error.value = null
+    console.log('Moving money between categories with optimistic update:', sourceCategoryId, destinationCategoryId, amount)
 
-    try {
-      // Get current month
-      const now = new Date()
-      const year = now.getFullYear()
-      const month = now.getMonth() + 1
+    // Use specific optimistic composable to handle optimistic updates and call server operation
+    await moveMoneyOptimistic.moveMoneyOptimistic(sourceCategoryId, destinationCategoryId, amount, async () => {
+      // This is the actual server operation that gets called by the optimistic composable
+      isLoading.value = true
+      error.value = null
 
-      // Send update to backend
-      await CategoryService.moveMoney(sourceCategoryId, destinationCategoryId, amount, year, month)
+      try {
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = now.getMonth() + 1
 
-      // Refresh category balances to get updated data
-      const budgetId = categoryStore.categories.find(c => c.id === sourceCategoryId)?.budget_id
-      if (budgetId) {
-        await fetchCategoryBalances(budgetId)
+        const response = await CategoryService.moveMoney(sourceCategoryId, destinationCategoryId, amount, year, month)
+
+        // Update with server data
+        budgetStore.setReadyToAssign(response.readyToAssign)
+        categoryStore.updateCategoryBalance(sourceCategoryId, response.sourceCategoryBalance)
+        categoryStore.updateCategoryBalance(destinationCategoryId, response.destinationCategoryBalance)
+
+      } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Failed to move money'
+        console.error('Error moving money:', err)
+        throw err
+      } finally {
+        isLoading.value = false
       }
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to move money'
-      console.error('Error moving money:', err)
-      throw err
-    } finally {
-      isLoading.value = false
-    }
+    })
   }
 
   const moveMoneyToReadyToAssign = async (sourceCategoryId: string, amount: number) => {

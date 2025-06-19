@@ -5,7 +5,8 @@ import type {
   UpdateCategoryDto,
   ReorderCategoriesDto,
   CategoryWithReadyToAssignResponse,
-  CategoryUpdateWithAffectedCategoriesResponse
+  CategoryUpdateWithAffectedCategoriesResponse,
+  MoveMoneyResponse
 } from '@/types/DTO/category.dto';
 
 export default class CategoryService {
@@ -49,14 +50,15 @@ export default class CategoryService {
     return response.data;
   }
 
-  static async moveMoney(sourceCategoryId: string, destinationCategoryId: string, amount: number, year: number, month: number): Promise<void> {
-    await api.post('/categories/move-money', {
+  static async moveMoney(sourceCategoryId: string, destinationCategoryId: string, amount: number, year: number, month: number): Promise<MoveMoneyResponse> {
+    const response = await api.post('/categories/move-money', {
       sourceCategoryId,
       destinationCategoryId,
       amount,
       year,
       month
     });
+    return response.data;
   }
 
   static async moveMoneyToReadyToAssign(sourceCategoryId: string, amount: number, year: number, month: number): Promise<CategoryUpdateWithAffectedCategoriesResponse> {

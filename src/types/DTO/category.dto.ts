@@ -57,3 +57,9 @@ export interface CategoryUpdateWithAffectedCategoriesResponse {
   categoryBalance: CategoryBalanceResponse; // The updated balance
   affectedCategories?: CategoryResponse[];
 }
+
+export interface MoveMoneyResponse {
+  readyToAssign: number;
+  sourceCategoryBalance: CategoryBalanceResponse;
+  destinationCategoryBalance: CategoryBalanceResponse;
+}
