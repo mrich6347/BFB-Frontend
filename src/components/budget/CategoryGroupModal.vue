@@ -80,6 +80,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCategoryStore } from '@/stores/category.store'
+import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
 import type { CategoryGroupResponse, CreateCategoryGroupDto, UpdateCategoryGroupDto } from '@/types/DTO/category-group.dto'
 import CategoryGroupForm from './forms/CategoryGroupForm.vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shadcn-ui'
@@ -105,6 +106,7 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
+const { createCategoryGroup, updateCategoryGroup, deleteCategoryGroup } = useCategoryOperations()
 const isLoading = ref(false)
 const isDeleting = ref(false)
 const showConfirmation = ref(false)
@@ -127,13 +129,13 @@ const handleSubmit = async (formData: CreateCategoryGroupDto) => {
 
   try {
     if (props.mode === 'create') {
-      const response = await categoryStore.createCategoryGroup(formData)
+      const response = await createCategoryGroup(formData)
       emit('created', response)
     } else if (props.mode === 'edit' && props.categoryGroup) {
       const updateData: UpdateCategoryGroupDto = {
         name: formData.name
       }
-      const response = await categoryStore.updateCategoryGroup(props.categoryGroup.id, updateData)
+      const response = await updateCategoryGroup(props.categoryGroup.id, updateData)
       emit('updated', response)
     }
     close()
@@ -158,7 +160,7 @@ const handleDelete = async () => {
   isDeleting.value = true
 
   try {
-    await categoryStore.deleteCategoryGroup(props.categoryGroup.id)
+    await deleteCategoryGroup(props.categoryGroup.id)
     emit('deleted', props.categoryGroup.id)
     close()
   } catch (error) {

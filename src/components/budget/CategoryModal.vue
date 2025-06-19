@@ -59,6 +59,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCategoryStore } from '@/stores/category.store'
+import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
 import type { CategoryResponse, CreateCategoryDto, UpdateCategoryDto } from '@/types/DTO/category.dto'
 import CategoryForm from './forms/CategoryForm.vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shadcn-ui'
@@ -85,6 +86,7 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
+const { createCategory, updateCategory, hideCategory } = useCategoryOperations()
 const isLoading = ref(false)
 const isDeleting = ref(false)
 const showConfirmation = ref(false)
@@ -110,13 +112,13 @@ const handleSubmit = async (formData: CreateCategoryDto | UpdateCategoryDto) => 
     if (props.mode === 'create') {
       const createData = formData as CreateCategoryDto
       console.log('➕ Creating category:', createData);
-      const response = await categoryStore.createCategory(createData)
+      const response = await createCategory(createData)
       console.log('✅ Category created, emitting event:', response);
       emit('created', response)
     } else if (props.mode === 'edit' && props.category) {
       const updateData = formData as UpdateCategoryDto
       console.log('✏️ Updating category:', { id: props.category.id, from: props.category.name, to: updateData.name });
-      const response = await categoryStore.updateCategory(props.category.id, updateData)
+      const response = await updateCategory(props.category.id, updateData)
       console.log('✅ Category updated, emitting event:', response);
       emit('updated', response)
     }
@@ -143,7 +145,7 @@ const handleHide = async () => {
   isDeleting.value = true
 
   try {
-    await categoryStore.hideCategory(props.category.id)
+    await hideCategory(props.category.id)
     emit('hidden', props.category.id)
     close()
   } catch (error) {

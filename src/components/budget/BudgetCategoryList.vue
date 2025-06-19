@@ -278,6 +278,7 @@ import { ChevronRightIcon, ChevronDownIcon, PlusIcon, Edit, GripVertical } from 
 import { formatCurrency } from '@/utils/currencyUtil'
 import Badge from '@/components/shadcn-ui/Badge.vue'
 import { useCategoryStore } from '@/stores/category.store'
+import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useAccountStore } from '@/stores/account.store'
 import type { CategoryGroupResponse } from '@/types/DTO/category-group.dto'
@@ -292,6 +293,14 @@ import draggable from 'vuedraggable'
 import { saveExpandedGroups, loadExpandedGroups } from '@/utils/expandedGroupsStorage'
 
 const categoryStore = useCategoryStore()
+const {
+  moveMoney,
+  moveMoneyToReadyToAssign,
+  pullFromReadyToAssign,
+  reorderCategoryGroups,
+  reorderCategories,
+  updateCategoryBalance
+} = useCategoryOperations()
 const budgetStore = useBudgetStore()
 const accountStore = useAccountStore()
 
@@ -301,7 +310,7 @@ const categoryGroupsList = ref<CategoryGroupResponse[]>([])
 
 // Computed property to get visible category groups (filtered based on credit card accounts)
 const sortedCategoryGroups = computed(() => {
-  return categoryStore.visibleCategoryGroups(accountStore.accounts)
+  return categoryStore.visibleCategoryGroups
 })
 
 // Computed property to separate regular groups from hidden categories group
@@ -363,7 +372,7 @@ const initializeCategoryLists = () => {
 }
 
 // Watch for changes in categories and update the categoryLists
-watch(() => categoryStore.getCategoriesWithBalances(), (newCategories) => {
+watch(() => categoryStore.getCategoriesWithBalances, (newCategories) => {
   // Update existing arrays in place to maintain reactivity with draggable components
   sortedCategoryGroups.value.forEach(group => {
     const newCategoriesForGroup = getCategoriesForGroup(group.id)
@@ -504,9 +513,9 @@ const onGroupChange = async (event: any) => {
   }
 
   try {
-    // The store will optimistically update the UI and then send to backend
-    console.log('Calling reorderCategoryGroups in store')
-    await categoryStore.reorderCategoryGroups(validGroupIds)
+    // Call composable to handle the reorder
+    console.log('Calling reorderCategoryGroups in composable')
+    await reorderCategoryGroups(validGroupIds)
     console.log('Group reorder completed successfully')
   } catch (error) {
     console.error('Failed to reorder category groups:', error)
@@ -541,9 +550,9 @@ const onChange = async (event: any, groupId: string) => {
   }
 
   try {
-    // The store will optimistically update the UI and then send to backend
-    console.log('Calling reorderCategories in store')
-    await categoryStore.reorderCategories(validCategoryIds)
+    // Call composable to handle the reorder
+    console.log('Calling reorderCategories in composable')
+    await reorderCategories(validCategoryIds)
     console.log('Reorder completed successfully')
   } catch (error) {
     console.error('Failed to reorder categories:', error)
@@ -713,7 +722,7 @@ const handleCategoryUnhidden = (categoryId: string) => {
 
 const updateCategoryAssigned = async (categoryId: string, assignedValue: number) => {
   try {
-    await categoryStore.updateCategoryBalance(categoryId, assignedValue)
+    await updateCategoryBalance(categoryId, assignedValue)
   } catch (error) {
     console.error('Failed to update category assigned value:', error)
   }
@@ -728,7 +737,7 @@ const availableDestinationCategories = computed(() => {
     group.name === 'Hidden Categories' && group.is_system_group
   )
 
-  return categoryStore.getCategoriesWithBalances().filter(category =>
+  return categoryStore.getCategoriesWithBalances.filter(category =>
     category.id !== selectedSourceCategory.value?.id &&
     (!hiddenGroup || category.category_group_id !== hiddenGroup.id) // Exclude hidden categories
   )
@@ -743,7 +752,7 @@ const availableSourceCategories = computed(() => {
     group.name === 'Hidden Categories' && group.is_system_group
   )
 
-  return categoryStore.getCategoriesWithBalances(budgetStore.currentYear, budgetStore.currentMonth).filter(category =>
+  return categoryStore.getCategoriesWithBalances.filter(category =>
     category.id !== selectedDestinationCategory.value?.id &&
     category.available &&
     category.available > 0 &&
@@ -787,7 +796,7 @@ const handleMoveMoney = async (destinationCategoryId: string, amount: number) =>
   if (!selectedSourceCategory.value) return
 
   try {
-    await categoryStore.moveMoney(
+    await moveMoney(
       selectedSourceCategory.value.id,
       destinationCategoryId,
       amount
@@ -802,7 +811,7 @@ const handleMoveToReadyToAssign = async (amount: number) => {
   if (!selectedSourceCategory.value) return
 
   try {
-    await categoryStore.moveMoneyToReadyToAssign(
+    await moveMoneyToReadyToAssign(
       selectedSourceCategory.value.id,
       amount
     )
@@ -816,7 +825,7 @@ const handlePullMoney = async (sourceCategoryId: string, amount: number) => {
   if (!selectedDestinationCategory.value) return
 
   try {
-    await categoryStore.moveMoney(
+    await moveMoney(
       sourceCategoryId,
       selectedDestinationCategory.value.id,
       amount
@@ -831,7 +840,7 @@ const handlePullFromReadyToAssign = async (amount: number) => {
   if (!selectedDestinationCategory.value) return
 
   try {
-    await categoryStore.pullFromReadyToAssign(
+    await pullFromReadyToAssign(
       selectedDestinationCategory.value.id,
       amount
     )
