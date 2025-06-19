@@ -24,9 +24,11 @@ import { onMounted, ref } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import BudgetHeader from '@/components/budget/BudgetHeader.vue'
 import { useBudgetStore } from '@/stores/budget.store'
+import { useBudgetOperations } from '@/composables/budgets/useBudgetOperations'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { MainDataService } from '@/services/common/mainData.service'
 import { useAccountStore } from '@/stores/account.store'
+import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
 import { useCategoryStore } from '@/stores/category.store'
 import { useTransactionStore } from '@/stores/transaction.store'
 import { useAutoAssignStore } from '@/stores/auto-assign.store'
@@ -37,7 +39,9 @@ import { saveLastVisitedBudget } from '@/utils/lastVisitedBudgetStorage'
 const route = useRoute()
 const router = useRouter()
 const budgetStore = useBudgetStore()
+const { setCurrentBudget, setReadyToAssign, ensureCurrentMonth, resetBudgetData, setLoading } = useBudgetOperations()
 const accountStore = useAccountStore()
+const { setAccounts } = useAccountOperations()
 const categoryStore = useCategoryStore()
 const transactionStore = useTransactionStore()
 const autoAssignStore = useAutoAssignStore()
@@ -47,18 +51,18 @@ const budgetId = route.params.budgetId as string
 const categoryListRef = ref<InstanceType<typeof BudgetCategoryList> | null>(null)
 
 onMounted(async () => {
-  budgetStore.setIsLoading(true)
+  setLoading(true)
 
   // Ensure we're showing the current month
-  budgetStore.ensureCurrentMonth()
+  ensureCurrentMonth()
 
   try {
     const mainData = await MainDataService.getMainData(route.params.budgetId as string)
     if (mainData?.budget) {
-      budgetStore.setCurrentBudget(mainData.budget)
+      setCurrentBudget(mainData.budget)
     }
     if (mainData?.accounts?.length) {
-      accountStore.setAccounts(mainData.accounts)
+      setAccounts(mainData.accounts)
     }
     if (mainData?.categoryGroups) {
       categoryStore.setCategoryGroups(mainData.categoryGroups)
@@ -70,7 +74,7 @@ onMounted(async () => {
       categoryStore.setCategoryBalances(mainData.categoryBalances)
     }
     if (mainData?.readyToAssign !== undefined) {
-      budgetStore.setReadyToAssign(mainData.readyToAssign)
+      setReadyToAssign(mainData.readyToAssign)
     }
     if (mainData?.transactions?.length) {
       transactionStore.setTransactions(mainData.transactions)
@@ -80,14 +84,14 @@ onMounted(async () => {
     }
 
     // Set loading to false for both stores
-    budgetStore.setIsLoading(false)
+    setLoading(false)
     categoryStore.setIsLoading(false)
 
     // Save this budget as the last visited budget
     saveLastVisitedBudget(budgetId)
   } catch (error) {
     console.error("Error fetching main data:", error)
-    budgetStore.reset()
+    resetBudgetData()
     categoryStore.reset()
     await router.push('/dashboard')
   }

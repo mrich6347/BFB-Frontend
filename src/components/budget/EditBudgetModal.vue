@@ -4,7 +4,7 @@
       <DialogHeader>
         <DialogTitle>Edit Budget</DialogTitle>
       </DialogHeader>
-      
+
       <BudgetForm
         :is-loading="isLoading"
         mode="edit"
@@ -17,10 +17,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useBudgetStore } from '@/stores/budget.store'
+import { useBudgetOperations } from '@/composables/budgets/useBudgetOperations'
 import type { CreateBudgetDto, BudgetResponse } from '@/types/DTO/budget.dto'
-import { useRouter } from 'vue-router'
 import BudgetForm from './forms/BudgetForm.vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
 
@@ -34,8 +32,7 @@ const emit = defineEmits<{
   (e: 'updated'): void
 }>()
 
-const budgetStore = useBudgetStore()
-const isLoading = ref(false)
+const { updateBudget, isLoading } = useBudgetOperations()
 
 const close = () => {
   emit('close')
@@ -43,14 +40,12 @@ const close = () => {
 
 const handleSubmit = async (formData: CreateBudgetDto) => {
   try {
-    isLoading.value = true
-    await budgetStore.updateBudget(props.budget.id, formData)
+    await updateBudget(props.budget.id, formData)
     emit('updated')
     close()
   } catch (error) {
-    console.error('Failed to update budget:', error)
-  } finally {
-    isLoading.value = false
+    // Error is already handled by composable
+    // Just prevent modal from closing
   }
 }
-</script> 
+</script>

@@ -5,7 +5,7 @@
         <DialogTitle>Create New Account</DialogTitle>
       </DialogHeader>
 
-      <AccountForm 
+      <AccountForm
         :isLoading="isLoading"
         :budgetId="budgetId"
         mode="create"
@@ -18,8 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useAccountStore } from '@/stores/account.store'
+import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
 import type { CreateAccountDto } from '@/types/DTO/account.dto'
 import AccountForm from './forms/AccountForm.vue';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
@@ -33,8 +32,7 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-const accountStore = useAccountStore()
-const isLoading = ref(false)
+const { createAccount, isLoading } = useAccountOperations()
 
 const close = () => {
   emit('close')
@@ -42,14 +40,12 @@ const close = () => {
 
 const handleFormSubmit = async (formData: CreateAccountDto) => {
   try {
-    isLoading.value = true
-    await accountStore.createAccount(formData)
+    await createAccount(formData)
     close()
   } catch (error) {
-    console.error('Failed to create account:', error)
-  } finally {
-    isLoading.value = false
+    // Error is already handled by composable
+    // Just prevent modal from closing
   }
 }
 
-</script> 
+</script>

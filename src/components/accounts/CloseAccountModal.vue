@@ -7,8 +7,8 @@
 
       <div class="space-y-4">
         <div class="text-sm text-foreground">
-          Before you can close this account, the balance will have to be zeroed out. 
-          An adjustment transaction will be created for 
+          Before you can close this account, the balance will have to be zeroed out.
+          An adjustment transaction will be created for
           <span class="font-semibold">{{ formatCurrency(Math.abs(account?.working_balance || 0)) }}</span>.
         </div>
 
@@ -49,13 +49,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
 import Button from '@/components/shadcn-ui/button.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { AccountResponse } from '@/types/DTO/account.dto'
-import { useAccountStore } from '@/stores/account.store'
+import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
 import { useToast } from 'vue-toast-notification'
 
 const props = defineProps<{
@@ -68,24 +67,20 @@ const emit = defineEmits<{
   closed: []
 }>()
 
-const accountStore = useAccountStore()
-const isLoading = ref(false)
+const { closeAccount, isLoading } = useAccountOperations()
 const $toast = useToast()
 
 const handleCloseAccount = async () => {
   if (!props.account) return
 
   try {
-    isLoading.value = true
-    await accountStore.closeAccount(props.account.id)
+    await closeAccount(props.account.id)
     $toast.success('Account closed successfully')
     emit('closed')
     close()
   } catch (error) {
     console.error('Failed to close account:', error)
     $toast.error('Failed to close account')
-  } finally {
-    isLoading.value = false
   }
 }
 

@@ -110,7 +110,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { CheckCircle } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { AccountResponse } from '@/types/DTO/account.dto'
-import { useAccountStore } from '@/stores/account.store'
+import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
 import { useTransactionStore } from '@/stores/transaction.store'
 import { useToast } from 'vue-toast-notification'
 
@@ -124,12 +124,11 @@ const emit = defineEmits<{
   reconciled: []
 }>()
 
-const accountStore = useAccountStore()
+const { reconcileAccount, isLoading } = useAccountOperations()
 const transactionStore = useTransactionStore()
 const $toast = useToast()
 
 const step = ref(1)
-const isLoading = ref(false)
 const actualBalance = ref<number | null>(null)
 
 const clearedBalance = computed(() => {
@@ -154,25 +153,21 @@ const close = () => {
 const confirmBalance = async () => {
   if (!props.account) return
 
-  isLoading.value = true
   try {
     // Reconcile with current cleared balance (no adjustment needed)
-    await accountStore.reconcileAccount(props.account.id, clearedBalance.value)
+    await reconcileAccount(props.account.id, clearedBalance.value)
     step.value = 3
     emit('reconciled')
     $toast.success('Account reconciled successfully')
   } catch (error) {
     $toast.error('Failed to reconcile account')
     console.error('Reconciliation error:', error)
-  } finally {
-    isLoading.value = false
   }
 }
 
 const reconcileWithAdjustment = async () => {
   if (!props.account || actualBalance.value === null) return
 
-  isLoading.value = true
   try {
     // Ensure actualBalance is a number
     const balanceAsNumber = typeof actualBalance.value === 'string'
@@ -186,15 +181,13 @@ const reconcileWithAdjustment = async () => {
     }
 
     // Reconcile with adjustment
-    await accountStore.reconcileAccount(props.account.id, balanceAsNumber)
+    await reconcileAccount(props.account.id, balanceAsNumber)
     step.value = 3
     emit('reconciled')
     $toast.success('Account reconciled successfully with adjustment')
   } catch (error) {
     $toast.error('Failed to reconcile account')
     console.error('Reconciliation error:', error)
-  } finally {
-    isLoading.value = false
   }
 }
 

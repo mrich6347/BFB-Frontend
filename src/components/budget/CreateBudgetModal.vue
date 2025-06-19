@@ -4,7 +4,7 @@
       <DialogHeader>
         <DialogTitle>Create New Budget</DialogTitle>
       </DialogHeader>
-      
+
       <BudgetForm
         :is-loading="isLoading"
         mode="create"
@@ -16,8 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useBudgetStore } from '@/stores/budget.store'
+import { useBudgetOperations } from '@/composables/budgets/useBudgetOperations'
 import type { CreateBudgetDto } from '@/types/DTO/budget.dto'
 import { useRouter } from 'vue-router'
 import BudgetForm from './forms/BudgetForm.vue'
@@ -32,8 +31,7 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-const budgetStore = useBudgetStore()
-const isLoading = ref(false)
+const { createBudget, isLoading } = useBudgetOperations()
 
 const close = () => {
   emit('close')
@@ -41,14 +39,12 @@ const close = () => {
 
 const handleSubmit = async (formData: CreateBudgetDto) => {
   try {
-    isLoading.value = true
-    const budget = await budgetStore.createBudget(formData)
+    const budget = await createBudget(formData)
     close()
     router.push(`/budget/${budget.id}`)
   } catch (error) {
-    console.error('Failed to create budget:', error)
-  } finally {
-    isLoading.value = false
+    // Error is already handled by composable
+    // Just prevent modal from closing
   }
 }
-</script> 
+</script>

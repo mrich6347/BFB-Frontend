@@ -19,8 +19,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useAccountStore } from '@/stores/account.store'
+import { computed } from 'vue'
+import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
 import type { UpdateAccountDto, AccountResponse } from '@/types/DTO/account.dto'
 import AccountForm from './forms/AccountForm.vue';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
@@ -36,8 +36,7 @@ const emit = defineEmits<{
   updated: []
 }>()
 
-const accountStore = useAccountStore()
-const isLoading = ref(false)
+const { updateAccount, isLoading } = useAccountOperations()
 const $toast = useToast()
 
 const initialValues = computed(() => {
@@ -58,13 +57,11 @@ const handleFormSubmit = async (formData: { name: string }) => {
   if (!props.account) return
 
   try {
-    isLoading.value = true
-
     const updateData: UpdateAccountDto = {
       name: formData.name
     }
 
-    await accountStore.updateAccount(props.account.id, updateData)
+    await updateAccount(props.account.id, updateData)
 
     $toast.success('Account updated successfully')
     emit('updated')
@@ -76,8 +73,6 @@ const handleFormSubmit = async (formData: { name: string }) => {
     } else {
       $toast.error('Failed to update account')
     }
-  } finally {
-    isLoading.value = false
   }
 }
 

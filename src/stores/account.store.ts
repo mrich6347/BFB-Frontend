@@ -1,225 +1,87 @@
 import { defineStore } from "pinia";
-import type { CreateAccountDto, AccountResponse, AccountType, AccountWithReadyToAssignResponse, UpdateAccountDto, CloseAccountResponse } from "@/types/DTO/account.dto";
-import { AccountService } from "@/services/account.service";
-import { TransferService } from "@/services/transfer.service";
-import { useAccounts } from "@/composables/accounts/useCreateAccount";
-import { useBudgetStore } from "./budget.store";
-import { useCategoryStore } from "./category.store";
+import { ref, computed, readonly } from 'vue'
+import type { AccountResponse, AccountType } from "@/types/DTO/account.dto";
 
-export const useAccountStore = defineStore('accountStore', {
-    state: () => ({
-        accounts: [] as AccountResponse[],
-        isLoading: true
-    }),
-    getters: {
-        getAccountsByType: (state) => (type: AccountType) => {
-            return state.accounts.filter(account => account.account_type === type && account.is_active !== false);
-        },
-        accountExistsByName: (state) => (name: string, excludeAccountId?: string) => {
-            return state.accounts.find(account =>
-                account.name.toLowerCase() === name.toLowerCase() &&
-                account.id !== excludeAccountId
-            )
-        },
-        activeAccounts: (state) => {
-            return state.accounts.filter(account => account.is_active !== false);
-        },
-        closedAccounts: (state) => {
-            return state.accounts.filter(account => account.is_active === false);
-        }
-    },
-    actions: {
-        setAccounts(accounts: AccountResponse[]) {
-            this.accounts = accounts
-        },
-        async createAccount(request: CreateAccountDto) {
-            const { prepareAccountCreation } = useAccounts();
-            const preparedAccount = prepareAccountCreation(request);
+export const useAccountStore = defineStore('accountStore', () => {
+  // State
+  const accounts = ref<AccountResponse[]>([])
 
-            const response = await AccountService.createAccount(preparedAccount);
+  // Getters
+  const getAccountsByType = computed(() => (type: AccountType) => {
+    return accounts.value.filter(account => account.account_type === type && account.is_active !== false);
+  })
 
-            // Update Ready to Assign in budget store
-            const budgetStore = useBudgetStore();
-            budgetStore.setReadyToAssign(response.readyToAssign);
+  const accountExistsByName = computed(() => (name: string, excludeAccountId?: string) => {
+    return accounts.value.find(account =>
+      account.name.toLowerCase() === name.toLowerCase() &&
+      account.id !== excludeAccountId
+    )
+  })
 
-            // Add the account to the accounts list
-            this.accounts.push(response.account);
+  const activeAccounts = computed(() => {
+    return accounts.value.filter(account => account.is_active !== false);
+  })
 
-            // If this is a credit card account, refresh categories to show the new payment category
-            if (response.account.account_type === 'CREDIT') {
-                const categoryStore = useCategoryStore();
-                await categoryStore.fetchAllCategoryData(response.account.budget_id);
-            }
+  const closedAccounts = computed(() => {
+    return accounts.value.filter(account => account.is_active === false);
+  })
 
-            return response.account;
-        },
-        async updateAccount(accountId: string, request: UpdateAccountDto) {
-            try {
-                const response = await AccountService.updateAccount(accountId, request);
+  const getAccountById = computed(() => (id: string) => {
+    return accounts.value.find(account => account.id === id)
+  })
 
-                // Update Ready to Assign in budget store
-                const budgetStore = useBudgetStore();
-                budgetStore.setReadyToAssign(response.readyToAssign);
+  // State mutations
+  const setAccounts = (newAccounts: AccountResponse[]) => {
+    accounts.value = newAccounts
+  }
 
-                // Update the account in the accounts list
-                const accountIndex = this.accounts.findIndex(account => account.id === accountId);
-                if (accountIndex !== -1) {
-                    this.accounts[accountIndex] = response.account;
-                }
+  const addAccount = (account: AccountResponse) => {
+    accounts.value.push(account)
+  }
 
-                return response.account;
-            } catch (error) {
-                console.error('Failed to update account:', error);
-                throw error;
-            }
-        },
-        async closeAccount(accountId: string) {
-            try {
-                const response = await AccountService.closeAccount(accountId);
-
-                // Update Ready to Assign in budget store
-                const budgetStore = useBudgetStore();
-                budgetStore.setReadyToAssign(response.readyToAssign);
-
-                // Update the account in the accounts list to mark as inactive
-                const accountIndex = this.accounts.findIndex(account => account.id === accountId);
-                if (accountIndex !== -1) {
-                    this.accounts[accountIndex] = response.account;
-                }
-
-                // If this was a credit card account, refresh categories to remove the payment category
-                const account = this.accounts[accountIndex];
-                if (account && account.account_type === 'CREDIT') {
-                    const categoryStore = useCategoryStore();
-                    await categoryStore.fetchAllCategoryData(account.budget_id);
-                }
-
-                return response;
-            } catch (error) {
-                console.error('Failed to close account:', error);
-                throw error;
-            }
-        },
-        async reopenAccount(accountId: string) {
-            try {
-                const response = await AccountService.reopenAccount(accountId);
-
-                // Update Ready to Assign in budget store
-                const budgetStore = useBudgetStore();
-                budgetStore.setReadyToAssign(response.readyToAssign);
-
-                // Update the account in the accounts list to mark as active
-                const accountIndex = this.accounts.findIndex(account => account.id === accountId);
-                if (accountIndex !== -1) {
-                    this.accounts[accountIndex] = response.account;
-                }
-
-                // If this is a credit card account, refresh categories to show the payment category again
-                if (response.account.account_type === 'CREDIT') {
-                    const categoryStore = useCategoryStore();
-                    await categoryStore.fetchAllCategoryData(response.account.budget_id);
-                }
-
-                return response.account;
-            } catch (error) {
-                console.error('Failed to reopen account:', error);
-                throw error;
-            }
-        },
-        updateAccountBalance(accountId: string, amount: number, isCleared: boolean) {
-            const accountIndex = this.accounts.findIndex(account => account.id === accountId)
-            if (accountIndex === -1) return
-
-            const account = this.accounts[accountIndex]
-
-            if (isCleared) {
-                account.cleared_balance += amount
-            } else {
-                account.uncleared_balance += amount
-            }
-
-            account.working_balance = account.cleared_balance + account.uncleared_balance
-        },
-
-        setAccountBalance(accountId: string, accountData: any) {
-            const accountIndex = this.accounts.findIndex(account => account.id === accountId)
-            if (accountIndex === -1) return
-
-            // Update the account with the new balance data from the backend
-            this.accounts[accountIndex] = {
-                ...this.accounts[accountIndex],
-                account_balance: accountData.account_balance,
-                cleared_balance: accountData.cleared_balance,
-                uncleared_balance: accountData.uncleared_balance,
-                working_balance: accountData.working_balance
-            }
-        },
-
-        updateAccountBalanceOnClearedToggle(accountId: string, amount: number, newClearedStatus: boolean) {
-            const accountIndex = this.accounts.findIndex(account => account.id === accountId)
-            if (accountIndex === -1) return
-
-            const account = this.accounts[accountIndex]
-
-            if (newClearedStatus) {
-                // Moving from uncleared to cleared
-                account.uncleared_balance -= amount
-                account.cleared_balance += amount
-            } else {
-                // Moving from cleared to uncleared
-                account.cleared_balance -= amount
-                account.uncleared_balance += amount
-            }
-
-            // Working balance stays the same since we're just moving between cleared/uncleared
-        },
-
-        removeAccountBalance(accountId: string, amount: number, isCleared: boolean) {
-            const accountIndex = this.accounts.findIndex(account => account.id === accountId)
-            if (accountIndex === -1) return
-
-            const account = this.accounts[accountIndex]
-
-            if (isCleared) {
-                account.cleared_balance -= amount
-            } else {
-                account.uncleared_balance -= amount
-            }
-
-            account.working_balance = account.cleared_balance + account.uncleared_balance
-        },
-
-        async reconcileAccount(accountId: string, actualBalance: number) {
-            try {
-                const response = await AccountService.reconcileAccount(accountId, actualBalance)
-
-                // Update the account balance optimistically
-                const accountIndex = this.accounts.findIndex(account => account.id === accountId)
-                if (accountIndex !== -1) {
-                    this.accounts[accountIndex].account_balance = actualBalance
-                    this.accounts[accountIndex].cleared_balance = actualBalance
-                    this.accounts[accountIndex].working_balance = actualBalance + this.accounts[accountIndex].uncleared_balance
-                }
-
-                return response
-            } catch (error) {
-                console.error('Failed to reconcile account:', error)
-                throw error
-            }
-        },
-
-        async getTransferOptions(accountId: string): Promise<AccountResponse[]> {
-            try {
-                return await TransferService.getTransferOptions(accountId)
-            } catch (error) {
-                console.error('Failed to get transfer options:', error)
-                throw error
-            }
-        },
-
-        reset() {
-            this.accounts = []
-            this.isLoading = true
-        }
+  const updateAccount = (id: string, updates: Partial<AccountResponse>) => {
+    const index = accounts.value.findIndex(account => account.id === id)
+    if (index !== -1) {
+      accounts.value[index] = { ...accounts.value[index], ...updates }
     }
+  }
+
+  const removeAccount = (id: string) => {
+    const index = accounts.value.findIndex(account => account.id === id)
+    if (index !== -1) {
+      accounts.value.splice(index, 1)
+    }
+  }
+
+  // Simple balance update method - just takes the new balance data and updates the account
+  const updateAccountBalances = (accountId: string, balanceUpdates: Partial<AccountResponse>) => {
+    const accountIndex = accounts.value.findIndex(account => account.id === accountId)
+    if (accountIndex !== -1) {
+      accounts.value[accountIndex] = { ...accounts.value[accountIndex], ...balanceUpdates }
+    }
+  }
+
+  const reset = () => {
+    accounts.value = []
+  }
+
+  return {
+    // State (readonly)
+    accounts: readonly(accounts),
+
+    // Getters
+    getAccountsByType,
+    accountExistsByName,
+    activeAccounts,
+    closedAccounts,
+    getAccountById,
+
+    // Mutations
+    setAccounts,
+    addAccount,
+    updateAccount,
+    removeAccount,
+    updateAccountBalances,
+    reset
+  }
 })
