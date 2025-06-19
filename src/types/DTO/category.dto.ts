@@ -44,15 +44,16 @@ export interface CategoryResponse {
   updated_at: Date;
 }
 
+import type { CategoryBalanceResponse } from './category-balance.dto';
+
 export interface CategoryWithReadyToAssignResponse {
   category: CategoryResponse;
   readyToAssign: number;
-  categoryBalance?: any; // CategoryBalanceResponse - optional for backward compatibility
+  categoryBalance?: CategoryBalanceResponse; // Optional for backward compatibility
 }
 
 export interface CategoryUpdateWithAffectedCategoriesResponse {
-  category: CategoryResponse;
   readyToAssign: number;
+  categoryBalance: CategoryBalanceResponse; // The updated balance
   affectedCategories?: CategoryResponse[];
-  categoryBalance: any; // CategoryBalanceResponse - the updated balance
 }
