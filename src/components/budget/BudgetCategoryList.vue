@@ -839,14 +839,18 @@ const handlePullMoney = async (sourceCategoryId: string, amount: number) => {
 const handlePullFromReadyToAssign = async (amount: number) => {
   if (!selectedDestinationCategory.value) return
 
+  // Close modal immediately for optimistic update
+  showPullMoneyModal.value = false
+
   try {
     await pullFromReadyToAssign(
       selectedDestinationCategory.value.id,
       amount
     )
-    showPullMoneyModal.value = false
   } catch (error) {
     console.error('Failed to pull money from Ready to Assign:', error)
+    // Note: Error handling for optimistic updates is handled in the composable
+    // The UI will automatically rollback if the server operation fails
   }
 }
 

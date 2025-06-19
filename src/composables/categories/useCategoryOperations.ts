@@ -6,6 +6,7 @@ import CategoryService from '@/services/category.service'
 import { MainDataService } from '@/services/common/mainData.service'
 import { useUpdateCategoryBalance } from './optimistic/useUpdateCategoryBalance'
 import { useMoveMoneyToReadyToAssign } from './optimistic/useMoveMoneyToReadyToAssign'
+import { usePullFromReadyToAssign } from './optimistic/usePullFromReadyToAssign'
 import type { CreateCategoryGroupDto, UpdateCategoryGroupDto } from '@/types/DTO/category-group.dto'
 import type { CreateCategoryDto, UpdateCategoryDto } from '@/types/DTO/category.dto'
 
@@ -14,6 +15,7 @@ export const useCategoryOperations = () => {
   const budgetStore = useBudgetStore()
   const updateCategoryBalanceOptimistic = useUpdateCategoryBalance()
   const moveMoneyToReadyToAssignOptimistic = useMoveMoneyToReadyToAssign()
+  const pullFromReadyToAssignOptimistic = usePullFromReadyToAssign()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -435,39 +437,33 @@ export const useCategoryOperations = () => {
   }
 
   const pullFromReadyToAssign = async (destinationCategoryId: string, amount: number) => {
-    isLoading.value = true
-    error.value = null
+    console.log('Pulling money from ready to assign with optimistic update:', destinationCategoryId, amount)
 
-    try {
-      // Validate that Ready to Assign has enough money
-      if (budgetStore.readyToAssign < amount) {
-        throw new Error('Insufficient Ready to Assign balance')
+    // Use specific optimistic composable to handle optimistic updates and call server operation
+    await pullFromReadyToAssignOptimistic.pullFromReadyToAssignOptimistic(destinationCategoryId, amount, async () => {
+      // This is the actual server operation that gets called by the optimistic composable
+      isLoading.value = true
+      error.value = null
+
+      try {
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = now.getMonth() + 1
+
+        const response = await CategoryService.pullFromReadyToAssign(destinationCategoryId, amount, year, month)
+
+        // Update with server data
+        budgetStore.setReadyToAssign(response.readyToAssign)
+        categoryStore.updateCategoryBalance(destinationCategoryId, response.categoryBalance)
+
+      } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Failed to pull money from Ready to Assign'
+        console.error('Error pulling money from Ready to Assign:', err)
+        throw err
+      } finally {
+        isLoading.value = false
       }
-
-      // Get current month
-      const now = new Date()
-      const year = now.getFullYear()
-      const month = now.getMonth() + 1
-
-      // Send update to backend
-      await CategoryService.pullFromReadyToAssign(destinationCategoryId, amount, year, month)
-
-      // Composable responsibility: Coordinate cross-store updates
-      // Update Ready to Assign
-      budgetStore.setReadyToAssign(budgetStore.readyToAssign - amount)
-
-      // Refresh category balances to get updated data
-      const budgetId = categoryStore.categories.find(c => c.id === destinationCategoryId)?.budget_id
-      if (budgetId) {
-        await fetchCategoryBalances(budgetId)
-      }
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to pull money from Ready to Assign'
-      console.error('Error pulling money from Ready to Assign:', err)
-      throw err
-    } finally {
-      isLoading.value = false
-    }
+    })
   }
 
   const setIsLoading = (loading: boolean) => {
