@@ -6,10 +6,13 @@
     </div>
     <div v-else class="flex h-screen">
       <Sidebar :budgetId="budgetId" />
-      <div class="flex-1 overflow-auto">
-        <BudgetHeader />
-        <div class="p-4">
-          <!-- Budget content goes here -->
+      <div class="flex-1 flex flex-col">
+        <!-- Sticky Budget Header -->
+        <div class="sticky top-0 z-10">
+          <BudgetHeader />
+        </div>
+        <!-- Scrollable Category List -->
+        <div class="flex-1 overflow-auto p-4">
           <BudgetCategoryList ref="categoryListRef" />
         </div>
       </div>
