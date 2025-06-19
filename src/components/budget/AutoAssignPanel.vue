@@ -120,6 +120,7 @@ import { ref, onMounted, computed } from 'vue'
 import Button from '@/components/shadcn-ui/button.vue'
 import { Plus, Edit, Trash2, Play } from 'lucide-vue-next'
 import { useAutoAssignStore } from '@/stores/auto-assign.store'
+import { useAutoAssignOperations } from '@/composables/auto-assign/useAutoAssignOperations'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { formatCurrency } from '@/utils/currencyUtil'
@@ -133,6 +134,14 @@ const emit = defineEmits<{
 }>()
 
 const autoAssignStore = useAutoAssignStore()
+const {
+  deleteConfiguration: deleteConfigurationOp,
+  applyConfiguration: applyConfigurationOp,
+  createConfiguration: createConfigurationOp,
+  updateConfiguration: updateConfigurationOp,
+  isLoading: autoAssignLoading,
+  error: autoAssignError
+} = useAutoAssignOperations()
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
 
@@ -143,8 +152,6 @@ const isApplying = ref(false)
 const applyingMessage = ref('')
 const appliedCategories = ref<{ category_id: string; amount: number }[]>([])
 
-
-
 const editConfiguration = async (config: AutoAssignConfigurationSummary) => {
   editingConfiguration.value = config
   showEditModal.value = true
@@ -153,7 +160,7 @@ const editConfiguration = async (config: AutoAssignConfigurationSummary) => {
 const deleteConfiguration = async (config: AutoAssignConfigurationSummary) => {
   if (confirm(`Are you sure you want to delete "${config.name}"?`)) {
     try {
-      await autoAssignStore.deleteConfiguration(budgetStore.currentBudget!.id, config.name)
+      await deleteConfigurationOp(budgetStore.currentBudget!.id, config.name)
     } catch (error) {
       console.error('Failed to delete configuration:', error)
       alert('Failed to delete configuration. Please try again.')
@@ -172,7 +179,7 @@ const applyConfiguration = async (config: AutoAssignConfigurationSummary) => {
   appliedCategories.value = []
 
   try {
-    const result = await autoAssignStore.applyConfiguration({
+    const result = await applyConfigurationOp({
       name: config.name,
       budget_id: budgetStore.currentBudget!.id
     })
@@ -208,13 +215,13 @@ const applyConfiguration = async (config: AutoAssignConfigurationSummary) => {
 const handleSaveConfiguration = async (configData: any) => {
   try {
     if (showEditModal.value && editingConfiguration.value) {
-      await autoAssignStore.updateConfiguration(
+      await updateConfigurationOp(
         budgetStore.currentBudget!.id,
         editingConfiguration.value.name,
         configData
       )
     } else {
-      await autoAssignStore.createConfiguration({
+      await createConfigurationOp({
         ...configData,
         budget_id: budgetStore.currentBudget!.id
       })
