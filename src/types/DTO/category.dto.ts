@@ -54,6 +54,7 @@ export interface CategoryWithReadyToAssignResponse {
 
 export interface CategoryUpdateWithAffectedCategoriesResponse {
   readyToAssign: number;
+  category: CategoryResponse; // The updated category data
   categoryBalance: CategoryBalanceResponse; // The updated balance
   affectedCategories?: CategoryResponse[];
 }

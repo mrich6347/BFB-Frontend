@@ -25,7 +25,7 @@ export default class CategoryService {
     return response.data;
   }
 
-  static async updateCategory(id: string, request: UpdateCategoryDto): Promise<CategoryWithReadyToAssignResponse> {
+  static async updateCategory(id: string, request: UpdateCategoryDto): Promise<CategoryUpdateWithAffectedCategoriesResponse> {
     const response = await api.patch(`/categories/${id}`, request);
     return response.data;
   }
