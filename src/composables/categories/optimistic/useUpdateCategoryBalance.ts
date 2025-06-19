@@ -74,10 +74,14 @@ export const useUpdateCategoryBalance = () => {
       // Update category balance optimistically
       const updatedBalances = categoryStore.categoryBalances.map(balance => {
         if (balance.category_id === categoryId) {
+          // Calculate the difference in assigned amount (same as server logic)
+          const assignedDifference = assigned - balance.assigned
+
           return {
             ...balance,
             assigned: assigned,
-            available: assigned + balance.activity,
+            // Update available by adding the difference (YNAB behavior - matches server logic)
+            available: balance.available + assignedDifference,
             // Mark as optimistic update
             is_optimistic: true
           }
