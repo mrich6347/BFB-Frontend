@@ -1,8 +1,7 @@
 <template>
   <div class="relative min-h-screen">
-    <div v-if="budgetStore.isLoading" class="flex justify-center items-center min-h-[400px]">
-      <LoadingSpinner>
-      </LoadingSpinner>
+    <div v-if="isLoading" class="flex justify-center items-center min-h-screen">
+      <LoadingSpinner />
     </div>
     <div v-else class="flex h-screen">
       <Sidebar :budgetId="budgetId" />
@@ -42,7 +41,7 @@ import { saveLastVisitedBudget } from '@/utils/lastVisitedBudgetStorage'
 const route = useRoute()
 const router = useRouter()
 const budgetStore = useBudgetStore()
-const { setCurrentBudget, setReadyToAssign, ensureCurrentMonth, resetBudgetData, setLoading } = useBudgetOperations()
+const { setCurrentBudget, setReadyToAssign, ensureCurrentMonth, resetBudgetData, setLoading, isLoading } = useBudgetOperations()
 const accountStore = useAccountStore()
 const { setAccounts } = useAccountOperations()
 const categoryStore = useCategoryStore()
