@@ -58,31 +58,24 @@ export const useUpdateCategoryBalance = () => {
       isOptimisticUpdate.value = true
 
       // Step 2: Apply optimistic updates specific to category balance update
-      // Find the current category balance
       const currentBalance = categoryStore.categoryBalances.find(b => b.category_id === categoryId)
       if (!currentBalance) {
         throw new Error('Category balance not found')
       }
 
-      // Calculate the difference in assigned amount
       const assignedDifference = assigned - currentBalance.assigned
 
-      // Update Ready to Assign optimistically (decrease by the difference)
       const newReadyToAssign = budgetStore.readyToAssign - assignedDifference
       budgetStore.setReadyToAssign(newReadyToAssign)
 
-      // Update category balance optimistically
       const updatedBalances = categoryStore.categoryBalances.map(balance => {
         if (balance.category_id === categoryId) {
-          // Calculate the difference in assigned amount (same as server logic)
           const assignedDifference = assigned - balance.assigned
 
           return {
             ...balance,
             assigned: assigned,
-            // Update available by adding the difference (YNAB behavior - matches server logic)
             available: balance.available + assignedDifference,
-            // Mark as optimistic update
             is_optimistic: true
           }
         }
@@ -93,11 +86,9 @@ export const useUpdateCategoryBalance = () => {
       // Step 3: Call the actual server operation (passed as parameter)
       await serverOperation()
 
-      // Step 4: If successful, clear optimistic state
       clearOptimisticState()
 
     } catch (err) {
-      // Step 5: If failed, rollback optimistic updates
       console.error('Update category balance optimistic operation failed, rolling back:', err)
       rollbackOptimisticUpdate()
 
