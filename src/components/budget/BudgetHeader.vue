@@ -126,6 +126,9 @@ const handleAssignClick = (event: MouseEvent) => {
 }
 
 const handleAssignMoney = async (categoryId: string, amount: number) => {
+  // Close modal immediately for optimistic update
+  showAssignModal.value = false
+
   try {
     // Get current month
     const now = new Date()
@@ -143,10 +146,10 @@ const handleAssignMoney = async (categoryId: string, amount: number) => {
     const newTotalAssigned = currentAssigned + amount
 
     await updateCategoryBalance(categoryId, newTotalAssigned)
-
-    showAssignModal.value = false
   } catch (error) {
     console.error('Failed to assign money:', error)
+    // Note: Error handling for optimistic updates is handled in the composable
+    // The UI will automatically rollback if the server operation fails
   }
 }
 
