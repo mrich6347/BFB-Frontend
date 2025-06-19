@@ -47,10 +47,12 @@ export interface CategoryResponse {
 export interface CategoryWithReadyToAssignResponse {
   category: CategoryResponse;
   readyToAssign: number;
+  categoryBalance?: any; // CategoryBalanceResponse - optional for backward compatibility
 }
 
 export interface CategoryUpdateWithAffectedCategoriesResponse {
   category: CategoryResponse;
   readyToAssign: number;
   affectedCategories?: CategoryResponse[];
+  categoryBalance: any; // CategoryBalanceResponse - the updated balance
 }

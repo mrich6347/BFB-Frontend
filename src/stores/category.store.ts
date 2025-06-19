@@ -204,6 +204,23 @@ export const useCategoryStore = defineStore('categoryStore', () => {
     categoryBalances.value = newCategoryBalances
   }
 
+  const updateCategoryBalance = (categoryId: string, updatedBalance: CategoryBalanceResponse) => {
+    const index = categoryBalances.value.findIndex(balance => balance.category_id === categoryId)
+    if (index !== -1) {
+      // Replace with server data and mark as not optimistic
+      categoryBalances.value[index] = {
+        ...updatedBalance,
+        is_optimistic: false
+      }
+    } else {
+      // If balance doesn't exist, add it (mark as not optimistic since it's from server)
+      categoryBalances.value.push({
+        ...updatedBalance,
+        is_optimistic: false
+      })
+    }
+  }
+
   const setIsLoading = (loading: boolean) => {
     isLoading.value = loading
   }
@@ -283,6 +300,7 @@ export const useCategoryStore = defineStore('categoryStore', () => {
     reorderCategoryGroups,
     reorderCategories,
     setCategoryBalances,
+    updateCategoryBalance,
     setIsLoading,
     reset
   }

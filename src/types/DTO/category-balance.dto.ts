@@ -40,4 +40,5 @@ export interface CategoryBalanceResponse {
   available: number;
   created_at: Date;
   updated_at: Date;
+  is_optimistic?: boolean; // Frontend-only flag to track optimistic updates
 }

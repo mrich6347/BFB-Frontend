@@ -4,12 +4,14 @@ import { useBudgetStore } from '@/stores/budget.store'
 import CategoryGroupService from '@/services/category-group.service'
 import CategoryService from '@/services/category.service'
 import { MainDataService } from '@/services/common/mainData.service'
+import { useUpdateCategoryBalance } from './optimistic/useUpdateCategoryBalance'
 import type { CreateCategoryGroupDto, UpdateCategoryGroupDto } from '@/types/DTO/category-group.dto'
 import type { CreateCategoryDto, UpdateCategoryDto } from '@/types/DTO/category.dto'
 
 export const useCategoryOperations = () => {
   const categoryStore = useCategoryStore()
   const budgetStore = useBudgetStore()
+  const updateCategoryBalanceOptimistic = useUpdateCategoryBalance()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -344,31 +346,33 @@ export const useCategoryOperations = () => {
   }
 
   const updateCategoryBalance = async (categoryId: string, assigned: number) => {
-    isLoading.value = true
-    error.value = null
+    console.log('Updating category balance with optimistic update:', categoryId, assigned)
 
-    try {
-      // Get current month
-      const now = new Date()
-      const year = now.getFullYear()
-      const month = now.getMonth() + 1
+    // Use specific optimistic composable to handle optimistic updates and call server operation
+    await updateCategoryBalanceOptimistic.updateCategoryBalanceOptimistic(categoryId, assigned, async () => {
+      // This is the actual server operation that gets called by the optimistic composable
+      isLoading.value = true
+      error.value = null
 
-      // Send update to backend - only update assigned, let backend calculate available
-      const response = await CategoryService.updateCategoryBalance(categoryId, { assigned }, year, month)
+      try {
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = now.getMonth() + 1
 
-      // Composable responsibility: Coordinate cross-store updates
-      // Update Ready to Assign in budget store
-      budgetStore.setReadyToAssign(response.readyToAssign)
+        const response = await CategoryService.updateCategoryBalance(categoryId, { assigned }, year, month)
 
-      // Refresh category balances to get updated data
-      await fetchCategoryBalances(categoryStore.categories.find(c => c.id === categoryId)?.budget_id || '')
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to update category balance'
-      console.error('Error updating category balance:', err)
-      throw err
-    } finally {
-      isLoading.value = false
-    }
+        // update with server data
+        budgetStore.setReadyToAssign(response.readyToAssign)
+        categoryStore.updateCategoryBalance(categoryId, response.categoryBalance)
+
+      } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Failed to update category balance'
+        console.error('Error updating category balance:', err)
+        throw err
+      } finally {
+        isLoading.value = false
+      }
+    })
   }
 
   const moveMoney = async (sourceCategoryId: string, destinationCategoryId: string, amount: number) => {
