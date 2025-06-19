@@ -30,16 +30,11 @@ import TransactionTable from '@/components/transactions/TransactionTable.vue'
 import TrackingAccountPage from './TrackingAccountPage.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useAccountStore } from '@/stores/account.store'
-import { useBudgetStore } from '@/stores/budget.store'
-import { MainDataService } from '@/services/common/mainData.service'
-import { useCategoryStore } from '@/stores/category.store'
-import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
+import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 
 const route = useRoute()
 const accountStore = useAccountStore()
-const budgetStore = useBudgetStore()
-const categoryStore = useCategoryStore()
-const { setTransactions } = useTransactionOperations()
+const { ensureDataLoaded, isLoading: mainDataLoading } = useMainDataOperations()
 
 // Make route parameters reactive
 const accountId = computed(() => route.params.accountId as string)
@@ -51,42 +46,10 @@ const account = computed(() => {
 })
 
 const loadMainData = async () => {
-  isLoading.value = true
-
   try {
-    // Load main data if we don't have it or if it's for a different budget
-    if (!budgetStore.currentBudget || budgetStore.currentBudget.id !== budgetId.value) {
-      const mainData = await MainDataService.getMainData(budgetId.value)
-
-      if (mainData?.budget) {
-        budgetStore.setCurrentBudget(mainData.budget)
-      }
-      if (mainData?.accounts?.length) {
-        accountStore.setAccounts(mainData.accounts)
-      }
-      if (mainData?.categoryGroups) {
-        categoryStore.setCategoryGroups(mainData.categoryGroups)
-      }
-      if (mainData?.categories) {
-        categoryStore.setCategories(mainData.categories)
-      }
-      if (mainData?.categoryBalances) {
-        categoryStore.setCategoryBalances(mainData.categoryBalances)
-      }
-      if (mainData?.readyToAssign !== undefined) {
-        budgetStore.setReadyToAssign(mainData.readyToAssign)
-      }
-      if (mainData?.autoAssignConfigurations) {
-        const { useAutoAssignStore } = await import('@/stores/auto-assign.store')
-        const autoAssignStore = useAutoAssignStore()
-        autoAssignStore.setConfigurations(mainData.autoAssignConfigurations)
-      }
-      if (mainData?.transactions) {
-        setTransactions(mainData.transactions)
-      }
-    }
-  } catch (error) {
-    console.error('Failed to load account data:', error)
+    isLoading.value = true
+    // Ensure data is loaded for this budget (will be no-op if already loaded by App.vue)
+    await ensureDataLoaded(budgetId.value)
   } finally {
     isLoading.value = false
   }

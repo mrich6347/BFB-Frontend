@@ -137,6 +137,11 @@
     <!-- Settings and Collapse Section -->
     <div class="border-t border-border dark:border-border relative">
       <div v-if="isSettingsExpanded" class="absolute bottom-full right-0 w-full p-4 bg-secondary dark:bg-secondary border border-border dark:border-border rounded-t-lg shadow-lg">
+        <button @click="router.push('/profile-settings')"
+          class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground bg-background dark:bg-background rounded-lg border border-border dark:border-border mb-2"
+        >
+          Profile Settings
+        </button>
         <button @click="router.push('/dashboard')"
           class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground bg-background dark:bg-background rounded-lg border border-border dark:border-border mb-2"
         >

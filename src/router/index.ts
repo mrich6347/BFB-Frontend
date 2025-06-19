@@ -8,6 +8,7 @@ import BannedPage from '../pages/util-pages/BannedPage.vue'
 import BudgetPage from '../pages/BudgetPage.vue'
 import ReportsPage from '../pages/ReportsPage.vue'
 import AccountPage from '../pages/AccountPage.vue'
+import ProfileSettingsPage from '../pages/ProfileSettingsPage.vue'
 import { supabase } from '../lib/supabaseClient'
 import { getLastVisitedBudget } from '../utils/lastVisitedBudgetStorage'
 
@@ -55,6 +56,14 @@ const routes = [
     path: '/budget/:budgetId/account/:accountId',
     name: 'Account',
     component: AccountPage,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/profile-settings',
+    name: 'ProfileSettings',
+    component: ProfileSettingsPage,
     meta: {
       requiresAuth: true
     }
