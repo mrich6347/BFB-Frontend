@@ -123,3 +123,16 @@ export interface GoalActivityResponse {
     display_name: string;
   };
 }
+
+export interface ParticipantWithProgressResponse extends GoalParticipantResponse {
+  current_contribution: number;
+  contribution_percentage: number;
+}
+
+export interface GoalProgressResponse {
+  goal: SharedGoalResponse;
+  current_amount: number;
+  progress_percentage: number;
+  projected_completion_date?: Date;
+  participants_with_progress: ParticipantWithProgressResponse[];
+}

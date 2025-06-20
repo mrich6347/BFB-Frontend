@@ -44,10 +44,21 @@
           </div>
         </div>
 
+        <!-- Participant Settings Section (for current user) -->
+        <div v-if="currentUserParticipant && showParticipantSettings" class="space-y-3">
+          <div class="border border-border rounded-lg p-4 bg-muted/30">
+            <ParticipantSettings
+              :participant="currentUserParticipant"
+              :goal-id="goal.id"
+              @updated="handleParticipantUpdated"
+            />
+          </div>
+        </div>
+
         <!-- Participants Section -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-medium text-foreground">Participants</h3>
+            <h3 class="text-lg font-medium text-foreground">Participants ({{ allParticipants.length }})</h3>
             <Button
               v-if="isGoalCreator"
               @click="openInviteModal"
@@ -63,7 +74,6 @@
           <ParticipantList
             :goal="goal"
             :participants="allParticipants"
-            @invite-user="openInviteModal"
             @update-participant="handleUpdateParticipant"
             @participant-removed="handleParticipantRemoved"
             @left-goal="handleLeftGoal"
@@ -139,9 +149,11 @@ import { UserPlusIcon } from 'lucide-vue-next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../shadcn-ui'
 import Button from '../shadcn-ui/button.vue'
 import ParticipantList from './ParticipantList.vue'
+import ParticipantSettings from './ParticipantSettings.vue'
 import InviteUserModal from './InviteUserModal.vue'
 import { useGoalInvitations } from '../../composables/shared-goals/useGoalInvitations'
 import { useAuthStore } from '../../stores/auth.store'
+import { useUserProfileStore } from '../../stores/user-profile.store'
 import type { SharedGoalResponse, InvitationResponse, GoalParticipantResponse } from '../../types/DTO/shared-goal.dto'
 
 interface Props {
@@ -160,40 +172,27 @@ const emit = defineEmits<Emits>()
 
 const { leaveGoal } = useGoalInvitations()
 const authStore = useAuthStore()
+const userProfileStore = useUserProfileStore()
 
 const isInviteModalOpen = ref(false)
+const showParticipantSettings = ref(false)
 
 // Computed
-const currentUserId = computed(() => authStore.userProfile?.id)
+const currentUserId = computed(() => userProfileStore.currentProfile?.id)
 
 const isGoalCreator = computed(() => {
   return props.goal?.created_by === currentUserId.value
 })
 
 const allParticipants = computed(() => {
-  if (!props.goal) return []
+  if (!props.goal?.participants) return []
 
-  const participants: GoalParticipantResponse[] = []
+  // Just return the participants from the backend - the creator should already be included
+  return props.goal.participants
+})
 
-  // Add creator as first participant
-  if (props.goal.creator_profile) {
-    participants.push({
-      id: `creator-${props.goal.created_by}`,
-      goal_id: props.goal.id,
-      user_profile_id: props.goal.created_by,
-      joined_at: props.goal.created_at,
-      user_profile: props.goal.creator_profile,
-      monthly_contribution: null,
-      category: null
-    })
-  }
-
-  // Add other participants
-  if (props.goal.participants) {
-    participants.push(...props.goal.participants)
-  }
-
-  return participants
+const currentUserParticipant = computed(() => {
+  return allParticipants.value.find(p => p.user_profile_id === currentUserId.value)
 })
 
 // Methods
@@ -235,8 +234,19 @@ const handleInvitationSent = (invitation: InvitationResponse) => {
 }
 
 const handleUpdateParticipant = (participant: GoalParticipantResponse) => {
-  console.log('Update participant:', participant)
-  // TODO: Implement update participant functionality
+  // Only allow users to update their own settings
+  if (participant.user_profile_id === currentUserId.value) {
+    showParticipantSettings.value = !showParticipantSettings.value
+  } else {
+    console.log('Cannot update other participants settings')
+  }
+}
+
+const handleParticipantUpdated = () => {
+  console.log('Participant settings updated')
+  // Hide the settings panel after successful update
+  showParticipantSettings.value = false
+  // The main data service will automatically refresh the data
 }
 
 const handleParticipantRemoved = (participant: GoalParticipantResponse) => {
@@ -268,6 +278,7 @@ const handleEditGoal = () => {
 }
 
 const handleClose = () => {
+  showParticipantSettings.value = false
   emit('update:isOpen', false)
 }
 </script>

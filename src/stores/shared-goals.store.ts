@@ -32,6 +32,15 @@ export const useSharedGoalsStore = defineStore('sharedGoals', () => {
     }
   }
 
+  const updateGoalProgress = (goalId: string, updatedGoal: SharedGoalResponse) => {
+    // Update the goal with new progress data
+    updateGoal(goalId, {
+      current_amount: updatedGoal.current_amount,
+      progress_percentage: updatedGoal.progress_percentage,
+      participants: updatedGoal.participants
+    })
+  }
+
   const removeGoal = (goalId: string) => {
     const index = goals.value.findIndex(g => g.id === goalId)
     if (index !== -1) {
@@ -112,6 +121,7 @@ export const useSharedGoalsStore = defineStore('sharedGoals', () => {
     setGoals,
     addGoal,
     updateGoal,
+    updateGoalProgress,
     removeGoal,
     setCurrentGoal,
     setInvitations,

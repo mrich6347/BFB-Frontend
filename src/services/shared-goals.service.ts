@@ -5,7 +5,8 @@ import type {
   CreateInvitationDto,
   InvitationResponse,
   UpdateParticipantDto,
-  GoalActivityResponse
+  GoalActivityResponse,
+  GoalProgressResponse
 } from "../types/DTO/shared-goal.dto"
 import api from "./common/api"
 
@@ -58,6 +59,12 @@ export class SharedGoalsService {
 
   static async leaveGoal(goalId: string): Promise<void> {
     await api.post(`/shared-goals/${goalId}/leave`)
+  }
+
+  // Progress operations (Phase 5)
+  static async getGoalProgress(goalId: string): Promise<GoalProgressResponse> {
+    const response = await api.get(`/shared-goals/${goalId}/progress`)
+    return response.data
   }
 
   // Activity operations (to be implemented in Phase 6)

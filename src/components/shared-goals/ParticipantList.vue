@@ -1,21 +1,5 @@
 <template>
   <div class="space-y-4">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <h3 class="text-lg font-semibold text-foreground">
-        Participants ({{ participants.length }})
-      </h3>
-      <Button
-        v-if="isGoalCreator"
-        variant="outline"
-        size="sm"
-        @click="$emit('inviteUser')"
-      >
-        <UserPlusIcon class="h-4 w-4 mr-2" />
-        Invite User
-      </Button>
-    </div>
-
     <!-- Participants List -->
     <div class="space-y-3">
       <div
@@ -44,7 +28,6 @@
               <div class="flex items-center space-x-4 mt-1 text-xs text-muted-foreground">
                 <span>Joined {{ formatDate(participant.joined_at) }}</span>
                 <span v-if="participant.monthly_contribution" class="flex items-center space-x-1">
-                  <DollarSignIcon class="h-3 w-3" />
                   <span>{{ formatCurrency(participant.monthly_contribution) }}/month</span>
                 </span>
               </div>
@@ -55,14 +38,11 @@
           <div class="flex items-center space-x-2">
             <!-- Category Status -->
             <div class="text-right">
-              <div v-if="participant.category" class="text-xs text-muted-foreground">
-                Tracking: {{ participant.category.name }}
+              <div v-if="participant.category_id" class="text-xs text-muted-foreground">
+                Category selected
               </div>
               <div v-else class="text-xs text-yellow-600">
                 No category selected
-              </div>
-              <div v-if="participant.category?.available_balance !== undefined" class="text-sm font-medium text-foreground">
-                {{ formatCurrency(participant.category.available_balance) }}
               </div>
             </div>
 
@@ -102,15 +82,7 @@
           </div>
         </div>
 
-        <!-- Progress Contribution (if available) -->
-        <div v-if="participant.category?.available_balance !== undefined" class="mt-3 pt-3 border-t border-border">
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-muted-foreground">Contribution to goal:</span>
-            <span class="font-medium text-foreground">
-              {{ formatCurrency(participant.category.available_balance) }}
-            </span>
-          </div>
-        </div>
+
       </div>
     </div>
 
@@ -120,13 +92,9 @@
         <UsersIcon class="h-8 w-8 text-muted-foreground" />
       </div>
       <h4 class="text-lg font-medium text-foreground mb-2">No Participants</h4>
-      <p class="text-muted-foreground mb-4">
-        This goal doesn't have any participants yet.
+      <p class="text-muted-foreground">
+        This goal doesn't have any participants yet. Use the "Invite User" button above to add participants.
       </p>
-      <Button v-if="isGoalCreator" @click="$emit('inviteUser')">
-        <UserPlusIcon class="h-4 w-4 mr-2" />
-        Invite First User
-      </Button>
     </div>
 
     <!-- Confirmation Dialog -->
@@ -189,7 +157,6 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'inviteUser'): void
   (e: 'updateParticipant', participant: GoalParticipantResponse): void
   (e: 'participantRemoved', participant: GoalParticipantResponse): void
   (e: 'leftGoal'): void
