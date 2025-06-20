@@ -262,7 +262,8 @@ import {
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
   DatabaseIcon,
-  Loader2Icon
+  Loader2Icon,
+  TargetIcon
 } from 'lucide-vue-next'
 import { authService } from '../services/common/auth.service'
 import { formatCurrency } from '@/utils/currencyUtil'
@@ -288,6 +289,7 @@ type SectionTitle = AccountType | 'CLOSED'
 const mainNavItems = computed(() => [
   { name: 'Budget', to: `/budget/${props.budgetId}`, icon: BarChart2Icon },
   { name: 'Reports', to: '/reports', icon: PieChartIcon },
+  { name: 'Shared Goals', to: '/shared-goals', icon: TargetIcon },
 ])
 
 const accountStore = useAccountStore()

@@ -31,7 +31,6 @@ export interface CreateSharedGoalDto {
   description?: string;
   target_amount: number;
   target_date?: string;
-  is_private?: boolean;
 }
 
 export interface UpdateSharedGoalDto {
@@ -39,7 +38,6 @@ export interface UpdateSharedGoalDto {
   description?: string;
   target_amount?: number;
   target_date?: string;
-  is_private?: boolean;
   status?: GoalStatus;
 }
 
@@ -72,7 +70,6 @@ export interface SharedGoalResponse {
   created_by: string;
   budget_id?: string;
   status: GoalStatus;
-  is_private: boolean;
   created_at: Date;
   updated_at: Date;
   creator_profile?: {

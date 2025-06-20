@@ -9,6 +9,7 @@ import BudgetPage from '../pages/BudgetPage.vue'
 import ReportsPage from '../pages/ReportsPage.vue'
 import AccountPage from '../pages/AccountPage.vue'
 import ProfileSettingsPage from '../pages/ProfileSettingsPage.vue'
+import SharedGoalsPage from '../pages/SharedGoalsPage.vue'
 import { supabase } from '../lib/supabaseClient'
 import { getLastVisitedBudget } from '../utils/lastVisitedBudgetStorage'
 
@@ -64,6 +65,14 @@ const routes = [
     path: '/profile-settings',
     name: 'ProfileSettings',
     component: ProfileSettingsPage,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/shared-goals',
+    name: 'SharedGoals',
+    component: SharedGoalsPage,
     meta: {
       requiresAuth: true
     }
