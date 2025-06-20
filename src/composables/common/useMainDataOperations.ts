@@ -89,6 +89,11 @@ export function useMainDataOperations() {
         sharedGoalsStore.setGoals(mainData.sharedGoals)
       }
 
+      // Invitations data
+      if (mainData?.invitations) {
+        sharedGoalsStore.setInvitations(mainData.invitations)
+      }
+
       // Set loading states to false
       categoryStore.setIsLoading(false)
 
