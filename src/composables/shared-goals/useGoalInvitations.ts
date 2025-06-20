@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import { useToast } from 'vue-toast-notification'
 import { SharedGoalsService } from '../../services/shared-goals.service'
 import { useSharedGoalsStore } from '../../stores/shared-goals.store'
+import { useBudgetStore } from '../../stores/budget.store'
 import type {
   CreateInvitationDto,
   InvitationResponse,
@@ -14,6 +15,7 @@ export function useGoalInvitations() {
   const error = ref<string | null>(null)
   const toast = useToast()
   const sharedGoalsStore = useSharedGoalsStore()
+  const budgetStore = useBudgetStore()
 
   const setError = (errorMessage: string) => {
     error.value = errorMessage
@@ -81,6 +83,17 @@ export function useGoalInvitations() {
       // Remove from store (it's no longer pending)
       sharedGoalsStore.removeInvitation(invitationId)
 
+      // Refresh shared goals to show the newly joined goal
+      if (budgetStore.currentBudget?.id) {
+        try {
+          const updatedGoals = await SharedGoalsService.findAll(budgetStore.currentBudget.id)
+          sharedGoalsStore.setGoals(updatedGoals)
+        } catch (refreshError) {
+          console.error('Failed to refresh goals after accepting invitation:', refreshError)
+          // Don't fail the whole operation if refresh fails
+        }
+      }
+
       toast.success('Invitation accepted! You are now part of the goal.')
       return true
     } catch (err: any) {
@@ -127,7 +140,7 @@ export function useGoalInvitations() {
       // Note: Participants are typically loaded as part of the goal data
       // This method is for cases where we need to refresh participant data specifically
       const participants = await SharedGoalsService.findById(goalId)
-      
+
       return participants.participants || []
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to load participants'

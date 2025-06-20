@@ -3,22 +3,22 @@
     <DialogContent class="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle class="flex items-center justify-between">
-          <span>{{ goal?.name || 'Goal Details' }}</span>
+          <span>{{ displayGoal?.name || 'Goal Details' }}</span>
           <div class="flex items-center space-x-2">
             <span
               class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-              :class="getStatusBadgeClass(goal?.status)"
+              :class="getStatusBadgeClass(displayGoal?.status)"
             >
-              {{ goal?.status || 'active' }}
+              {{ displayGoal?.status || 'active' }}
             </span>
           </div>
         </DialogTitle>
-        <DialogDescription v-if="goal?.description">
-          {{ goal.description }}
+        <DialogDescription v-if="displayGoal?.description">
+          {{ displayGoal.description }}
         </DialogDescription>
       </DialogHeader>
 
-      <div v-if="goal" class="space-y-6">
+      <div v-if="displayGoal" class="space-y-6">
         <!-- Progress Section -->
         <div class="space-y-3">
           <h3 class="text-lg font-medium text-foreground">Progress</h3>
@@ -26,19 +26,19 @@
             <div class="flex items-center justify-between text-sm">
               <span class="text-muted-foreground">Current Progress</span>
               <span class="font-medium text-foreground">
-                {{ formatCurrency(goal.current_amount || 0) }} / {{ formatCurrency(goal.target_amount) }}
+                {{ formatCurrency(displayGoal.current_amount || 0) }} / {{ formatCurrency(displayGoal.target_amount) }}
               </span>
             </div>
             <div class="bg-secondary rounded-full h-3">
               <div
                 class="bg-primary h-3 rounded-full transition-all duration-300"
-                :style="{ width: `${Math.min((goal.progress_percentage || 0), 100)}%` }"
+                :style="{ width: `${Math.min((displayGoal.progress_percentage || 0), 100)}%` }"
               ></div>
             </div>
             <div class="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{{ Math.round(goal.progress_percentage || 0) }}% complete</span>
-              <span v-if="goal.target_date">
-                Target: {{ formatDate(goal.target_date) }}
+              <span>{{ Math.round(displayGoal.progress_percentage || 0) }}% complete</span>
+              <span v-if="displayGoal.target_date">
+                Target: {{ formatDate(displayGoal.target_date) }}
               </span>
             </div>
           </div>
@@ -49,7 +49,7 @@
           <div class="border border-border rounded-lg p-4 bg-muted/30">
             <ParticipantSettings
               :participant="currentUserParticipant"
-              :goal-id="goal.id"
+              :goal-id="displayGoal.id"
               @updated="handleParticipantUpdated"
             />
           </div>
@@ -72,7 +72,7 @@
           </div>
 
           <ParticipantList
-            :goal="goal"
+            :goal="displayGoal"
             :participants="allParticipants"
             @update-participant="handleUpdateParticipant"
             @participant-removed="handleParticipantRemoved"
@@ -86,19 +86,19 @@
           <div class="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span class="text-muted-foreground">Created by:</span>
-              <p class="font-medium">{{ goal.creator_profile?.display_name || 'Unknown' }}</p>
+              <p class="font-medium">{{ displayGoal.creator_profile?.display_name || 'Unknown' }}</p>
             </div>
             <div>
               <span class="text-muted-foreground">Created on:</span>
-              <p class="font-medium">{{ formatDate(goal.created_at) }}</p>
+              <p class="font-medium">{{ formatDate(displayGoal.created_at) }}</p>
             </div>
             <div>
               <span class="text-muted-foreground">Target Amount:</span>
-              <p class="font-medium">{{ formatCurrency(goal.target_amount) }}</p>
+              <p class="font-medium">{{ formatCurrency(displayGoal.target_amount) }}</p>
             </div>
-            <div v-if="goal.target_date">
+            <div v-if="displayGoal.target_date">
               <span class="text-muted-foreground">Target Date:</span>
-              <p class="font-medium">{{ formatDate(goal.target_date) }}</p>
+              <p class="font-medium">{{ formatDate(displayGoal.target_date) }}</p>
             </div>
           </div>
         </div>
@@ -137,23 +137,33 @@
   <!-- Invite User Modal -->
   <InviteUserModal
     :is-open="isInviteModalOpen"
-    :goal="goal"
+    :goal="displayGoal"
     @update:is-open="isInviteModalOpen = $event"
     @invitation-sent="handleInvitationSent"
+  />
+
+  <!-- Edit Goal Modal -->
+  <EditGoalModal
+    :is-open="isEditModalOpen"
+    :goal="displayGoal"
+    @update:is-open="isEditModalOpen = $event"
+    @goal-updated="handleGoalUpdated"
   />
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { UserPlusIcon } from 'lucide-vue-next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../shadcn-ui'
 import Button from '../shadcn-ui/button.vue'
 import ParticipantList from './ParticipantList.vue'
 import ParticipantSettings from './ParticipantSettings.vue'
 import InviteUserModal from './InviteUserModal.vue'
+import EditGoalModal from './EditGoalModal.vue'
 import { useGoalInvitations } from '../../composables/shared-goals/useGoalInvitations'
 import { useAuthStore } from '../../stores/auth.store'
 import { useUserProfileStore } from '../../stores/user-profile.store'
+import { useSharedGoalsStore } from '../../stores/shared-goals.store'
 import type { SharedGoalResponse, InvitationResponse, GoalParticipantResponse } from '../../types/DTO/shared-goal.dto'
 
 interface Props {
@@ -173,22 +183,59 @@ const emit = defineEmits<Emits>()
 const { leaveGoal } = useGoalInvitations()
 const authStore = useAuthStore()
 const userProfileStore = useUserProfileStore()
+const sharedGoalsStore = useSharedGoalsStore()
 
 const isInviteModalOpen = ref(false)
+const isEditModalOpen = ref(false)
 const showParticipantSettings = ref(false)
+
+// Reactive goal data that updates from store
+const reactiveGoal = ref<SharedGoalResponse | null>(null)
+
+// Watch for goal changes and update reactive goal
+watch(
+  () => props.goal,
+  (newGoal) => {
+    if (newGoal) {
+      // Find the latest version from store or use the prop
+      const storeGoal = sharedGoalsStore.goals.find(g => g.id === newGoal.id)
+      reactiveGoal.value = storeGoal || newGoal
+    } else {
+      reactiveGoal.value = null
+    }
+  },
+  { immediate: true }
+)
+
+// Watch for store updates to this specific goal
+watch(
+  () => sharedGoalsStore.goals,
+  (goals) => {
+    if (props.goal?.id) {
+      const updatedGoal = goals.find(g => g.id === props.goal.id)
+      if (updatedGoal) {
+        reactiveGoal.value = updatedGoal
+      }
+    }
+  },
+  { deep: true }
+)
 
 // Computed
 const currentUserId = computed(() => userProfileStore.currentProfile?.id)
 
 const isGoalCreator = computed(() => {
-  return props.goal?.created_by === currentUserId.value
+  return reactiveGoal.value?.created_by === currentUserId.value
 })
 
+// Use reactive goal for all computed properties
+const displayGoal = computed(() => reactiveGoal.value || props.goal)
+
 const allParticipants = computed(() => {
-  if (!props.goal?.participants) return []
+  if (!displayGoal.value?.participants) return []
 
   // Just return the participants from the backend - the creator should already be included
-  return props.goal.participants
+  return displayGoal.value.participants
 })
 
 const currentUserParticipant = computed(() => {
@@ -256,29 +303,34 @@ const handleParticipantRemoved = (participant: GoalParticipantResponse) => {
 
 const handleLeftGoal = () => {
   console.log('Left goal from participant list')
-  emit('goalLeft', props.goal?.id || '')
+  emit('goalLeft', displayGoal.value?.id || '')
   handleClose()
 }
 
 const handleLeaveGoal = async () => {
-  if (!props.goal) return
+  if (!displayGoal.value) return
 
-  if (confirm(`Are you sure you want to leave "${props.goal.name}"? You won't be able to rejoin unless invited again.`)) {
-    const success = await leaveGoal(props.goal.id)
+  if (confirm(`Are you sure you want to leave "${displayGoal.value.name}"? You won't be able to rejoin unless invited again.`)) {
+    const success = await leaveGoal(displayGoal.value.id)
     if (success) {
-      emit('goalLeft', props.goal.id)
+      emit('goalLeft', displayGoal.value.id)
       handleClose()
     }
   }
 }
 
 const handleEditGoal = () => {
-  console.log('Edit goal:', props.goal)
-  // TODO: Implement edit goal functionality
+  isEditModalOpen.value = true
+}
+
+const handleGoalUpdated = (updatedGoal: SharedGoalResponse) => {
+  console.log('Goal updated:', updatedGoal)
+  emit('goalUpdated', updatedGoal)
 }
 
 const handleClose = () => {
   showParticipantSettings.value = false
+  isEditModalOpen.value = false
   emit('update:isOpen', false)
 }
 </script>

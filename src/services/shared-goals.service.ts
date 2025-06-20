@@ -17,7 +17,10 @@ export class SharedGoalsService {
     return response.data
   }
 
-  // Note: Goals are loaded via main data service, no need for findAll method
+  static async findAll(budgetId: string): Promise<SharedGoalResponse[]> {
+    const response = await api.get('/shared-goals', { params: { budgetId } })
+    return response.data
+  }
 
   static async findById(goalId: string): Promise<SharedGoalResponse> {
     const response = await api.get(`/shared-goals/${goalId}`)

@@ -9,27 +9,29 @@
       </DialogHeader>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
-        <!-- User Search -->
+        <!-- Username Input -->
         <div>
           <label class="block text-sm font-medium text-foreground mb-2">
-            Search User <span class="text-destructive">*</span>
+            Username <span class="text-destructive">*</span>
           </label>
-          <div class="user-search-container">
-            <UserSearch
-              v-model="selectedUser"
-              placeholder="Search by username..."
-              :exclude-usernames="excludedUsernames"
-              @user-selected="onUserSelected"
-              @search-cleared="onSearchCleared"
-            />
-          </div>
+          <input
+            v-model="username"
+            type="text"
+            placeholder="Enter username..."
+            class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            :disabled="isSubmitting"
+            required
+          />
+          <p class="text-sm text-muted-foreground mt-1">
+            Enter the exact username of the person you want to invite.
+          </p>
         </div>
 
         <!-- Invitation Preview -->
-        <div v-if="selectedUser" class="p-4 bg-muted/50 border border-border rounded-md">
+        <div v-if="username.trim()" class="p-4 bg-muted/50 border border-border rounded-md">
           <h4 class="text-sm font-medium text-foreground mb-2">Invitation Preview</h4>
           <p class="text-sm text-muted-foreground">
-            <strong>{{ selectedUser.display_name }}</strong> (@{{ selectedUser.username }}) will be invited to join your goal "{{ goalName }}".
+            <strong>@{{ username.trim() }}</strong> will be invited to join your goal "{{ goalName }}".
           </p>
           <p class="text-xs text-muted-foreground mt-2">
             They will have 7 days to accept this invitation.
@@ -74,7 +76,7 @@
           </Button>
           <Button
             type="submit"
-            :disabled="!selectedUser || isSubmitting"
+            :disabled="!username.trim() || isSubmitting"
           >
             <span v-if="isSubmitting">Sending...</span>
             <span v-else>Send Invitation</span>
@@ -90,9 +92,7 @@ import { ref, computed, watch } from 'vue'
 import { AlertCircleIcon, CheckCircleIcon } from 'lucide-vue-next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../shadcn-ui'
 import Button from '../shadcn-ui/button.vue'
-import UserSearch from './UserSearch.vue'
 import { useGoalInvitations } from '../../composables/shared-goals/useGoalInvitations'
-import type { PublicUserProfileResponse } from '../../types/DTO/user-profile.dto'
 import type { InvitationResponse, SharedGoalResponse } from '../../types/DTO/shared-goal.dto'
 
 interface Props {
@@ -110,7 +110,7 @@ const emit = defineEmits<Emits>()
 
 const { inviteUser, error, clearError, isLoading } = useGoalInvitations()
 
-const selectedUser = ref<PublicUserProfileResponse | null>(null)
+const username = ref('')
 const isSubmitting = ref(false)
 const showSuccess = ref(false)
 const lastInvitedUser = ref('')
@@ -118,43 +118,9 @@ const lastInvitedUser = ref('')
 // Computed
 const goalName = computed(() => props.goal?.name || '')
 
-const excludedUsernames = computed(() => {
-  if (!props.goal) return []
-  
-  const usernames: string[] = []
-  
-  // Add goal creator
-  if (props.goal.creator_profile?.username) {
-    usernames.push(props.goal.creator_profile.username)
-  }
-  
-  // Add existing participants
-  if (props.goal.participants) {
-    props.goal.participants.forEach(participant => {
-      if (participant.user_profile?.username) {
-        usernames.push(participant.user_profile.username)
-      }
-    })
-  }
-  
-  return usernames
-})
-
 // Methods
-const onUserSelected = (user: PublicUserProfileResponse) => {
-  selectedUser.value = user
-  clearError()
-  showSuccess.value = false
-}
-
-const onSearchCleared = () => {
-  selectedUser.value = null
-  clearError()
-  showSuccess.value = false
-}
-
 const handleSubmit = async () => {
-  if (!selectedUser.value || !props.goal) return
+  if (!username.value.trim() || !props.goal) return
 
   try {
     isSubmitting.value = true
@@ -162,16 +128,16 @@ const handleSubmit = async () => {
     showSuccess.value = false
 
     const invitation = await inviteUser(props.goal.id, {
-      invitee_username: selectedUser.value.username
+      invitee_username: username.value.trim()
     })
 
     if (invitation) {
-      lastInvitedUser.value = selectedUser.value.display_name
+      lastInvitedUser.value = username.value.trim()
       showSuccess.value = true
-      selectedUser.value = null
-      
+      username.value = ''
+
       emit('invitationSent', invitation)
-      
+
       // Auto-close after showing success for 2 seconds
       setTimeout(() => {
         if (showSuccess.value) {
@@ -187,7 +153,7 @@ const handleSubmit = async () => {
 }
 
 const resetForm = () => {
-  selectedUser.value = null
+  username.value = ''
   showSuccess.value = false
   lastInvitedUser.value = ''
   clearError()
@@ -210,8 +176,4 @@ watch(() => isLoading.value, (loading) => {
 })
 </script>
 
-<style scoped>
-.user-search-container {
-  /* This class is used for click-outside detection in UserSearch */
-}
-</style>
+

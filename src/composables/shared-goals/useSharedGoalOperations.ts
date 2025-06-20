@@ -119,6 +119,27 @@ export function useSharedGoalOperations() {
     }
   }
 
+  const refreshGoals = async (budgetId: string): Promise<SharedGoalResponse[]> => {
+    try {
+      isLoading.value = true
+      clearError()
+
+      const goals = await SharedGoalsService.findAll(budgetId)
+
+      // Update store
+      sharedGoalsStore.setGoals(goals)
+
+      return goals
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'Failed to refresh goals'
+      setError(errorMessage)
+      console.error('Error refreshing goals:', err)
+      return []
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     // State
     isLoading,
@@ -129,6 +150,7 @@ export function useSharedGoalOperations() {
     loadGoal,
     updateGoal,
     deleteGoal,
+    refreshGoals,
     clearError
   }
 }

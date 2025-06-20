@@ -174,10 +174,23 @@ const cancelEditing = () => {
   clearErrors()
 }
 
-const handleCategorySelect = (category: CategoryResponse | null) => {
+const handleCategorySelect = async (category: CategoryResponse | null) => {
   if (category) {
     selectedCategoryId.value = category.id
     categoryError.value = ''
+
+    // Immediately call progress calculation to show updated progress
+    // This provides instant feedback when user selects a category
+    try {
+      const progressData = await loadGoalProgress(props.goalId)
+      if (progressData) {
+        // Update the specific goal in the store with new progress data
+        sharedGoalsStore.updateGoalProgress(props.goalId, progressData.goal)
+      }
+    } catch (error) {
+      console.error('Failed to refresh goal progress after category selection:', error)
+      // Don't show error to user since this is just for immediate feedback
+    }
   }
 }
 
