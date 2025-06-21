@@ -1,6 +1,7 @@
 export enum AccountType {
     CASH = 'CASH',
     TRACKING = 'TRACKING',
+    CREDIT = 'CREDIT',
 }
 
 export interface CreateAccountDto {
