@@ -77,6 +77,16 @@
             >
               Leave Goal
             </Button>
+            <Button
+              v-if="isGoalCreator"
+              @click="handleDeleteGoal"
+              variant="outline"
+              size="sm"
+              class="text-destructive hover:text-destructive"
+            >
+              <TrashIcon class="h-4 w-4 mr-2" />
+              Delete Goal
+            </Button>
           </div>
           <div class="flex items-center space-x-2">
             <Button
@@ -115,7 +125,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { UserPlusIcon } from 'lucide-vue-next'
+import { UserPlusIcon, TrashIcon } from 'lucide-vue-next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../shadcn-ui'
 import Button from '../shadcn-ui/button.vue'
 import ParticipantList from './ParticipantList.vue'
@@ -124,6 +134,7 @@ import InviteUserModal from './InviteUserModal.vue'
 import EditGoalModal from './EditGoalModal.vue'
 import GoalProgressChart from './GoalProgressChart.vue'
 import { useGoalInvitations } from '../../composables/shared-goals/useGoalInvitations'
+import { useSharedGoalOperations } from '../../composables/shared-goals/useSharedGoalOperations'
 import { useAuthStore } from '../../stores/auth.store'
 import { useUserProfileStore } from '../../stores/user-profile.store'
 import { useSharedGoalsStore } from '../../stores/shared-goals.store'
@@ -138,12 +149,14 @@ interface Emits {
   (e: 'update:isOpen', value: boolean): void
   (e: 'goalUpdated', goal: SharedGoalResponse): void
   (e: 'goalLeft', goalId: string): void
+  (e: 'goalDeleted', goalId: string): void
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const { leaveGoal } = useGoalInvitations()
+const { leaveGoal, loadGoal } = useGoalInvitations()
+const { deleteGoal } = useSharedGoalOperations()
 const authStore = useAuthStore()
 const userProfileStore = useUserProfileStore()
 const sharedGoalsStore = useSharedGoalsStore()
@@ -261,7 +274,10 @@ const handleParticipantUpdated = () => {
 
 const handleParticipantRemoved = (participant: GoalParticipantResponse) => {
   console.log('Participant removed:', participant)
-  // Participant removal is handled by the ParticipantList component
+  // Refresh the goal data to update the participant list
+  if (displayGoal.value?.id) {
+    loadGoal(displayGoal.value.id)
+  }
 }
 
 const handleLeftGoal = () => {
@@ -289,6 +305,21 @@ const handleEditGoal = () => {
 const handleGoalUpdated = (updatedGoal: SharedGoalResponse) => {
   console.log('Goal updated:', updatedGoal)
   emit('goalUpdated', updatedGoal)
+}
+
+const handleDeleteGoal = async () => {
+  if (!displayGoal.value) return
+
+  const goalName = displayGoal.value.name
+  const confirmMessage = `Are you sure you want to delete "${goalName}"? This will permanently remove the goal for all participants and cannot be undone.`
+
+  if (confirm(confirmMessage)) {
+    const success = await deleteGoal(displayGoal.value.id)
+    if (success) {
+      emit('goalDeleted', displayGoal.value.id)
+      handleClose()
+    }
+  }
 }
 
 const handleClose = () => {

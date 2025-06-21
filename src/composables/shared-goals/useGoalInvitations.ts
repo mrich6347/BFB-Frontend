@@ -175,6 +175,26 @@ export function useGoalInvitations() {
     }
   }
 
+  const removeParticipant = async (goalId: string, participantId: string): Promise<boolean> => {
+    try {
+      isLoading.value = true
+      clearError()
+
+      await SharedGoalsService.removeParticipant(goalId, participantId)
+
+      toast.success('Participant removed from goal.')
+      return true
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'Failed to remove participant'
+      setError(errorMessage)
+      toast.error(errorMessage)
+      console.error('Error removing participant:', err)
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const updateParticipant = async (goalId: string, participantData: UpdateParticipantDto): Promise<boolean> => {
     try {
       isLoading.value = true
@@ -209,6 +229,7 @@ export function useGoalInvitations() {
     // Participant operations
     loadParticipants,
     leaveGoal,
+    removeParticipant,
     updateParticipant,
 
     // Utility

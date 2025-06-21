@@ -63,6 +63,10 @@ export class SharedGoalsService {
     await api.post(`/shared-goals/${goalId}/leave`)
   }
 
+  static async removeParticipant(goalId: string, participantId: string): Promise<void> {
+    await api.delete(`/shared-goals/${goalId}/participant/${participantId}`)
+  }
+
   // Progress operations (Phase 5)
   static async getGoalProgress(goalId: string): Promise<GoalProgressResponse> {
     const response = await api.get(`/shared-goals/${goalId}/progress`)

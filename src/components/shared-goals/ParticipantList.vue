@@ -165,7 +165,7 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const { leaveGoal } = useGoalInvitations()
+const { leaveGoal, removeParticipant } = useGoalInvitations()
 const userProfileStore = useUserProfileStore()
 
 const showConfirmDialog = ref(false)
@@ -226,9 +226,11 @@ const confirmActionHandler = async () => {
         emit('leftGoal')
       }
     } else {
-      // TODO: Implement remove participant functionality
-      // This would require a new backend endpoint
-      console.log('Remove participant functionality not yet implemented')
+      // Remove participant functionality
+      const success = await removeParticipant(props.goal.id, selectedParticipant.value.id)
+      if (success) {
+        emit('participantRemoved', selectedParticipant.value)
+      }
     }
 
     showConfirmDialog.value = false

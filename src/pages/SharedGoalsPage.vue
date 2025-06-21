@@ -200,6 +200,7 @@
     @update:is-open="isGoalDetailsModalOpen = $event"
     @goal-updated="handleGoalUpdated"
     @goal-left="handleGoalLeft"
+    @goal-deleted="handleGoalDeleted"
   />
 
   <!-- Invite User Modal -->
@@ -301,6 +302,11 @@ const handleGoalUpdated = (goal: SharedGoalResponse) => {
 
 const handleGoalLeft = (goalId: string) => {
   console.log('Left goal:', goalId)
+  // Goal is already removed from store by the composable
+}
+
+const handleGoalDeleted = (goalId: string) => {
+  console.log('Goal deleted:', goalId)
   // Goal is already removed from store by the composable
 }
 
