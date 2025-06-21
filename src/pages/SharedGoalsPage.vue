@@ -14,6 +14,15 @@
           </div>
           <div class="flex items-center space-x-3">
             <button
+              @click="handleRefreshData"
+              :disabled="isRefreshing"
+              class="inline-flex items-center px-3 py-2 border border-border rounded-md text-sm font-medium text-foreground bg-background hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Refresh shared goals data"
+            >
+              <RefreshCwIcon :class="['h-4 w-4 mr-2', { 'animate-spin': isRefreshing }]" />
+              Refresh
+            </button>
+            <button
               v-if="invitations.length > 0"
               @click="showInvitations = !showInvitations"
               class="relative inline-flex items-center px-4 py-2 border border-border rounded-md shadow-sm text-sm font-medium text-foreground bg-background hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-colors"
@@ -52,14 +61,14 @@
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="rounded-md bg-destructive/10 border border-destructive/20 p-4 mb-6">
+      <div v-else-if="error || refreshError" class="rounded-md bg-destructive/10 border border-destructive/20 p-4 mb-6">
         <div class="flex">
           <div class="flex-shrink-0">
             <AlertCircleIcon class="h-5 w-5 text-destructive" />
           </div>
           <div class="ml-3">
             <h3 class="text-sm font-medium text-destructive">Error</h3>
-            <p class="mt-1 text-sm text-destructive/80">{{ error }}</p>
+            <p class="mt-1 text-sm text-destructive/80">{{ error || refreshError }}</p>
           </div>
         </div>
       </div>
@@ -203,11 +212,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { PlusIcon, TargetIcon, UsersIcon, CalendarIcon, AlertCircleIcon, MailIcon, UserPlusIcon } from 'lucide-vue-next'
+import { PlusIcon, TargetIcon, UsersIcon, CalendarIcon, AlertCircleIcon, MailIcon, UserPlusIcon, RefreshCwIcon } from 'lucide-vue-next'
 import { useSharedGoalOperations } from '../composables/shared-goals/useSharedGoalOperations'
 import { useGoalInvitations } from '../composables/shared-goals/useGoalInvitations'
+import { useSharedGoalsPageData } from '../composables/shared-goals/useSharedGoalsPageData'
 import { useSharedGoalsStore } from '../stores/shared-goals.store'
 import { useBudgetStore } from '../stores/budget.store'
 import Sidebar from '../components/Sidebar.vue'
@@ -221,6 +231,7 @@ import type { SharedGoalResponse, GoalStatus, InvitationResponse } from '../type
 const router = useRouter()
 const { isLoading, error } = useSharedGoalOperations()
 const { leaveGoal } = useGoalInvitations()
+const { refreshPageData, isRefreshing, refreshError, clearRefreshError } = useSharedGoalsPageData()
 const sharedGoalsStore = useSharedGoalsStore()
 const budgetStore = useBudgetStore()
 const authStore = useAuthStore()
@@ -339,5 +350,44 @@ const handleLeaveGoal = async (goal: any) => {
   }
 }
 
-// Note: Goals and invitations are loaded via main data service in App.vue, no need for onMounted loadGoals or loadInvitations
+const handleRefreshData = async () => {
+  const currentBudgetId = budgetStore.currentBudget?.id
+  if (currentBudgetId) {
+    // Clear any previous refresh errors
+    clearRefreshError()
+
+    // Refresh page data to get the latest goals and invitations
+    const result = await refreshPageData(currentBudgetId)
+
+    if (result) {
+      console.log('Shared goals page data refreshed manually', {
+        goalsCount: result.goals.length,
+        invitationsCount: result.invitations.length
+      })
+    } else {
+      console.error('Failed to refresh shared goals page data manually')
+    }
+  }
+}
+
+// Refresh shared goals data when page is mounted to ensure fresh data
+onMounted(async () => {
+  const currentBudgetId = budgetStore.currentBudget?.id
+  if (currentBudgetId) {
+    // Clear any previous refresh errors
+    clearRefreshError()
+
+    // Refresh page data to get the latest goals and invitations
+    const result = await refreshPageData(currentBudgetId)
+
+    if (result) {
+      console.log('Shared goals page data refreshed successfully on mount', {
+        goalsCount: result.goals.length,
+        invitationsCount: result.invitations.length
+      })
+    } else {
+      console.error('Failed to refresh shared goals page data on mount')
+    }
+  }
+})
 </script>
