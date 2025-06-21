@@ -5,11 +5,7 @@ export enum GoalStatus {
   CANCELLED = 'CANCELLED'
 }
 
-export enum ParticipantStatus {
-  INVITED = 'INVITED',
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE'
-}
+
 
 export enum InvitationStatus {
   PENDING = 'PENDING',
@@ -42,7 +38,6 @@ export interface GoalParticipantResponse {
   monthly_contribution?: number;
   category_id?: string;
   budget_id: string;
-  status: ParticipantStatus;
   joined_at: Date;
   user_profile: {
     username: string;
