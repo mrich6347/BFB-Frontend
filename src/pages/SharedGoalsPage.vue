@@ -120,20 +120,32 @@
         </div>
       </div>
 
-      <!-- Goals Grid -->
-      <div v-else class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div
-          v-for="goal in goals"
-          :key="goal.id"
-          class="bg-card rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow"
-        >
+      <!-- Goals Sections -->
+      <div v-else class="space-y-8">
+        <!-- Active Goals Section -->
+        <div v-if="activeGoals.length > 0">
+          <h2 class="text-xl font-semibold text-foreground mb-4">Active Goals</h2>
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div
+              v-for="goal in activeGoals"
+              :key="goal.id"
+              class="bg-card rounded-lg border border-border shadow-sm hover:shadow-md transition-all duration-300"
+            >
           <div class="p-6">
             <!-- Goal Header -->
             <div class="flex items-start justify-between">
               <div class="flex-1 min-w-0 cursor-pointer" @click="handleGoalClick(goal)">
-                <h3 class="text-lg font-medium text-card-foreground truncate">
-                  {{ goal.name }}
-                </h3>
+                <div class="flex items-center space-x-2">
+                  <h3 class="text-lg font-medium text-card-foreground truncate">
+                    {{ goal.name }}
+                  </h3>
+                  <!-- Trophy icon for completed goals -->
+                  <TrophyIcon
+                    v-if="goal.status === 'COMPLETED'"
+                    class="h-5 w-5 text-yellow-500 flex-shrink-0 animate-pulse"
+                    title="Goal Completed!"
+                  />
+                </div>
                 <p v-if="goal.description" class="mt-1 text-sm text-muted-foreground line-clamp-2">
                   {{ goal.description }}
                 </p>
@@ -167,12 +179,20 @@
               </div>
               <div class="mt-2 bg-secondary rounded-full h-2">
                 <div
-                  class="bg-primary h-2 rounded-full transition-all duration-300"
+                  :class="[
+                    'h-2 rounded-full transition-all duration-300',
+                    goal.status === 'COMPLETED' ? 'bg-green-500' : 'bg-primary'
+                  ]"
                   :style="{ width: `${Math.min((goal.progress_percentage || 0), 100)}%` }"
                 ></div>
               </div>
-              <div class="mt-1 text-xs text-muted-foreground">
-                {{ Math.round(goal.progress_percentage || 0) }}% complete
+              <div class="mt-1 text-xs">
+                <span v-if="goal.status === 'COMPLETED'" class="text-green-600 font-medium">
+                  🎉 Goal Completed!
+                </span>
+                <span v-else class="text-muted-foreground">
+                  {{ Math.round(goal.progress_percentage || 0) }}% complete
+                </span>
               </div>
             </div>
 
@@ -206,6 +226,115 @@
                 >
                   View Details
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+        </div>
+
+        <!-- Completed Goals Section -->
+        <div v-if="completedGoals.length > 0">
+          <h2 class="text-xl font-semibold text-foreground mb-4 flex items-center">
+            <TrophyIcon class="h-5 w-5 text-yellow-500 mr-2" />
+            Completed Goals
+          </h2>
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div
+              v-for="goal in completedGoals"
+              :key="goal.id"
+              class="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-green-100/50 hover:shadow-green-200/50 dark:from-green-950/20 dark:to-emerald-950/20 dark:border-green-800/30 rounded-lg border shadow-sm hover:shadow-md transition-all duration-300"
+            >
+              <div class="p-6">
+                <!-- Goal Header -->
+                <div class="flex items-start justify-between">
+                  <div class="flex-1 min-w-0 cursor-pointer" @click="handleGoalClick(goal)">
+                    <div class="flex items-center space-x-2">
+                      <h3 class="text-lg font-medium text-card-foreground truncate">
+                        {{ goal.name }}
+                      </h3>
+                      <!-- Trophy icon for completed goals -->
+                      <TrophyIcon
+                        class="h-5 w-5 text-yellow-500 flex-shrink-0 animate-pulse"
+                        title="Goal Completed!"
+                      />
+                    </div>
+                    <p v-if="goal.description" class="mt-1 text-sm text-muted-foreground line-clamp-2">
+                      {{ goal.description }}
+                    </p>
+                  </div>
+                  <div class="ml-4 flex-shrink-0 flex items-center space-x-2">
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                      :class="getStatusClasses(goal.status)"
+                    >
+                      {{ goal.status }}
+                    </span>
+                    <!-- Invite Button for Goal Creator -->
+                    <button
+                      v-if="isGoalCreator(goal)"
+                      @click.stop="openInviteModal(goal)"
+                      class="inline-flex items-center p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                      title="Invite users"
+                    >
+                      <UserPlusIcon class="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="mt-4 cursor-pointer" @click="handleGoalClick(goal)">
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-muted-foreground">Progress</span>
+                    <span class="font-medium text-card-foreground">
+                      {{ formatCurrency(goal.current_amount || 0) }} / {{ formatCurrency(goal.target_amount) }}
+                    </span>
+                  </div>
+                  <div class="mt-2 bg-secondary rounded-full h-2">
+                    <div
+                      class="bg-green-500 h-2 rounded-full transition-all duration-300"
+                      :style="{ width: `${Math.min((goal.progress_percentage || 0), 100)}%` }"
+                    ></div>
+                  </div>
+                  <div class="mt-1 text-xs">
+                    <span class="text-green-600 font-medium">
+                      🎉 Goal Completed!
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Goal Info -->
+                <div class="mt-4 flex items-center justify-between text-sm text-muted-foreground cursor-pointer" @click="handleGoalClick(goal)">
+                  <div class="flex items-center">
+                    <UsersIcon class="h-4 w-4 mr-1" />
+                    {{ goal.participants?.length || 0 }} participant{{ (goal.participants?.length || 0) !== 1 ? 's' : '' }}
+                  </div>
+                  <div v-if="goal.target_date" class="flex items-center">
+                    <CalendarIcon class="h-4 w-4 mr-1" />
+                    {{ formatDate(goal.target_date) }}
+                  </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                  <div class="flex items-center space-x-2">
+                    <button
+                      v-if="!isGoalCreator(goal)"
+                      @click.stop="handleLeaveGoal(goal)"
+                      class="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      Leave Goal
+                    </button>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <button
+                      @click.stop="handleGoalClick(goal)"
+                      class="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -251,7 +380,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { PlusIcon, TargetIcon, UsersIcon, CalendarIcon, AlertCircleIcon, MailIcon, UserPlusIcon, RefreshCwIcon } from 'lucide-vue-next'
+import { PlusIcon, TargetIcon, UsersIcon, CalendarIcon, AlertCircleIcon, MailIcon, UserPlusIcon, RefreshCwIcon, TrophyIcon } from 'lucide-vue-next'
 import { useSharedGoalOperations } from '../composables/shared-goals/useSharedGoalOperations'
 import { useGoalInvitations } from '../composables/shared-goals/useGoalInvitations'
 import { useSharedGoalsPageData } from '../composables/shared-goals/useSharedGoalsPageData'
@@ -286,6 +415,8 @@ const showProfileSetup = ref(false)
 
 // Computed
 const goals = computed(() => sharedGoalsStore.goals)
+const activeGoals = computed(() => goals.value.filter(goal => goal.status !== 'COMPLETED'))
+const completedGoals = computed(() => goals.value.filter(goal => goal.status === 'COMPLETED'))
 const invitations = computed(() => sharedGoalsStore.invitations)
 const currentBudgetId = computed(() => budgetStore.currentBudget?.id || '')
 const hasUserProfile = computed(() => !!userProfileStore.currentProfile)
