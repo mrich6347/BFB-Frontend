@@ -13,36 +13,19 @@
             </span>
           </div>
         </DialogTitle>
-        <DialogDescription v-if="displayGoal?.description">
-          {{ displayGoal.description }}
+        <DialogDescription>
+          <div v-if="displayGoal?.description" class="mb-1">
+            {{ displayGoal.description }}
+          </div>
+          <div v-if="displayGoal?.target_date" class="text-sm text-muted-foreground">
+            Target Date: {{ formatDate(displayGoal.target_date) }}
+          </div>
         </DialogDescription>
       </DialogHeader>
 
       <div v-if="displayGoal" class="space-y-6">
         <!-- Progress Section -->
-        <div class="space-y-3">
-          <h3 class="text-lg font-medium text-foreground">Progress</h3>
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-muted-foreground">Current Progress</span>
-              <span class="font-medium text-foreground">
-                {{ formatCurrency(displayGoal.current_amount || 0) }} / {{ formatCurrency(displayGoal.target_amount) }}
-              </span>
-            </div>
-            <div class="bg-secondary rounded-full h-3">
-              <div
-                class="bg-primary h-3 rounded-full transition-all duration-300"
-                :style="{ width: `${Math.min((displayGoal.progress_percentage || 0), 100)}%` }"
-              ></div>
-            </div>
-            <div class="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{{ Math.round(displayGoal.progress_percentage || 0) }}% complete</span>
-              <span v-if="displayGoal.target_date">
-                Target: {{ formatDate(displayGoal.target_date) }}
-              </span>
-            </div>
-          </div>
-        </div>
+        <GoalProgressChart :goal="displayGoal" />
 
         <!-- Participant Settings Section (for current user) -->
         <div v-if="currentUserParticipant && showParticipantSettings" class="space-y-3">
@@ -80,28 +63,7 @@
           />
         </div>
 
-        <!-- Goal Info Section -->
-        <div class="space-y-3">
-          <h3 class="text-lg font-medium text-foreground">Goal Information</h3>
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span class="text-muted-foreground">Created by:</span>
-              <p class="font-medium">{{ displayGoal.creator_profile?.display_name || 'Unknown' }}</p>
-            </div>
-            <div>
-              <span class="text-muted-foreground">Created on:</span>
-              <p class="font-medium">{{ formatDate(displayGoal.created_at) }}</p>
-            </div>
-            <div>
-              <span class="text-muted-foreground">Target Amount:</span>
-              <p class="font-medium">{{ formatCurrency(displayGoal.target_amount) }}</p>
-            </div>
-            <div v-if="displayGoal.target_date">
-              <span class="text-muted-foreground">Target Date:</span>
-              <p class="font-medium">{{ formatDate(displayGoal.target_date) }}</p>
-            </div>
-          </div>
-        </div>
+
 
         <!-- Actions Section -->
         <div class="flex items-center justify-between pt-4 border-t border-border">
@@ -160,6 +122,7 @@ import ParticipantList from './ParticipantList.vue'
 import ParticipantSettings from './ParticipantSettings.vue'
 import InviteUserModal from './InviteUserModal.vue'
 import EditGoalModal from './EditGoalModal.vue'
+import GoalProgressChart from './GoalProgressChart.vue'
 import { useGoalInvitations } from '../../composables/shared-goals/useGoalInvitations'
 import { useAuthStore } from '../../stores/auth.store'
 import { useUserProfileStore } from '../../stores/user-profile.store'

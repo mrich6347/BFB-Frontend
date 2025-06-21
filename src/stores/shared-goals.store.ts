@@ -1,13 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, readonly } from 'vue'
-import type { SharedGoalResponse, InvitationResponse, GoalActivityResponse } from '../types/DTO/shared-goal.dto'
+import type { SharedGoalResponse, InvitationResponse } from '../types/DTO/shared-goal.dto'
 
 export const useSharedGoalsStore = defineStore('sharedGoals', () => {
   // State
   const goals = ref<SharedGoalResponse[]>([])
   const currentGoal = ref<SharedGoalResponse | null>(null)
   const invitations = ref<InvitationResponse[]>([])
-  const activities = ref<GoalActivityResponse[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -79,13 +78,7 @@ export const useSharedGoalsStore = defineStore('sharedGoals', () => {
     }
   }
 
-  const setActivities = (newActivities: GoalActivityResponse[]) => {
-    activities.value = newActivities
-  }
 
-  const addActivity = (activity: GoalActivityResponse) => {
-    activities.value.unshift(activity)
-  }
 
   const setLoading = (loading: boolean) => {
     isLoading.value = loading
@@ -103,7 +96,6 @@ export const useSharedGoalsStore = defineStore('sharedGoals', () => {
     goals.value = []
     currentGoal.value = null
     invitations.value = []
-    activities.value = []
     isLoading.value = false
     error.value = null
   }
@@ -113,7 +105,6 @@ export const useSharedGoalsStore = defineStore('sharedGoals', () => {
     goals: readonly(goals),
     currentGoal: readonly(currentGoal),
     invitations: readonly(invitations),
-    activities: readonly(activities),
     isLoading: readonly(isLoading),
     error: readonly(error),
 
@@ -128,8 +119,6 @@ export const useSharedGoalsStore = defineStore('sharedGoals', () => {
     addInvitation,
     updateInvitation,
     removeInvitation,
-    setActivities,
-    addActivity,
     setLoading,
     setError,
     clearError,

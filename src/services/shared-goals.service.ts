@@ -5,7 +5,6 @@ import type {
   CreateInvitationDto,
   InvitationResponse,
   UpdateParticipantDto,
-  GoalActivityResponse,
   GoalProgressResponse
 } from "../types/DTO/shared-goal.dto"
 import api from "./common/api"
@@ -70,9 +69,5 @@ export class SharedGoalsService {
     return response.data
   }
 
-  // Activity operations (to be implemented in Phase 6)
-  static async getGoalActivity(goalId: string): Promise<GoalActivityResponse[]> {
-    const response = await api.get(`/shared-goals/${goalId}/activity`)
-    return response.data
-  }
+
 }
