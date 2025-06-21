@@ -24,7 +24,7 @@
     </header>
 
     <!-- ================= HERO ================= -->
-    <section class="relative overflow-hidden pt-24 pb-48 md:pb-56">
+    <section class="relative overflow-hidden pt-24 pb-32 md:pb-40">
       <!-- Animated Glow Background -->
       <div ref="heroGlow" class="absolute left-1/2 top-0 -translate-x-1/2 -z-10 h-[600px] w-[600px] rounded-full bg-primary/20 blur-3xl opacity-60"></div>
 
@@ -37,7 +37,7 @@
         <!-- Headline & CTA -->
         <div class="flex-1 text-center md:text-left">
           <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight mb-6 animate-fade-in-up">
-            Take&nbsp;Charge of <span class="text-primary">Every&nbsp;Dollar</span>
+            Budget <span class="text-primary">Friendly</span> Budget
           </h1>
           <p class="text-xl md:text-2xl text-muted-foreground mb-10 max-w-xl mx-auto md:mx-0 animate-fade-in-up animation-delay-200">
             Plan, track and smash your financial goals with BFB's effortless budgeting experience.
@@ -52,118 +52,227 @@
       </div>
     </section>
 
-    <!-- ================= STATS ================= -->
-    <section class="relative -mt-24 md:-mt-32 z-10">
+    <!-- ================= FEATURES OVERVIEW ================= -->
+    <section class="py-16 md:py-20">
       <div class="container mx-auto px-4">
-        <StatsSection />
+        <div class="text-center mb-16">
+          <h2 class="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+            Everything You Need to Master Your Money
+          </h2>
+          <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+            BFB combines powerful budgeting tools with collaborative features to help you achieve your financial goals faster than ever before.
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <!-- Feature 1 -->
+          <div class="text-center group">
+            <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+              <div class="w-8 h-8 bg-primary rounded-lg"></div>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-foreground">Smart Categories</h3>
+            <p class="text-muted-foreground">Organize your budget with intelligent category management and real-time balance tracking.</p>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="text-center group">
+            <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+              <div class="w-8 h-8 bg-primary rounded-lg"></div>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-foreground">Team Goals</h3>
+            <p class="text-muted-foreground">Collaborate with family and friends on shared financial goals and savings targets.</p>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="text-center group">
+            <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+              <div class="w-8 h-8 bg-primary rounded-lg"></div>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-foreground">Easy Tracking</h3>
+            <p class="text-muted-foreground">Effortlessly track transactions and monitor your spending patterns with detailed insights.</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Features Section -->
-    <Section variant="muted">
-      <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">Why Choose BFB?</h2>
-      <div class="grid md:grid-cols-3 gap-8">
-        <!-- Feature 1 -->
-        <Card class="transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl">
-          <CardHeader>
-            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <PlusIcon class="h-6 w-6 text-primary" />
+    <!-- ================= CATEGORY BUDGETING FEATURE ================= -->
+    <section class="py-16 md:py-24">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row items-center gap-16">
+          <!-- Content -->
+          <div class="flex-1 text-center lg:text-left">
+            <h2 class="text-3xl md:text-5xl font-bold mb-6 text-foreground">
+              Smart Category <span class="text-primary">Budgeting</span>
+            </h2>
+            <p class="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
+              Organize your finances with intuitive category-based budgeting. Assign every dollar a purpose and watch your financial goals come to life with our clean, modern interface.
+            </p>
+            <div class="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Custom Categories</span>
+              </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Real-time Tracking</span>
+              </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Dark & Light Mode</span>
+              </div>
             </div>
-            <CardTitle>Easy Budgeting</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p class="text-muted-foreground">Create custom budget categories and track your spending with just a few clicks.</p>
-          </CardContent>
-        </Card>
-        
-        <!-- Feature 2 -->
-        <Card class="transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl">
-          <CardHeader>
-            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <PencilIcon class="h-6 w-6 text-primary" />
-            </div>
-            <CardTitle>Financial Goals</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p class="text-muted-foreground">Set and track your financial goals to help you save for what matters most.</p>
-          </CardContent>
-        </Card>
-        
-        <!-- Feature 3 -->
-        <Card class="transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl">
-          <CardHeader>
-            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <HeadphonesIcon class="h-6 w-6 text-primary" />
-            </div>
-            <CardTitle>24/7 Support</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p class="text-muted-foreground">Our team is always available to help you manage your finances better.</p>
-          </CardContent>
-        </Card>
-      </div>
-    </Section>
+          </div>
 
-    <!-- How It Works Section -->
-    <Section class="overflow-hidden">
-      <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">How It Works</h2>
-      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-        <!-- Step 1 -->
-        <div class="flex flex-col items-center text-center animate-fade-in-up">
-          <div class="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold mb-4">1</div>
-          <h3 class="text-xl font-semibold mb-2 text-foreground">Create Your Budget</h3>
-          <p class="text-muted-foreground">Set up your income, expenses, and savings goals in minutes.</p>
-        </div>
-        
-        <!-- Step 2 -->
-        <div class="flex flex-col items-center text-center animate-fade-in-up animation-delay-200">
-          <div class="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold mb-4">2</div>
-          <h3 class="text-xl font-semibold mb-2 text-foreground">Track Spending</h3>
-          <p class="text-muted-foreground">Log your transactions and see where your money is going.</p>
-        </div>
-        
-        <!-- Step 3 -->
-        <div class="flex flex-col items-center text-center animate-fade-in-up animation-delay-400">
-          <div class="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold mb-4">3</div>
-          <h3 class="text-xl font-semibold mb-2 text-foreground">Reach Your Goals</h3>
-          <p class="text-muted-foreground">Watch your savings grow as you stay on track with your budget.</p>
+          <!-- Image Showcase -->
+          <div class="flex-1 relative">
+            <div class="relative max-w-2xl mx-auto">
+              <!-- Main Image -->
+              <img
+                src="/category-budgeting.png"
+                alt="Category Budgeting Interface"
+                class="w-full rounded-2xl shadow-2xl border border-border/50"
+              />
+              <!-- Light Mode Comparison (Floating) -->
+              <div class="absolute -bottom-4 -right-4 w-1/2 opacity-90">
+                <img
+                  src="/category-budgeting-light.png"
+                  alt="Light Mode Category Budgeting"
+                  class="w-full rounded-xl shadow-xl border border-border/50"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </Section>
+    </section>
 
-    <!-- Testimonials Section -->
-    <Section variant="muted" class="overflow-hidden">
-      <TestimonialsSection />
-    </Section>
+    <!-- ================= SHARED GOALS FEATURE ================= -->
+    <section class="py-16 md:py-24">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row-reverse items-center gap-16">
+          <!-- Content -->
+          <div class="flex-1 text-center lg:text-left">
+            <h2 class="text-3xl md:text-5xl font-bold mb-6 text-foreground">
+              Collaborative <span class="text-primary">Shared Goals</span>
+            </h2>
+            <p class="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
+              Team up with family and friends to achieve financial goals together. Track progress, share contributions, and celebrate milestones as a group with our innovative shared savings feature.
+            </p>
+            <div class="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Group Savings</span>
+              </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Progress Tracking</span>
+              </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Team Collaboration</span>
+              </div>
+            </div>
+          </div>
 
-    <!-- CTA Section -->
-    <Section variant="primary" class="relative overflow-hidden">
-      <div class="text-center relative z-10">
-        <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to Take Control of Your Finances?</h2>
-        <p class="text-xl max-w-2xl mx-auto mb-8 text-primary-foreground/90">Join thousands of users who have transformed their financial future with BFB.</p>
-        <Button 
-          @click="handleSignUp" 
-          variant="outline" 
-          size="lg"
-          class="bg-background/10 backdrop-blur-sm hover:bg-background/20 border-primary-foreground/20"
-        >
-          Start Budgeting Now
-        </Button>
+          <!-- Image Showcase -->
+          <div class="flex-1 relative">
+            <div class="relative max-w-2xl mx-auto">
+              <img
+                src="/shared-goals.png"
+                alt="Shared Goals Interface"
+                class="w-full rounded-2xl shadow-2xl border border-border/50"
+              />
+            </div>
+          </div>
+        </div>
       </div>
-    </Section>
+    </section>
+
+    <!-- ================= TRANSACTIONS FEATURE ================= -->
+    <section class="py-16 md:py-24">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row items-center gap-16">
+          <!-- Content -->
+          <div class="flex-1 text-center lg:text-left">
+            <h2 class="text-3xl md:text-5xl font-bold mb-6 text-foreground">
+              Effortless <span class="text-primary">Transaction Tracking</span>
+            </h2>
+            <p class="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
+              Keep tabs on every penny with our comprehensive transaction management system. Categorize expenses, track income, and maintain a clear financial history with ease.
+            </p>
+            <div class="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Quick Entry</span>
+              </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Auto Categorization</span>
+              </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Detailed History</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Image Showcase -->
+          <div class="flex-1 relative">
+            <div class="relative max-w-2xl mx-auto">
+              <img
+                src="/transactions.png"
+                alt="Transaction Management Interface"
+                class="w-full rounded-2xl shadow-2xl border border-border/50"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CTA SECTION ================= -->
+    <section class="py-16 md:py-24 relative overflow-hidden">
+      <!-- Background Glow -->
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 h-[400px] w-[400px] rounded-full bg-primary/10 blur-3xl opacity-60"></div>
+
+      <div class="container mx-auto px-4">
+        <div class="text-center relative z-10 max-w-4xl mx-auto">
+          <h2 class="text-3xl md:text-5xl font-bold mb-6 text-foreground">
+            Ready to Take Control of Your <span class="text-primary">Finances?</span>
+          </h2>
+          <p class="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+            Join thousands of users who have transformed their financial future with BFB's powerful budgeting tools and collaborative features.
+          </p>
+          <div class="flex flex-wrap justify-center gap-4">
+            <Button size="lg" @click="handleSignUp" v-if="!user">
+              Get Started Free
+            </Button>
+            <Button size="lg" variant="outline" @click="handleLogin" v-if="!user">
+              Login
+            </Button>
+            <Button size="lg" @click="router.push('/dashboard')" v-else>
+              Go to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Footer -->
-    <footer class="bg-card border-t border-border py-10">
+    <footer class="border-t border-border/20 py-10">
       <div class="container mx-auto px-4">
         <div class="flex flex-col md:flex-row justify-between items-center">
           <div class="mb-4 md:mb-0">
-            <p class="font-bold text-lg text-card-foreground">Budget Friendly Budget</p>
-            <p class="text-muted-foreground text-sm">© 2023 BFB. All rights reserved.</p>
+            <div class="flex items-center gap-2 mb-2">
+              <WalletIcon class="h-5 w-5 text-primary" />
+              <p class="font-bold text-lg text-foreground">Budget Friendly Budget</p>
+            </div>
+            <p class="text-muted-foreground text-sm">© 2024 BFB. All rights reserved.</p>
           </div>
-          <div class="flex space-x-4">
-            <a href="#" class="text-muted-foreground hover:text-foreground transition-colors">Terms</a>
-            <a href="#" class="text-muted-foreground hover:text-foreground transition-colors">Privacy</a>
-            <a href="#" class="text-muted-foreground hover:text-foreground transition-colors">Contact</a>
+          <div class="flex space-x-6">
+            <a href="#" class="text-muted-foreground hover:text-primary transition-colors text-sm">Terms</a>
+            <a href="#" class="text-muted-foreground hover:text-primary transition-colors text-sm">Privacy</a>
+            <a href="#" class="text-muted-foreground hover:text-primary transition-colors text-sm">Contact</a>
           </div>
         </div>
       </div>
@@ -173,7 +282,7 @@
 
 <script setup lang="ts">
 import ThemeToggle from '@/components/common/ThemeToggle.vue'
-import { PlusIcon, PencilIcon, HeadphonesIcon, WalletIcon } from 'lucide-vue-next'
+import { WalletIcon } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
 import { onMounted, ref } from 'vue'
@@ -182,15 +291,8 @@ import { animate } from 'motion'
 
 // Import shadcn components
 import Button from '@/components/shadcn-ui/button.vue'
-import Card from '@/components/shadcn-ui/card.vue'
-import CardHeader from '@/components/shadcn-ui/card-header.vue'
-import CardTitle from '@/components/shadcn-ui/card-title.vue'
-import CardContent from '@/components/shadcn-ui/card-content.vue'
-import Section from '@/components/shadcn-ui/section.vue'
 
 // Landing additions
-import StatsSection from '@/components/landing/StatsSection.vue'
-import TestimonialsSection from '@/components/landing/TestimonialsSection.vue'
 import FinanceIllustration from '@/components/landing/FinanceIllustration.vue'
 
 const router = useRouter()
@@ -244,5 +346,17 @@ const handleSignUp = () => {
 
 .animation-delay-400 {
   animation-delay: 400ms;
+}
+
+/* Removed hover effects on images for better UX */
+
+/* Smooth scrolling for the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Feature section spacing */
+section {
+  scroll-margin-top: 2rem;
 }
 </style>
