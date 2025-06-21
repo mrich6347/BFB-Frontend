@@ -152,6 +152,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/s
 import Button from '@/components/shadcn-ui/button.vue'
 import { useCategoryStore } from '@/stores/category.store'
 import { useAccountStore } from '@/stores/account.store'
+import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
 import { TransferService } from '@/services/transfer.service'
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { AccountResponse } from '@/types/DTO/account.dto'
@@ -170,6 +171,7 @@ const emit = defineEmits<{
 
 const categoryStore = useCategoryStore()
 const accountStore = useAccountStore()
+const { getTransferOptions } = useAccountOperations()
 const amountType = ref<'inflow' | 'outflow'>('outflow')
 const payeeField = ref(null)
 const transferOptions = ref<AccountResponse[]>([])
@@ -246,7 +248,7 @@ const formData = computed(() => {
 // Load transfer options when component mounts
 onMounted(async () => {
   try {
-    transferOptions.value = await accountStore.getTransferOptions(props.accountId)
+    transferOptions.value = await getTransferOptions(props.accountId)
   } catch (error) {
     console.error('Failed to load transfer options:', error)
     // Don't throw - just continue without transfer options
