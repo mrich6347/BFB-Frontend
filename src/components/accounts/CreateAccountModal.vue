@@ -19,6 +19,7 @@
 
 <script setup lang="ts">
 import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
+import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
 import type { CreateAccountDto } from '@/types/DTO/account.dto'
 import AccountForm from './forms/AccountForm.vue';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
@@ -33,6 +34,7 @@ const emit = defineEmits<{
 }>()
 
 const { createAccount, isLoading } = useAccountOperations()
+const { fetchAllCategoryData } = useCategoryOperations()
 
 const close = () => {
   emit('close')
@@ -40,7 +42,13 @@ const close = () => {
 
 const handleFormSubmit = async (formData: CreateAccountDto) => {
   try {
-    await createAccount(formData)
+    const createdAccount = await createAccount(formData)
+
+    // If this is a credit card account, refresh category data to show the new payment category
+    if (createdAccount.account_type === 'CREDIT') {
+      await fetchAllCategoryData(props.budgetId)
+    }
+
     close()
   } catch (error) {
     // Error is already handled by composable

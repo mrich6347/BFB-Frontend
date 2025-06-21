@@ -55,6 +55,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { AccountResponse } from '@/types/DTO/account.dto'
 import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
+import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
 import { useToast } from 'vue-toast-notification'
 
 const props = defineProps<{
@@ -68,13 +69,21 @@ const emit = defineEmits<{
 }>()
 
 const { closeAccount, isLoading } = useAccountOperations()
+const { fetchAllCategoryData } = useCategoryOperations()
 const $toast = useToast()
 
 const handleCloseAccount = async () => {
   if (!props.account) return
 
   try {
+    const wasCredit = props.account.account_type === 'CREDIT'
     await closeAccount(props.account.id)
+
+    // If this was a credit card account, refresh category data to remove the payment category
+    if (wasCredit) {
+      await fetchAllCategoryData(props.account.budget_id)
+    }
+
     $toast.success('Account closed successfully')
     emit('closed')
     close()

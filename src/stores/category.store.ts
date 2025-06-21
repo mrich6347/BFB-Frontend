@@ -65,16 +65,9 @@ export const useCategoryStore = defineStore('categoryStore', () => {
     return [...categoryGroups.value].sort((a, b) => a.display_order - b.display_order)
   })
 
-  // Filter out Credit Card Payments system group since we no longer support credit accounts
+  // Show all category groups including Credit Card Payments system group
   const visibleCategoryGroups = computed(() => {
     return categoryGroups.value
-      .filter(group => {
-        // Hide Credit Card Payments system group since we don't support credit accounts
-        if (group.is_system_group && group.name === 'Credit Card Payments') {
-          return false
-        }
-        return true
-      })
       .sort((a, b) => a.display_order - b.display_order)
   })
 
