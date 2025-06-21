@@ -36,8 +36,7 @@
           <div class="space-y-3">
             <div class="bg-secondary rounded-full h-3">
               <div
-                :class="getProgressBarColor(goal.progress_percentage || 0)"
-                class="h-3 rounded-full transition-all duration-500 ease-out"
+                class="bg-green-500 h-3 rounded-full transition-all duration-500 ease-out"
                 :style="{ width: `${Math.min((goal.progress_percentage || 0), 100)}%` }"
               ></div>
             </div>

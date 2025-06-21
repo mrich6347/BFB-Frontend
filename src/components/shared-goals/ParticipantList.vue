@@ -59,16 +59,6 @@
                 Settings
               </Button>
               <Button
-                v-if="isCurrentUser(participant) && !isGoalCreator"
-                @click="handleLeaveGoal(participant)"
-                variant="ghost"
-                size="sm"
-                class="text-xs text-destructive hover:text-destructive"
-              >
-                <LogOutIcon class="h-3 w-3 mr-1" />
-                Leave
-              </Button>
-              <Button
                 v-if="isGoalCreator && !isCurrentUser(participant)"
                 @click="handleRemoveParticipant(participant)"
                 variant="ghost"
@@ -101,14 +91,9 @@
     <Dialog :open="showConfirmDialog" @update:open="showConfirmDialog = false">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{{ confirmAction === 'leave' ? 'Leave Goal' : 'Remove Participant' }}</DialogTitle>
+          <DialogTitle>Remove Participant</DialogTitle>
           <DialogDescription>
-            <span v-if="confirmAction === 'leave'">
-              Are you sure you want to leave this goal? You won't be able to rejoin unless invited again.
-            </span>
-            <span v-else>
-              Are you sure you want to remove {{ selectedParticipant?.user_profile.display_name }} from this goal?
-            </span>
+            Are you sure you want to remove {{ selectedParticipant?.user_profile.display_name }} from this goal?
           </DialogDescription>
         </DialogHeader>
         <div class="flex justify-end space-x-3 pt-4">
@@ -121,7 +106,7 @@
             :disabled="isProcessing"
           >
             <span v-if="isProcessing">Processing...</span>
-            <span v-else>{{ confirmAction === 'leave' ? 'Leave Goal' : 'Remove' }}</span>
+            <span v-else>Remove</span>
           </Button>
         </div>
       </DialogContent>
@@ -135,7 +120,6 @@ import {
   UserPlusIcon,
   UsersIcon,
   SettingsIcon,
-  LogOutIcon,
   UserMinusIcon,
   DollarSignIcon
 } from 'lucide-vue-next'
@@ -159,17 +143,15 @@ interface Props {
 interface Emits {
   (e: 'updateParticipant', participant: GoalParticipantResponse): void
   (e: 'participantRemoved', participant: GoalParticipantResponse): void
-  (e: 'leftGoal'): void
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const { leaveGoal, removeParticipant } = useGoalInvitations()
+const { removeParticipant } = useGoalInvitations()
 const userProfileStore = useUserProfileStore()
 
 const showConfirmDialog = ref(false)
-const confirmAction = ref<'leave' | 'remove'>('leave')
 const selectedParticipant = ref<GoalParticipantResponse | null>(null)
 const isProcessing = ref(false)
 
@@ -202,15 +184,8 @@ const canManageParticipant = (participant: GoalParticipantResponse): boolean => 
   return isCurrentUser(participant) || isGoalCreator.value
 }
 
-const handleLeaveGoal = (participant: GoalParticipantResponse) => {
-  selectedParticipant.value = participant
-  confirmAction.value = 'leave'
-  showConfirmDialog.value = true
-}
-
 const handleRemoveParticipant = (participant: GoalParticipantResponse) => {
   selectedParticipant.value = participant
-  confirmAction.value = 'remove'
   showConfirmDialog.value = true
 }
 
@@ -220,22 +195,15 @@ const confirmActionHandler = async () => {
   try {
     isProcessing.value = true
 
-    if (confirmAction.value === 'leave') {
-      const success = await leaveGoal(props.goal.id)
-      if (success) {
-        emit('leftGoal')
-      }
-    } else {
-      // Remove participant functionality
-      const success = await removeParticipant(props.goal.id, selectedParticipant.value.id)
-      if (success) {
-        emit('participantRemoved', selectedParticipant.value)
-      }
+    // Remove participant functionality
+    const success = await removeParticipant(props.goal.id, selectedParticipant.value.id)
+    if (success) {
+      emit('participantRemoved', selectedParticipant.value)
     }
 
     showConfirmDialog.value = false
   } catch (error) {
-    console.error('Failed to process action:', error)
+    console.error('Failed to remove participant:', error)
   } finally {
     isProcessing.value = false
     selectedParticipant.value = null
