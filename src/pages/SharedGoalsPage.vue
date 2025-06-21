@@ -33,12 +33,23 @@
                 {{ invitations.length }}
               </span>
             </button>
+            <!-- Show Create Goal button only if user has a profile -->
             <button
+              v-if="hasUserProfile"
               @click="isCreateModalOpen = true"
               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-colors"
             >
               <PlusIcon class="h-4 w-4 mr-2" />
               Create Goal
+            </button>
+            <!-- Show Create Profile button if user doesn't have a profile -->
+            <button
+              v-else
+              @click="showProfileSetup = true"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+            >
+              <UserPlusIcon class="h-4 w-4 mr-2" />
+              Create Profile First
             </button>
           </div>
         </div>
@@ -73,7 +84,25 @@
         </div>
       </div>
 
-      <!-- Empty State -->
+      <!-- Empty State - No Profile -->
+      <div v-else-if="!hasUserProfile" class="text-center py-12">
+        <UserPlusIcon class="mx-auto h-12 w-12 text-muted-foreground" />
+        <h3 class="mt-2 text-sm font-medium text-foreground">Profile Required</h3>
+        <p class="mt-1 text-sm text-muted-foreground">
+          You need to create a user profile before you can create or participate in shared goals.
+        </p>
+        <div class="mt-6">
+          <button
+            @click="showProfileSetup = true"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+          >
+            <UserPlusIcon class="h-4 w-4 mr-2" />
+            Create Profile
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State - No Goals -->
       <div v-else-if="!goals || goals.length === 0" class="text-center py-12">
         <TargetIcon class="mx-auto h-12 w-12 text-muted-foreground" />
         <h3 class="mt-2 text-sm font-medium text-foreground">No shared goals</h3>
@@ -210,6 +239,13 @@
     @update:is-open="isInviteModalOpen = $event"
     @invitation-sent="handleInvitationSent"
   />
+
+  <!-- User Profile Setup Modal -->
+  <UserProfileSetup
+    :is-open="showProfileSetup"
+    @update:is-open="showProfileSetup = $event"
+    @profile-created="handleProfileCreated"
+  />
 </template>
 
 <script setup lang="ts">
@@ -221,12 +257,14 @@ import { useGoalInvitations } from '../composables/shared-goals/useGoalInvitatio
 import { useSharedGoalsPageData } from '../composables/shared-goals/useSharedGoalsPageData'
 import { useSharedGoalsStore } from '../stores/shared-goals.store'
 import { useBudgetStore } from '../stores/budget.store'
+import { useUserProfileStore } from '../stores/user-profile.store'
 import Sidebar from '../components/Sidebar.vue'
 import CreateGoalModal from '../components/shared-goals/CreateGoalModal.vue'
 import GoalDetailsModal from '../components/shared-goals/GoalDetailsModal.vue'
 import { useAuthStore } from '../stores/auth.store'
 import InviteUserModal from '../components/shared-goals/InviteUserModal.vue'
 import InvitationManager from '../components/shared-goals/InvitationManager.vue'
+import UserProfileSetup from '../components/shared-goals/UserProfileSetup.vue'
 import type { SharedGoalResponse, GoalStatus, InvitationResponse } from '../types/DTO/shared-goal.dto'
 
 const router = useRouter()
@@ -235,6 +273,7 @@ const { leaveGoal } = useGoalInvitations()
 const { refreshPageData, isRefreshing, refreshError, clearRefreshError } = useSharedGoalsPageData()
 const sharedGoalsStore = useSharedGoalsStore()
 const budgetStore = useBudgetStore()
+const userProfileStore = useUserProfileStore()
 const authStore = useAuthStore()
 
 const isCreateModalOpen = ref(false)
@@ -243,11 +282,13 @@ const selectedGoal = ref<SharedGoalResponse | null>(null)
 const isInviteModalOpen = ref(false)
 const selectedGoalForInvite = ref<SharedGoalResponse | null>(null)
 const showInvitations = ref(false)
+const showProfileSetup = ref(false)
 
 // Computed
 const goals = computed(() => sharedGoalsStore.goals)
 const invitations = computed(() => sharedGoalsStore.invitations)
 const currentBudgetId = computed(() => budgetStore.currentBudget?.id || '')
+const hasUserProfile = computed(() => !!userProfileStore.currentProfile)
 
 // Methods
 const formatCurrency = (amount: number): string => {
@@ -374,6 +415,12 @@ const handleRefreshData = async () => {
       console.error('Failed to refresh shared goals page data manually')
     }
   }
+}
+
+const handleProfileCreated = () => {
+  console.log('Profile created successfully')
+  // The profile is already updated in the store by the composable
+  // The UI will automatically update to show the Create Goal button
 }
 
 // Refresh shared goals data when page is mounted to ensure fresh data
