@@ -218,6 +218,13 @@
                 >
                   Leave Goal
                 </button>
+                <button
+                  v-if="isGoalCreator(goal)"
+                  @click.stop="handleDeleteGoal(goal)"
+                  class="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  Delete Goal
+                </button>
               </div>
               <div class="flex items-center space-x-2">
                 <button
@@ -325,6 +332,13 @@
                     >
                       Leave Goal
                     </button>
+                    <button
+                      v-if="isGoalCreator(goal)"
+                      @click.stop="handleDeleteGoal(goal)"
+                      class="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      Delete Goal
+                    </button>
                   </div>
                   <div class="flex items-center space-x-2">
                     <button
@@ -397,7 +411,7 @@ import UserProfileSetup from '../components/shared-goals/UserProfileSetup.vue'
 import type { SharedGoalResponse, GoalStatus, InvitationResponse } from '../types/DTO/shared-goal.dto'
 
 const router = useRouter()
-const { isLoading, error } = useSharedGoalOperations()
+const { isLoading, error, deleteGoal } = useSharedGoalOperations()
 const { leaveGoal } = useGoalInvitations()
 const { refreshPageData, isRefreshing, refreshError, clearRefreshError } = useSharedGoalsPageData()
 const sharedGoalsStore = useSharedGoalsStore()
@@ -454,7 +468,7 @@ const getStatusClasses = (status: GoalStatus): string => {
 }
 
 const isGoalCreator = (goal: any): boolean => {
-  return goal.created_by === authStore.userProfile?.id
+  return goal.created_by === userProfileStore.currentProfile?.id
 }
 
 const handleGoalClick = (goal: any) => {
@@ -524,6 +538,15 @@ const handleLeaveGoal = async (goal: any) => {
     const success = await leaveGoal(goal.id)
     if (success) {
       console.log('Left goal:', goal.name)
+    }
+  }
+}
+
+const handleDeleteGoal = async (goal: any) => {
+  if (confirm(`Are you sure you want to delete "${goal.name}"? This will permanently delete the goal for all participants and cannot be undone.`)) {
+    const success = await deleteGoal(goal.id)
+    if (success) {
+      console.log('Deleted goal:', goal.name)
     }
   }
 }
