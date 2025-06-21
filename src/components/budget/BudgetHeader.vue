@@ -44,13 +44,17 @@
       <button
         v-for="filter in filters"
         :key="filter.id"
+        :disabled="!filter.enabled"
         :class="[
-          'px-2.5 py-0.5 text-sm rounded-md transition-colors cursor-pointer',
-          selectedFilter === filter.id
+          'px-2.5 py-0.5 text-sm rounded-md transition-colors',
+          filter.enabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50',
+          selectedFilter === filter.id && filter.enabled
             ? 'bg-primary/15 text-primary'
-            : 'bg-secondary text-secondary-foreground'
+            : filter.enabled
+            ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+            : 'bg-secondary/50 text-secondary-foreground/50'
         ]"
-        @click="selectedFilter = filter.id"
+        @click="handleFilterClick(filter)"
       >
         {{ filter.name }}
       </button>
@@ -78,17 +82,31 @@ import { useCategoryOperations } from '@/composables/categories/useCategoryOpera
 import AssignMoneyModal from './AssignMoneyModal.vue'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 
+// Define emits
+const emit = defineEmits<{
+  filterChanged: [filter: string]
+}>()
+
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
 const { updateCategoryBalance } = useCategoryOperations()
 
 const selectedFilter = ref('all')
 
-const filters = [
-  { id: 'all', name: 'All' },
-  { id: 'overspent', name: 'Overspent' },
-  { id: 'moneyAvailable', name: 'Money Available' }
-]
+// Computed properties to check if filters should be enabled
+const hasOverspentCategories = computed(() => {
+  return categoryStore.getCategoriesWithBalances.some(category => category.available < 0)
+})
+
+const hasMoneyAvailableCategories = computed(() => {
+  return categoryStore.getCategoriesWithBalances.some(category => category.available > 0)
+})
+
+const filters = computed(() => [
+  { id: 'all', name: 'All', enabled: true },
+  { id: 'overspent', name: 'Overspent', enabled: hasOverspentCategories.value },
+  { id: 'moneyAvailable', name: 'Money Available', enabled: hasMoneyAvailableCategories.value }
+])
 
 // Assign money modal state
 const showAssignModal = ref(false)
@@ -112,6 +130,13 @@ const readyToAssignColorClass = computed(() => {
 })
 
 // Event handlers
+const handleFilterClick = (filter: { id: string; name: string; enabled: boolean }) => {
+  if (!filter.enabled) return
+
+  selectedFilter.value = filter.id
+  emit('filterChanged', filter.id)
+}
+
 const handleAssignClick = (event: MouseEvent) => {
   if (budgetStore.readyToAssign <= 0) return
 

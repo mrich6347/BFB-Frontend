@@ -292,6 +292,11 @@ import CalculationInput from './CalculationInput.vue'
 import draggable from 'vuedraggable'
 import { saveExpandedGroups, loadExpandedGroups } from '@/utils/expandedGroupsStorage'
 
+// Props
+const props = defineProps<{
+  activeFilter?: string
+}>()
+
 const categoryStore = useCategoryStore()
 const {
   moveMoney,
@@ -314,10 +319,23 @@ const sortedCategoryGroups = computed(() => {
 })
 
 // Computed property to separate regular groups from hidden categories group
+// Also filters out groups that have no visible categories when a filter is applied
 const regularCategoryGroups = computed(() => {
-  return sortedCategoryGroups.value.filter(group =>
-    !(group.name === 'Hidden Categories' && group.is_system_group)
-  )
+  return sortedCategoryGroups.value.filter(group => {
+    // Always exclude Hidden Categories system group
+    if (group.name === 'Hidden Categories' && group.is_system_group) {
+      return false
+    }
+
+    // If no filter is applied, show all groups
+    if (!props.activeFilter || props.activeFilter === 'all') {
+      return true
+    }
+
+    // Check if this group has any categories that match the current filter
+    const categoriesInGroup = getCategoriesForGroup(group.id)
+    return categoriesInGroup.length > 0
+  })
 })
 
 const hiddenCategoriesGroup = computed(() => {
@@ -338,9 +356,24 @@ watch(() => regularCategoryGroups.value, (newGroups) => {
   categoryGroupsList.value = [...newGroups]
 }, { immediate: true })
 
-// Get categories for a specific group
+// Get categories for a specific group with filtering applied
 const getCategoriesForGroup = (groupId: string) => {
-  return categoryStore.getCategoriesByGroupWithBalances(groupId)
+  const categories = categoryStore.getCategoriesByGroupWithBalances(groupId)
+
+  // Apply filter if specified
+  if (!props.activeFilter || props.activeFilter === 'all') {
+    return categories
+  }
+
+  if (props.activeFilter === 'overspent') {
+    return categories.filter(category => category.available < 0)
+  }
+
+  if (props.activeFilter === 'moneyAvailable') {
+    return categories.filter(category => category.available > 0)
+  }
+
+  return categories
 }
 
 // Get categories from the reactive categoryLists
@@ -411,6 +444,22 @@ watch(() => sortedCategoryGroups.value, (newGroups) => {
     }
   })
 }, { immediate: true })
+
+// Watch for changes in active filter and update the categoryLists
+watch(() => props.activeFilter, () => {
+  // Update existing arrays in place to maintain reactivity with draggable components
+  sortedCategoryGroups.value.forEach(group => {
+    const newCategoriesForGroup = getCategoriesForGroup(group.id)
+
+    if (categoryLists[group.id]) {
+      // Update existing array in place
+      categoryLists[group.id].splice(0, categoryLists[group.id].length, ...newCategoriesForGroup)
+    } else {
+      // Create new array if it doesn't exist
+      categoryLists[group.id] = [...newCategoriesForGroup]
+    }
+  })
+})
 
 // Watch for changes in the current budget ID to load the appropriate expanded groups
 watch(() => budgetStore.currentBudget?.id, (newBudgetId) => {

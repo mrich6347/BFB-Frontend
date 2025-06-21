@@ -8,11 +8,11 @@
       <div class="flex-1 flex flex-col">
         <!-- Sticky Budget Header -->
         <div class="sticky top-0 z-10">
-          <BudgetHeader />
+          <BudgetHeader @filter-changed="handleFilterChanged" />
         </div>
         <!-- Scrollable Category List -->
         <div class="flex-1 overflow-auto p-4">
-          <BudgetCategoryList ref="categoryListRef" />
+          <BudgetCategoryList ref="categoryListRef" :active-filter="activeFilter" />
         </div>
       </div>
       <AutoAssignPanel @categories-assigned="handleCategoriesAssigned" />
@@ -43,6 +43,9 @@ const budgetId = route.params.budgetId as string
 // Reference to the category list component
 const categoryListRef = ref<InstanceType<typeof BudgetCategoryList> | null>(null)
 
+// Filter state
+const activeFilter = ref('all')
+
 onMounted(async () => {
   // Ensure we're showing the current month
   ensureCurrentMonth()
@@ -55,6 +58,11 @@ onMounted(async () => {
     await router.push('/dashboard')
   }
 })
+
+// Handle filter change from BudgetHeader
+const handleFilterChanged = (filter: string) => {
+  activeFilter.value = filter
+}
 
 // Handle categories assigned event from AutoAssignPanel
 const handleCategoriesAssigned = (categoryIds: string[]) => {
