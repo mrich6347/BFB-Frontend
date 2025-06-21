@@ -88,7 +88,7 @@ import type { AccountResponse } from '@/types/DTO/account.dto'
 import { formatCurrency } from '@/utils/currencyUtil'
 import { parseFormattedNumberToDecimal } from '@/utils/numberFormatUtil'
 import { TrackingAccountService } from '@/services/tracking-account.service'
-import { useAccountStore } from '@/stores/account.store'
+import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
 import { useToast } from 'vue-toast-notification'
 
 const props = defineProps<{
@@ -101,7 +101,7 @@ const emit = defineEmits<{
   (e: 'updated'): void
 }>()
 
-const accountStore = useAccountStore()
+const { setAccountBalance } = useAccountOperations()
 const toast = useToast()
 const isLoading = ref(false)
 
@@ -142,13 +142,13 @@ const handleSubmit = async (data: any) => {
       return
     }
 
-    await TrackingAccountService.updateBalance(props.account.id, {
+    const response = await TrackingAccountService.updateBalance(props.account.id, {
       new_balance: newBalance,
       memo: data.memo || ''
     })
 
-    // Update account in store
-    accountStore.updateAccountBalance(props.account.id, newBalance - currentBalance, true)
+    // Update account in store using the response data
+    setAccountBalance(props.account.id, response.account)
 
     toast.success('Balance updated successfully')
     emit('updated')

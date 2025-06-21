@@ -15,7 +15,7 @@ const api = axios.create({
 api.interceptors.request.use(async (config) => {
     try {
         const authStore = useAuthStore();
-        
+
         // Periodically check ban status (every 5 minutes)
         await authStore.checkBanStatus();
 
@@ -44,7 +44,7 @@ api.interceptors.response.use(
         if (error.response) {
             // The request was made and the server responded with a status code outside of 2xx
             const responseData = error.response.data;
-            
+
             if (responseData && responseData.message) {
                 errorMessage = responseData.message;
             } else if (responseData && responseData.error) {

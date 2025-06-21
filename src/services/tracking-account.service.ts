@@ -1,15 +1,13 @@
 import api from './common/api'
+import type { CloseAccountResponse } from '@/types/DTO/account.dto'
 
 export interface UpdateBalanceDto {
   new_balance: number
   memo?: string
 }
 
-export interface UpdateBalanceResponse {
-  account: any // AccountResponse
-  adjustmentTransaction?: any // TransactionResponse
-  readyToAssign: number
-}
+// Use the same response type as reconcile account since they have the same structure
+export type UpdateBalanceResponse = CloseAccountResponse
 
 export interface BalanceHistoryPoint {
   date: string
