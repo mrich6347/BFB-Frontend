@@ -36,18 +36,17 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { onMounted, ref, computed, watch } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import TrackingAccountHeader from '@/components/tracking/TrackingAccountHeader.vue'
 import BalanceHistoryChart from '@/components/tracking/BalanceHistoryChart.vue'
 import BalanceHistoryList from '@/components/tracking/BalanceHistoryList.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useAccountStore } from '@/stores/account.store'
-import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
+import { useBalanceHistory } from '@/composables/tracking/useBalanceHistory'
 
 const route = useRoute()
 const accountStore = useAccountStore()
-const { ensureDataLoaded } = useMainDataOperations()
 
 // Make route parameters reactive
 const accountId = computed(() => route.params.accountId as string)
@@ -55,27 +54,22 @@ const budgetId = computed(() => route.params.budgetId as string)
 const isLoading = ref(true)
 const chartKey = ref(0) // Used to force chart re-render
 
+// Use balance history composable for refreshing data
+const { refreshBalanceHistory } = useBalanceHistory(accountId.value)
+
 const account = computed(() => {
   return accountStore.accounts.find(acc => acc.id === accountId.value)
 })
 
-const loadMainData = async () => {
-  try {
-    isLoading.value = true
-    // Ensure data is loaded for this budget (will be no-op if already loaded by App.vue)
-    await ensureDataLoaded(budgetId.value)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const handleBalanceUpdated = () => {
-  // Force chart to re-render with updated data
+const handleBalanceUpdated = async () => {
+  // Refresh balance history data and force chart to re-render
+  await refreshBalanceHistory()
   chartKey.value++
 }
 
-onMounted(loadMainData)
-
-// Watch for route changes and reload data if needed
-watch([budgetId], loadMainData)
+onMounted(() => {
+  // Tracking account pages are always accessed from within a budget context
+  // so main data should already be loaded. Just set loading to false.
+  isLoading.value = false
+})
 </script>

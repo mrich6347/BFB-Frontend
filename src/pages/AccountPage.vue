@@ -45,18 +45,9 @@ const account = computed(() => {
   return accountStore.accounts.find(acc => acc.id === accountId.value)
 })
 
-const loadMainData = async () => {
-  try {
-    isLoading.value = true
-    // Ensure data is loaded for this budget (will be no-op if already loaded by App.vue)
-    await ensureDataLoaded(budgetId.value)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-onMounted(loadMainData)
-
-// Watch for route changes and reload data if needed
-watch([budgetId], loadMainData)
+onMounted(() => {
+  // Account pages are always accessed from within a budget context
+  // so main data should already be loaded. Just set loading to false.
+  isLoading.value = false
+})
 </script>

@@ -61,9 +61,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { TrackingAccountService, type BalanceHistoryPoint } from '@/services/tracking-account.service'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { formatCurrency } from '@/utils/currencyUtil'
+import { useBalanceHistory } from '@/composables/tracking/useBalanceHistory'
 
 const props = defineProps<{
   accountId: string
@@ -71,24 +71,8 @@ const props = defineProps<{
 
 const ITEMS_PER_PAGE = 10
 
-const isLoading = ref(true)
-const error = ref<string | null>(null)
-const balanceHistory = ref<BalanceHistoryPoint[]>([])
+const { balanceHistory, isLoading, error, loadBalanceHistory } = useBalanceHistory(props.accountId)
 const showAll = ref(false)
-
-const loadBalanceHistory = async () => {
-  try {
-    isLoading.value = true
-    error.value = null
-    balanceHistory.value = await TrackingAccountService.getBalanceHistory(props.accountId)
-    // Backend returns newest first
-  } catch (err) {
-    console.error('Failed to load balance history:', err)
-    error.value = 'Failed to load balance history'
-  } finally {
-    isLoading.value = false
-  }
-}
 
 const displayedHistory = computed(() => {
   if (showAll.value || balanceHistory.value.length <= ITEMS_PER_PAGE) {
