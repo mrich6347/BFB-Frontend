@@ -65,9 +65,17 @@ export const useCategoryStore = defineStore('categoryStore', () => {
     return [...categoryGroups.value].sort((a, b) => a.display_order - b.display_order)
   })
 
-  // Removed CREDIT account type support - all category groups are now visible
+  // Filter out Credit Card Payments system group since we no longer support credit accounts
   const visibleCategoryGroups = computed(() => {
-    return categoryGroups.value.sort((a, b) => a.display_order - b.display_order)
+    return categoryGroups.value
+      .filter(group => {
+        // Hide Credit Card Payments system group since we don't support credit accounts
+        if (group.is_system_group && group.name === 'Credit Card Payments') {
+          return false
+        }
+        return true
+      })
+      .sort((a, b) => a.display_order - b.display_order)
   })
 
   // State mutations
