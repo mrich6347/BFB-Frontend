@@ -212,6 +212,12 @@ export const useCategoryStore = defineStore('categoryStore', () => {
         ...updatedBalance,
         is_optimistic: false
       }
+    } else {
+      // Category balance doesn't exist yet - add it (this happens when a new category balance is created)
+      categoryBalances.value.push({
+        ...updatedBalance,
+        is_optimistic: false
+      })
     }
   }
 

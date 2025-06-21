@@ -59,28 +59,57 @@ export const useUpdateCategoryBalance = () => {
 
       // Step 2: Apply optimistic updates specific to category balance update
       const currentBalance = categoryStore.categoryBalances.find(b => b.category_id === categoryId)
-      if (!currentBalance) {
-        throw new Error('Category balance not found')
-      }
 
-      const assignedDifference = assigned - currentBalance.assigned
+      let assignedDifference: number
+      let updatedBalances: CategoryBalanceResponse[]
+
+      if (!currentBalance) {
+        // Category balance doesn't exist yet - create it optimistically
+        const category = categoryStore.categories.find(c => c.id === categoryId)
+        if (!category) {
+          throw new Error('Category not found')
+        }
+
+        const now = new Date()
+        const newBalance: CategoryBalanceResponse = {
+          id: `temp-${categoryId}`, // Temporary ID
+          category_id: categoryId,
+          budget_id: category.budget_id,
+          user_id: '', // Will be set by server
+          year: now.getFullYear(),
+          month: now.getMonth() + 1,
+          assigned: assigned,
+          activity: 0,
+          available: assigned, // For new categories, available = assigned initially
+          created_at: now,
+          updated_at: now,
+          is_optimistic: true
+        }
+
+        assignedDifference = assigned // Full amount since starting from 0
+        updatedBalances = [...categoryStore.categoryBalances, newBalance]
+      } else {
+        // Category balance exists - update it
+        assignedDifference = assigned - currentBalance.assigned
+
+        updatedBalances = categoryStore.categoryBalances.map(balance => {
+          if (balance.category_id === categoryId) {
+            const assignedDifference = assigned - balance.assigned
+
+            return {
+              ...balance,
+              assigned: assigned,
+              available: balance.available + assignedDifference,
+              is_optimistic: true
+            }
+          }
+          return balance
+        })
+      }
 
       const newReadyToAssign = budgetStore.readyToAssign - assignedDifference
       budgetStore.setReadyToAssign(newReadyToAssign)
 
-      const updatedBalances = categoryStore.categoryBalances.map(balance => {
-        if (balance.category_id === categoryId) {
-          const assignedDifference = assigned - balance.assigned
-
-          return {
-            ...balance,
-            assigned: assigned,
-            available: balance.available + assignedDifference,
-            is_optimistic: true
-          }
-        }
-        return balance
-      })
       categoryStore.setCategoryBalances(updatedBalances)
 
       // Step 3: Call the actual server operation (passed as parameter)
