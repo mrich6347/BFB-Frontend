@@ -1,22 +1,17 @@
 <template>
-  <div class="relative min-h-screen">
-    <div v-if="isLoading" class="flex justify-center items-center min-h-screen">
-      <LoadingSpinner />
-    </div>
-    <div v-else class="flex h-screen">
-      <Sidebar :budgetId="budgetId" />
-      <div class="flex-1 flex flex-col">
-        <!-- Sticky Budget Header -->
-        <div class="sticky top-0 z-10">
-          <BudgetHeader @filter-changed="handleFilterChanged" />
-        </div>
-        <!-- Scrollable Category List -->
-        <div class="flex-1 overflow-auto p-4">
-          <BudgetCategoryList ref="categoryListRef" :active-filter="activeFilter" />
-        </div>
+  <div class="flex h-screen">
+    <Sidebar :budgetId="budgetId" />
+    <div class="flex-1 flex flex-col">
+      <!-- Sticky Budget Header -->
+      <div class="sticky top-0 z-10">
+        <BudgetHeader @filter-changed="handleFilterChanged" />
       </div>
-      <AutoAssignPanel @categories-assigned="handleCategoriesAssigned" />
+      <!-- Scrollable Category List -->
+      <div class="flex-1 overflow-auto p-4">
+        <BudgetCategoryList ref="categoryListRef" :active-filter="activeFilter" />
+      </div>
     </div>
+    <AutoAssignPanel @categories-assigned="handleCategoriesAssigned" />
   </div>
 </template>
 
@@ -28,7 +23,6 @@ import Sidebar from '@/components/Sidebar.vue'
 import BudgetHeader from '@/components/budget/BudgetHeader.vue'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useBudgetOperations } from '@/composables/budgets/useBudgetOperations'
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 import BudgetCategoryList from '@/components/budget/BudgetCategoryList.vue'
 import AutoAssignPanel from '@/components/budget/AutoAssignPanel.vue'
@@ -37,7 +31,7 @@ const route = useRoute()
 const router = useRouter()
 const budgetStore = useBudgetStore()
 const { ensureCurrentMonth } = useBudgetOperations()
-const { ensureDataLoaded, isLoading } = useMainDataOperations()
+const { ensureDataLoaded } = useMainDataOperations()
 const budgetId = route.params.budgetId as string
 
 // Reference to the category list component

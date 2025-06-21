@@ -9,6 +9,12 @@ import { useSharedGoalsStore } from '../../stores/shared-goals.store'
 import type { MainDataResponse } from '../../types/DTO/mainData.dto'
 import type { UserDateContext } from '../../utils/dateContext'
 
+// Global state to track which budget has been loaded
+// This persists across different composable instances
+const globalLastLoadedBudgetId = ref<string | null>(null)
+const globalIsLoading = ref(false)
+const globalError = ref<string | null>(null)
+
 export function useMainDataOperations() {
   const budgetStore = useBudgetStore()
   const accountStore = useAccountStore()
@@ -17,9 +23,10 @@ export function useMainDataOperations() {
   const userProfileStore = useUserProfileStore()
   const sharedGoalsStore = useSharedGoalsStore()
 
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
-  const lastLoadedBudgetId = ref<string | null>(null)
+  // Use global state instead of local refs
+  const isLoading = globalIsLoading
+  const error = globalError
+  const lastLoadedBudgetId = globalLastLoadedBudgetId
 
   const clearError = () => {
     error.value = null
@@ -153,9 +160,22 @@ export function useMainDataOperations() {
   }
 
   const isDataLoadedForBudget = computed(() => (budgetId: string) => {
-    return lastLoadedBudgetId.value === budgetId &&
-           budgetStore.currentBudget?.id === budgetId &&
-           !isLoading.value
+    // Check if we have a successful load recorded for this budget
+    const hasLoadedBudget = lastLoadedBudgetId.value === budgetId
+
+    // Check if the budget store has the current budget set
+    const hasBudgetData = budgetStore.currentBudget?.id === budgetId
+
+    // Check if we have essential data in other stores (categories are a good indicator)
+    const hasCategoryData = categoryStore.categories.length > 0 && !categoryStore.isLoading
+
+    // Check if we have account data
+    const hasAccountData = accountStore.accounts.length > 0
+
+    // Not currently loading
+    const notLoading = !isLoading.value
+
+    return hasLoadedBudget && hasBudgetData && hasCategoryData && hasAccountData && notLoading
   })
 
   const needsDataLoad = computed(() => (budgetId: string) => {

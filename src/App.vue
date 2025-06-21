@@ -5,12 +5,13 @@ import { RouterView } from 'vue-router'
 import { useTheme } from '@/composables/common/useTheme'
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 import { getLastVisitedBudget, saveLastVisitedBudget } from '@/utils/lastVisitedBudgetStorage'
+import AppLoader from '@/components/common/AppLoader.vue'
 
 // Initialize theme
 useTheme()
 
 // Initialize main data operations
-const { loadMainData, clearError, isLoading, error } = useMainDataOperations()
+const { ensureDataLoaded, clearError, isLoading, error } = useMainDataOperations()
 const route = useRoute()
 const router = useRouter()
 
@@ -20,13 +21,13 @@ onMounted(async () => {
   const budgetId = route.params?.budgetId as string
 
   if (budgetId) {
-    // We're on a budget route, load data for this budget
-    try {
-      clearError()
-      await loadMainData(budgetId)
+    // We're on a budget route, ensure data is loaded for this budget
+    clearError()
+    const success = await ensureDataLoaded(budgetId)
+
+    if (success) {
       saveLastVisitedBudget(budgetId)
-    } catch (error) {
-      console.error('Failed to load main data:', error)
+    } else {
       // Redirect to dashboard on error
       await router.push('/dashboard')
     }
@@ -43,12 +44,7 @@ onMounted(async () => {
 
 <template>
   <!-- Global loading overlay -->
-  <div v-if="isLoading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
-      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-      <span class="text-gray-700">Loading budget data...</span>
-    </div>
-  </div>
+  <AppLoader :loading="isLoading" />
 
   <!-- Global error notification -->
   <div v-if="error" class="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50 max-w-md">
