@@ -110,10 +110,13 @@
                   >
                     <div class="flex items-center truncate">
                       <GripVertical
+                        v-if="!isCreditCardPaymentCategory(category)"
                         class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
                       />
+                      <div v-else class="h-3.5 w-3.5 mr-2"></div> <!-- Spacer for credit card payment categories -->
                       <span class="truncate">{{ category.name }}</span>
                       <Edit
+                        v-if="!isCreditCardPaymentCategory(category)"
                         class="h-3.5 w-3.5 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
                         @click="openEditCategoryModal(category)"
                       />
@@ -581,7 +584,14 @@ const onChange = async (event: any, groupId: string) => {
     return
   }
 
-  // Categories can be reordered freely now
+  // Prevent reordering of credit card payment categories
+  const movedCategory = event.moved.element
+  if (isCreditCardPaymentCategory(movedCategory)) {
+    console.log('Cannot reorder credit card payment categories')
+    // Revert the change by resetting the list
+    categoryLists[groupId] = [...getCategoriesForGroup(groupId)]
+    return
+  }
 
   console.log('Drag event detected:', event)
 
@@ -619,6 +629,12 @@ const getBadgeVariant = (amount: number | undefined | null): 'positive' | 'negat
   if (amount < 0) return 'negative'
   if (amount === 0) return 'neutral'
   return 'positive'
+}
+
+// Check if a category is a credit card payment category (non-editable)
+const isCreditCardPaymentCategory = (category: CategoryResponse): boolean => {
+  const categoryGroup = categoryStore.getCategoryGroupById(category.category_group_id)
+  return categoryGroup?.name === 'Credit Card Payments' && categoryGroup?.is_system_group === true
 }
 
 
