@@ -13,20 +13,30 @@
       </div>
 
       <!-- Applying Animation Overlay -->
-      <div v-if="isApplying" class="absolute inset-0 bg-black/50 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+      <div v-if="isApplying" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-background border border-border rounded-xl shadow-2xl p-8 max-w-lg mx-4 min-w-[400px] w-full max-h-[80vh] transform transition-all duration-300 ease-out">
           <div class="text-center">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <h3 class="text-lg font-semibold mb-2">Applying Configuration</h3>
-            <p class="text-sm text-gray-600 mb-4">{{ applyingMessage }}</p>
-            <div class="space-y-2">
+            <!-- Enhanced Loading Spinner -->
+            <div class="relative mb-6">
+              <div class="animate-spin rounded-full h-12 w-12 border-4 border-muted border-t-primary mx-auto"></div>
+              <div class="absolute inset-0 rounded-full h-12 w-12 border-4 border-transparent border-t-primary/30 animate-ping mx-auto"></div>
+            </div>
+
+            <!-- Title with better typography -->
+            <h3 class="text-xl font-bold mb-3 text-foreground">Applying Configuration</h3>
+            <p class="text-sm text-muted-foreground mb-6 leading-relaxed">{{ applyingMessage }}</p>
+
+            <!-- Applied Categories List -->
+            <div v-if="appliedCategories.length > 0" class="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
               <div
-                v-for="category in appliedCategories"
+                v-for="(category, index) in appliedCategories"
                 :key="category.category_id"
-                class="flex items-center justify-between text-sm p-2 bg-green-50 rounded border-l-4 border-green-400 animate-pulse"
+                class="flex items-center justify-between text-sm p-3 rounded-lg transition-all duration-300 ease-in-out success-item"
+                :style="{ animationDelay: `${index * 100}ms` }"
+                :class="{ 'animate-slideInUp': true }"
               >
-                <span class="font-medium">{{ getCategoryName(category.category_id) }}</span>
-                <span class="text-green-600 font-semibold">+{{ formatCurrency(category.amount) }}</span>
+                <span class="font-medium text-foreground truncate mr-2">{{ getCategoryName(category.category_id) }}</span>
+                <span class="font-bold whitespace-nowrap success-amount">+{{ formatCurrency(category.amount) }}</span>
               </div>
             </div>
           </div>
@@ -123,6 +133,7 @@ import { useAutoAssignStore } from '@/stores/auto-assign.store'
 import { useAutoAssignOperations } from '@/composables/auto-assign/useAutoAssignOperations'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
+import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
 import { formatCurrency } from '@/utils/currencyUtil'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import AutoAssignConfigModal from './AutoAssignConfigModal.vue'
@@ -144,6 +155,7 @@ const {
 } = useAutoAssignOperations()
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
+const { fetchCategoryBalances } = useCategoryOperations()
 
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
@@ -190,7 +202,7 @@ const applyConfiguration = async (config: AutoAssignConfigurationSummary) => {
       applyingMessage.value = `Successfully applied to ${result.appliedCount} categories!`
 
       // Refresh category data to show updated balances first
-      await categoryStore.fetchCategoryBalances(budgetStore.currentBudget!.id)
+      await fetchCategoryBalances(budgetStore.currentBudget!.id)
 
       // THEN emit event to trigger flash animation on category rows (after server responds)
       const categoryIds = result.appliedCategories.map(cat => cat.category_id)
@@ -254,4 +266,55 @@ onMounted(() => {
   width: 320px;
   min-width: 320px;
 }
+
+/* Custom animations for the applying modal */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideInUp {
+  animation: slideInUp 0.4s ease-out forwards;
+}
+
+/* Success styling using CSS custom properties */
+.success-item {
+  background-color: color-mix(in srgb, var(--success) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 20%, transparent);
+}
+
+.success-amount {
+  color: var(--success);
+}
+
+/* Enhanced backdrop blur effect */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+/* Custom scrollbar for the applied categories list */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+
 </style>
