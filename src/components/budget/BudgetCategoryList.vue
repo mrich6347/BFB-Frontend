@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-1">
+  <div class="space-y-1 pb-16">
     <!-- Loading State -->
     <div v-if="categoryStore.isLoading" class="flex justify-center items-center min-h-[200px]">
       <div class="text-muted-foreground">Loading categories...</div>
@@ -56,10 +56,8 @@
             >
               <div class="flex items-center truncate">
                 <GripVertical
-                  v-if="!group.is_system_group"
                   class="h-4 w-4 mr-1 text-muted-foreground cursor-grab group-drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
                 />
-                <div v-else class="h-4 w-4 mr-1"></div> <!-- Spacer for system groups -->
                 <ChevronDownIcon v-if="expandedGroups.has(group.id)" class="h-4 w-4 mr-1 flex-shrink-0" />
                 <ChevronRightIcon v-else class="h-4 w-4 mr-1 flex-shrink-0" />
                 <span class="flex items-center gap-1 truncate">
@@ -540,14 +538,7 @@ const onGroupChange = async (event: any) => {
     return
   }
 
-  // Prevent reordering of system groups
-  const movedGroup = event.moved.element
-  if (movedGroup.is_system_group) {
-    console.log('Cannot reorder system groups')
-    // Revert the change by resetting the list
-    categoryGroupsList.value = [...sortedCategoryGroups.value]
-    return
-  }
+  // Allow reordering of all groups, including system groups like Credit Card Payments
 
   console.log('Group drag event detected:', event)
 
