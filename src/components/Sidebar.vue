@@ -151,7 +151,7 @@
           class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-destructive bg-background dark:bg-background rounded-lg border border-border dark:border-border mb-2"
         >
           <DatabaseIcon class="w-5 h-5 mr-2" />
-          Nuke Database
+          Nuke Database (ALL USERS)
         </button>
         <button @click="showPopulateDatabaseConfirm = true"
           class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-600 bg-background dark:bg-background rounded-lg border border-border dark:border-border mb-2"
@@ -199,12 +199,17 @@
   <Dialog :open="showNukeDatabaseConfirm" @update:open="(value) => !value && (showNukeDatabaseConfirm = false)">
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
-        <DialogTitle class="text-destructive">Nuke Database</DialogTitle>
+        <DialogTitle class="text-destructive">Nuke Database - ALL USERS</DialogTitle>
         <DialogDescription>
-          This will permanently delete all your data including budgets, accounts, categories, and transactions. This action cannot be undone.
+          This will permanently delete ALL data for ALL users including budgets, accounts, categories, and transactions. This action cannot be undone.
         </DialogDescription>
       </DialogHeader>
       <div class="flex flex-col gap-4">
+        <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p class="text-sm text-red-800 font-medium">
+            ⚠️ WARNING: This will delete EVERYTHING for EVERY user in the database!
+          </p>
+        </div>
         <p class="text-sm text-muted-foreground">
           Are you absolutely sure you want to proceed? This is intended for testing purposes only.
         </p>
@@ -214,7 +219,7 @@
           </Button>
           <Button variant="destructive" :disabled="isNuking" @click="nukeDatabase">
             <Loader2Icon v-if="isNuking" class="mr-2 h-4 w-4 animate-spin" />
-            {{ isNuking ? 'Nuking...' : 'Yes, Nuke Everything' }}
+            {{ isNuking ? 'Nuking...' : 'Yes, Nuke ALL Data for ALL Users' }}
           </Button>
         </div>
       </div>
@@ -404,7 +409,7 @@ const nukeDatabase = async () => {
     const result = await DatabaseService.nukeDatabase()
 
     if (result.success) {
-      toast.success('Database has been successfully wiped')
+      toast.success('Database has been successfully wiped for ALL users')
       // Redirect to dashboard page
       router.push('/dashboard')
     } else {

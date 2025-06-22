@@ -48,7 +48,7 @@ onMounted(async () => {
   const success = await ensureDataLoaded(budgetId)
 
   if (!success) {
-    // If data loading failed, redirect to dashboard
+    // If data loading failed, redirect to dashboard (localStorage already cleared by useMainDataOperations)
     await router.push('/dashboard')
   }
 })

@@ -28,7 +28,7 @@ onMounted(async () => {
     if (success) {
       saveLastVisitedBudget(budgetId)
     } else {
-      // Redirect to dashboard on error
+      // Redirect to dashboard on error (localStorage already cleared by useMainDataOperations)
       await router.push('/dashboard')
     }
   } else {

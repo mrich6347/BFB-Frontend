@@ -35,8 +35,7 @@
                 <Plus class="h-5 w-5 mr-2" />
                 New Budget
             </Button>
-            <!-- TODO: Implement YNAB import -->
-            <Button variant="outline" class="ml-2" v-if="false">
+            <Button variant="outline" class="ml-2" @click="showImportModal = true">
               <Import class="h-5 w-5 mr-2" />
               Import From YNAB
             </Button>
@@ -96,6 +95,13 @@
       @close="closeEditModal"
       @updated="handleBudgetUpdated"
     />
+
+    <!-- YNAB Import Modal -->
+    <YnabImportModal
+      :is-open="showImportModal"
+      @close="showImportModal = false"
+      @imported="handleBudgetImported"
+    />
   </div>
 </template>
 
@@ -105,6 +111,7 @@ import { useBudgetStore } from '@/stores/budget.store'
 import { authService } from '@/services/common/auth.service'
 import ThemeToggle from '@/components/common/ThemeToggle.vue'
 import CreateBudgetModal from '@/components/budget/CreateBudgetModal.vue'
+import YnabImportModal from '@/components/budget/YnabImportModal.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useRouter } from 'vue-router'
 import { LogOut, Plus, Inbox, Import, Edit } from 'lucide-vue-next'
@@ -125,6 +132,7 @@ import { useBudgetOperations } from '@/composables/budgets/useBudgetOperations'
 const loading = ref(true)
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
+const showImportModal = ref(false)
 const selectedBudget = ref<BudgetResponse | null>(null)
 const budgetStore = useBudgetStore()
 const { loadAllBudgets, resetBudgetData } = useBudgetOperations()
@@ -157,6 +165,11 @@ const closeEditModal = () => {
 
 const handleBudgetUpdated = async () => {
   await loadAllBudgets()
+}
+
+const handleBudgetImported = (budget: BudgetResponse) => {
+  // Budget is already added to store by the modal
+  showImportModal.value = false
 }
 </script>
 
