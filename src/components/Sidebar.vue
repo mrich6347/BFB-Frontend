@@ -282,8 +282,10 @@ import { useToast } from 'vue-toast-notification'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shadcn-ui'
 import Button from '@/components/shadcn-ui/button.vue'
 import { saveExpandedAccounts, loadExpandedAccounts } from '@/utils/expandedAccountsStorage'
+import { useReopenAccount } from '@/composables/accounts/account-write/useReopenAccount'
 
 const budgetStore = useBudgetStore()
+const { reopenAccount } = useReopenAccount()
 
 const props = defineProps<{
   budgetId: string
@@ -374,7 +376,7 @@ const closeCreateAccountModal = () => {
 const handleReopenAccount = async (accountId: string) => {
   try {
     isReopeningAccount.value = true
-    await accountStore.reopenAccount(accountId)
+    await reopenAccount(accountId)
     toast.success('Account reopened successfully')
   } catch (error) {
     console.error('Failed to reopen account:', error)
