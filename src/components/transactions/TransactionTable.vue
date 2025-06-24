@@ -27,11 +27,8 @@
 
     <!-- Transaction Table -->
     <div class="bg-card rounded-lg border border-border overflow-hidden">
-      <div v-if="transactionStore.isLoading" class="flex justify-center items-center py-8">
-        <LoadingSpinner />
-      </div>
 
-      <div v-else-if="transactions.length === 0" class="text-center py-8 text-muted-foreground">
+      <div v-if="transactions.length === 0" class="text-center py-8 text-muted-foreground">
         No transactions found. Add your first transaction to get started.
       </div>
 
