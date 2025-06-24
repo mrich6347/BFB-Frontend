@@ -17,20 +17,20 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       </div>
-      <div v-if="isSearching" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+      <div v-if="userProfileStore.isSearching" class="absolute inset-y-0 right-0 pr-3 flex items-center">
         <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
       </div>
     </div>
 
     <!-- Search Results -->
     <div v-if="showResults" class="border border-gray-200 rounded-md bg-white shadow-sm max-h-60 overflow-y-auto">
-      <div v-if="searchResults.length === 0 && !isSearching && searchQuery.length >= minSearchLength" class="p-4 text-center text-gray-500">
+      <div v-if="userProfileStore.searchResults.length === 0 && !userProfileStore.isSearching && searchQuery.length >= minSearchLength" class="p-4 text-center text-gray-500">
         <p>No users found matching "{{ searchQuery }}"</p>
       </div>
 
-      <div v-else-if="searchResults.length > 0" class="divide-y divide-gray-100">
+      <div v-else-if="userProfileStore.searchResults.length > 0" class="divide-y divide-gray-100">
         <button
-          v-for="(user, index) in searchResults"
+          v-for="(user, index) in userProfileStore.searchResults"
           :key="user.username"
           :class="[
             'w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors',
@@ -88,8 +88,8 @@
     </div>
 
     <!-- Error Display -->
-    <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-md">
-      <p class="text-sm text-red-600">{{ error }}</p>
+    <div v-if="userProfileStore.error" class="p-3 bg-red-50 border border-red-200 rounded-md">
+      <p class="text-sm text-red-600">{{ userProfileStore.error }}</p>
     </div>
   </div>
 </template>
@@ -126,7 +126,6 @@ const { debouncedSearchUsers, clearError, clearSearchResults } = useUserProfileO
 
 // Get state from store
 const userProfileStore = useUserProfileStore()
-const { searchResults, isSearching, error } = userProfileStore
 
 const searchQuery = ref('')
 const selectedIndex = ref(-1)
@@ -134,7 +133,7 @@ const selectedUser = ref<PublicUserProfileResponse | null>(props.modelValue ?? n
 const showResults = ref(false)
 
 const filteredResults = computed(() => {
-  return searchResults.value.filter((user: PublicUserProfileResponse) =>
+  return userProfileStore.searchResults.filter((user: PublicUserProfileResponse) =>
     !props.excludeUsernames.includes(user.username)
   )
 })

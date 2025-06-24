@@ -57,8 +57,8 @@
           </p>
         </div>
 
-        <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-md">
-          <p class="text-sm text-red-600">{{ error }}</p>
+        <div v-if="userProfileStore.error" class="p-3 bg-red-50 border border-red-200 rounded-md">
+          <p class="text-sm text-red-600">{{ userProfileStore.error }}</p>
         </div>
 
         <div class="flex justify-end space-x-3 pt-4">
@@ -66,16 +66,16 @@
             type="button"
             variant="outline"
             @click="handleClose"
-            :disabled="isLoading"
+            :disabled="userProfileStore.isLoading"
           >
             Cancel
           </Button>
           <Button
             type="submit"
-            :disabled="!isFormValid || isLoading"
+            :disabled="!isFormValid || userProfileStore.isLoading"
             class="min-w-[100px]"
           >
-            <span v-if="isLoading">Creating...</span>
+            <span v-if="userProfileStore.isLoading">Creating...</span>
             <span v-else>Create Profile</span>
           </Button>
         </div>
@@ -109,7 +109,6 @@ const { createProfile, clearError } = useUserProfileOperations()
 
 // Get state from store
 const userProfileStore = useUserProfileStore()
-const { isLoading, error } = userProfileStore
 
 const formData = ref<CreateUserProfileDto>({
   username: '',
