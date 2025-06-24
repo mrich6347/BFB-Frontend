@@ -12,18 +12,6 @@ export interface CreateAccountDto {
     budget_id: string;
 }
 
-export interface AccountResponse {
-    id: string;
-    name: string;
-    account_type: AccountType;
-    budget_id: string;
-    account_balance: number;
-    cleared_balance: number;
-    uncleared_balance: number;
-    working_balance: number;
-    is_active: boolean;
-}
-
 export interface UpdateAccountDto {
     name?: string;
 }
@@ -38,3 +26,17 @@ export interface CloseAccountResponse {
     adjustmentTransaction?: any;
     readyToAssign: number;
 }
+
+
+export interface AccountResponse {
+    id: string;
+    name: string;
+    account_type: AccountType;
+    budget_id: string;
+    account_balance: number;
+    cleared_balance: number;
+    uncleared_balance: number;
+    working_balance: number;
+    is_active: boolean;
+}
+
