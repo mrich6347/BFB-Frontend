@@ -172,17 +172,19 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toast-notification'
-import { UserProfileService } from '../services/user-profile.service'
+import { useUserProfileOperations } from '../composables/user-profiles/useUserProfileOperations'
+import { useUserProfileStore } from '../stores/user-profile.store'
 
-import type { CreateUserProfileDto, UpdateUserProfileDto, UserProfileResponse } from '../types/DTO/user-profile.dto'
+import type { CreateUserProfileDto, UpdateUserProfileDto } from '../types/DTO/user-profile.dto'
 
 const router = useRouter()
 const $toast = useToast()
 
-// Simple, direct state management - no complex store interactions
-const currentProfile = ref<UserProfileResponse | null>(null)
-const isLoading = ref(false)
-const error = ref<string | null>(null)
+// Use store for state and composable for operations
+const userProfileStore = useUserProfileStore()
+const { createProfile: createProfileOp, updateProfile: updateProfileOp } = useUserProfileOperations()
+
+// Local form state
 const isSubmitting = ref(false)
 
 const formData = ref<CreateUserProfileDto>({
@@ -197,45 +199,17 @@ const errors = ref({
 
 const originalUsername = ref<string>('')
 
-// Simple, direct functions - no complex composables
-const clearError = () => {
-  error.value = null
-}
+const loadProfile = () => {
+  // Get profile from store (already loaded via main data)
+  const profile = userProfileStore.currentProfile
 
-const loadProfile = async () => {
-  try {
-    isLoading.value = true
-    const profile = await UserProfileService.getCurrentUserProfile()
-    currentProfile.value = profile
-
-    if (profile) {
-      formData.value = {
-        username: profile.username,
-        display_name: profile.display_name
-      }
-      originalUsername.value = profile.username
+  if (profile) {
+    formData.value = {
+      username: profile.username,
+      display_name: profile.display_name
     }
-  } catch (err: any) {
-    console.error('Error loading profile:', err)
-    // If 404, user just doesn't have a profile yet - that's fine
-    if (err.response?.status !== 404) {
-      error.value = 'Failed to load profile'
-    }
-  } finally {
-    isLoading.value = false
+    originalUsername.value = profile.username
   }
-}
-
-const createProfile = async (data: CreateUserProfileDto) => {
-  const profile = await UserProfileService.create(data)
-  currentProfile.value = profile
-  return profile
-}
-
-const updateProfile = async (data: UpdateUserProfileDto) => {
-  const profile = await UserProfileService.updateCurrentUserProfile(data)
-  currentProfile.value = profile
-  return profile
 }
 
 const isFormValid = computed(() => {
@@ -244,6 +218,16 @@ const isFormValid = computed(() => {
          !errors.value.username &&
          !errors.value.display_name
 })
+
+// Computed properties to access store state
+const currentProfile = computed(() => userProfileStore.currentProfile)
+const isLoading = computed(() => userProfileStore.isLoading)
+const error = computed(() => userProfileStore.error)
+
+// Clear error function
+const clearError = () => {
+  userProfileStore.clearError()
+}
 
 const validateUsername = () => {
   const username = formData.value.username
@@ -315,7 +299,7 @@ const handleSubmit = async () => {
       }
 
       if (Object.keys(updateData).length > 0) {
-        await updateProfile(updateData)
+        await updateProfileOp(updateData)
         originalUsername.value = formData.value.username
         $toast.success('Profile updated successfully!')
       } else {
@@ -323,7 +307,7 @@ const handleSubmit = async () => {
       }
     } else {
       // Create new profile
-      const createdProfile = await createProfile(formData.value)
+      const createdProfile = await createProfileOp(formData.value)
 
       // Update form state with created profile data
       if (createdProfile) {

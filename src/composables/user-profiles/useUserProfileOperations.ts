@@ -8,16 +8,7 @@ import type {
   PublicUserProfileResponse
 } from '../../types/DTO/user-profile.dto'
 
-export function useUserProfileOperations(): {
-  // Operations only - components should access store directly for state
-  createProfile: (createUserProfileDto: CreateUserProfileDto) => Promise<UserProfileResponse | null>
-  getCurrentProfile: () => Promise<UserProfileResponse | null>
-  updateProfile: (updateUserProfileDto: UpdateUserProfileDto) => Promise<UserProfileResponse | null>
-  searchUsers: (username: string) => Promise<PublicUserProfileResponse[]>
-  debouncedSearchUsers: (username: string, delay?: number) => Promise<PublicUserProfileResponse[]>
-  clearSearchResults: () => void
-  clearError: () => void
-} {
+export const useUserProfileOperations = () => {
   const userProfileStore = useUserProfileStore()
   const debounceTimer = ref<NodeJS.Timeout | null>(null)
 
