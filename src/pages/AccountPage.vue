@@ -33,7 +33,6 @@ const accountStore = useAccountStore()
 // Make route parameters reactive
 const accountId = computed(() => route.params.accountId as string)
 const budgetId = computed(() => route.params.budgetId as string)
-const isLoading = ref(true)
 
 const account = computed(() => {
   return accountStore.accounts.find(acc => acc.id === accountId.value)
