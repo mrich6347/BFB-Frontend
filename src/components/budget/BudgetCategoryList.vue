@@ -279,7 +279,12 @@ import { ChevronRightIcon, ChevronDownIcon, PlusIcon, Edit, GripVertical } from 
 import { formatCurrency } from '@/utils/currencyUtil'
 import Badge from '@/components/shadcn-ui/Badge.vue'
 import { useCategoryStore } from '@/stores/category.store'
-import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
+import { useMoveMoneyBetweenCategories } from '@/composables/categories/category-write/useMoveMoneyBetweenCategories'
+import { useMoveMoneyToReadyToAssign } from '@/composables/categories/category-write/useMoveMoneyToReadyToAssign'
+import { usePullFromReadyToAssign } from '@/composables/categories/category-write/usePullFromReadyToAssign'
+import { useReorderCategoryGroups } from '@/composables/categories/category-write/useReorderCategoryGroups'
+import { useReorderCategories } from '@/composables/categories/category-write/useReorderCategories'
+import { useUpdateCategoryBalance } from '@/composables/categories/category-write/useUpdateCategoryBalance'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useAccountStore } from '@/stores/account.store'
 import type { CategoryGroupResponse } from '@/types/DTO/category-group.dto'
@@ -299,14 +304,12 @@ const props = defineProps<{
 }>()
 
 const categoryStore = useCategoryStore()
-const {
-  moveMoney,
-  moveMoneyToReadyToAssign,
-  pullFromReadyToAssign,
-  reorderCategoryGroups,
-  reorderCategories,
-  updateCategoryBalance
-} = useCategoryOperations()
+const { moveMoney } = useMoveMoneyBetweenCategories()
+const { moveMoneyToReadyToAssign } = useMoveMoneyToReadyToAssign()
+const { pullFromReadyToAssign } = usePullFromReadyToAssign()
+const { reorderCategoryGroups } = useReorderCategoryGroups()
+const { reorderCategories } = useReorderCategories()
+const { updateCategoryBalance } = useUpdateCategoryBalance()
 const budgetStore = useBudgetStore()
 const accountStore = useAccountStore()
 

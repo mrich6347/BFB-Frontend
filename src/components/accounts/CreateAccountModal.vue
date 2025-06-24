@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
-import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
+import { useFetchAllCategoryData } from '@/composables/categories/category-read/useFetchAllCategoryData'
 import type { CreateAccountDto } from '@/types/DTO/account.dto'
 import AccountForm from './forms/AccountForm.vue';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
@@ -34,7 +34,7 @@ const emit = defineEmits<{
 }>()
 
 const { createAccount, isLoading } = useAccountOperations()
-const { fetchAllCategoryData } = useCategoryOperations()
+const { fetchAllCategoryData } = useFetchAllCategoryData()
 
 const close = () => {
   emit('close')

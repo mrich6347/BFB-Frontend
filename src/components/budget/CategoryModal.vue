@@ -59,7 +59,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCategoryStore } from '@/stores/category.store'
-import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
+import { useCreateCategory } from '@/composables/categories/category-write/useCreateCategory'
+import { useUpdateCategory } from '@/composables/categories/category-write/useUpdateCategory'
+import { useHideCategory } from '@/composables/categories/category-write/useHideCategory'
 import type { CategoryResponse, CreateCategoryDto, UpdateCategoryDto } from '@/types/DTO/category.dto'
 import CategoryForm from './forms/CategoryForm.vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shadcn-ui'
@@ -86,7 +88,9 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
-const { createCategory, updateCategory, hideCategory } = useCategoryOperations()
+const { createCategory } = useCreateCategory()
+const { updateCategory } = useUpdateCategory()
+const { hideCategory } = useHideCategory()
 const isLoading = ref(false)
 const isDeleting = ref(false)
 const showConfirmation = ref(false)

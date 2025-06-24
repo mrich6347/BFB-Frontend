@@ -80,7 +80,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCategoryStore } from '@/stores/category.store'
-import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
+import { useCreateCategoryGroup } from '@/composables/categories/category-write/useCreateCategoryGroup'
+import { useUpdateCategoryGroup } from '@/composables/categories/category-write/useUpdateCategoryGroup'
+import { useDeleteCategoryGroup } from '@/composables/categories/category-write/useDeleteCategoryGroup'
 import type { CategoryGroupResponse, CreateCategoryGroupDto, UpdateCategoryGroupDto } from '@/types/DTO/category-group.dto'
 import CategoryGroupForm from './forms/CategoryGroupForm.vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shadcn-ui'
@@ -106,7 +108,9 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
-const { createCategoryGroup, updateCategoryGroup, deleteCategoryGroup } = useCategoryOperations()
+const { createCategoryGroup } = useCreateCategoryGroup()
+const { updateCategoryGroup } = useUpdateCategoryGroup()
+const { deleteCategoryGroup } = useDeleteCategoryGroup()
 const isLoading = ref(false)
 const isDeleting = ref(false)
 const showConfirmation = ref(false)

@@ -2,7 +2,7 @@ import { ref, readonly } from 'vue'
 import { useTransactionStore } from '@/stores/transaction.store'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
-import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
+import { useFetchCategoryBalances } from '@/composables/categories/category-read/useFetchCategoryBalances'
 import { TransactionService } from '@/services/transaction.service'
 import type {
   CreateTransactionDto,
@@ -19,7 +19,7 @@ export const useTransactionOperations = () => {
     updateAccountBalanceOnClearedToggle,
     removeAccountBalance
   } = useAccountOperations()
-  const { fetchCategoryBalances } = useCategoryOperations()
+  const { fetchCategoryBalances } = useFetchCategoryBalances()
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)

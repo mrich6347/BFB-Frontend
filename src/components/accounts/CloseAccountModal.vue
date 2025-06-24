@@ -55,7 +55,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { AccountResponse } from '@/types/DTO/account.dto'
 import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
-import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
+import { useFetchAllCategoryData } from '@/composables/categories/category-read/useFetchAllCategoryData'
 import { useToast } from 'vue-toast-notification'
 
 const props = defineProps<{
@@ -69,7 +69,7 @@ const emit = defineEmits<{
 }>()
 
 const { closeAccount, isLoading } = useAccountOperations()
-const { fetchAllCategoryData } = useCategoryOperations()
+const { fetchAllCategoryData } = useFetchAllCategoryData()
 const $toast = useToast()
 
 const handleCloseAccount = async () => {

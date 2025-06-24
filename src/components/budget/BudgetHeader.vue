@@ -78,7 +78,7 @@ import { ChevronDown } from 'lucide-vue-next'
 import { formatCurrency } from '../../utils/currencyUtil'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
-import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
+import { useUpdateCategoryBalance } from '@/composables/categories/category-write/useUpdateCategoryBalance'
 import AssignMoneyModal from './AssignMoneyModal.vue'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 
@@ -89,7 +89,7 @@ const emit = defineEmits<{
 
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
-const { updateCategoryBalance } = useCategoryOperations()
+const { updateCategoryBalance } = useUpdateCategoryBalance()
 
 const selectedFilter = ref('all')
 

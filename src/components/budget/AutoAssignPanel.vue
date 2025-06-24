@@ -133,7 +133,7 @@ import { useAutoAssignStore } from '@/stores/auto-assign.store'
 import { useAutoAssignOperations } from '@/composables/auto-assign/useAutoAssignOperations'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
-import { useCategoryOperations } from '@/composables/categories/useCategoryOperations'
+import { useFetchCategoryBalances } from '@/composables/categories/category-read/useFetchCategoryBalances'
 import { formatCurrency } from '@/utils/currencyUtil'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import AutoAssignConfigModal from './AutoAssignConfigModal.vue'
@@ -155,7 +155,7 @@ const {
 } = useAutoAssignOperations()
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
-const { fetchCategoryBalances } = useCategoryOperations()
+const { fetchCategoryBalances } = useFetchCategoryBalances()
 
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
