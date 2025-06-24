@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { useBudgetOperations } from '@/composables/budgets/useBudgetOperations'
+import { useCreateBudget } from '@/composables/budgets/budget-write/useCreateBudget'
 import type { CreateBudgetDto } from '@/types/DTO/budget.dto'
 import { useRouter } from 'vue-router'
 import BudgetForm from './forms/BudgetForm.vue'
@@ -31,7 +31,7 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-const { createBudget, isLoading } = useBudgetOperations()
+const { createBudget, isLoading } = useCreateBudget()
 
 const close = () => {
   emit('close')

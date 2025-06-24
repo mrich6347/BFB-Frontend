@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { useBudgetOperations } from '@/composables/budgets/useBudgetOperations'
+import { useUpdateBudget } from '@/composables/budgets/budget-write/useUpdateBudget'
 import type { CreateBudgetDto, BudgetResponse } from '@/types/DTO/budget.dto'
 import BudgetForm from './forms/BudgetForm.vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
@@ -32,7 +32,7 @@ const emit = defineEmits<{
   (e: 'updated'): void
 }>()
 
-const { updateBudget, isLoading } = useBudgetOperations()
+const { updateBudget, isLoading } = useUpdateBudget()
 
 const close = () => {
   emit('close')

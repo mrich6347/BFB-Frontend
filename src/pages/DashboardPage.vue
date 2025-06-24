@@ -127,7 +127,8 @@ import Section from '@/components/shadcn-ui/section.vue'
 import EditBudgetModal from '@/components/budget/EditBudgetModal.vue'
 import type { BudgetResponse } from '@/types/DTO/budget.dto'
 import { saveLastVisitedBudget } from '@/utils/lastVisitedBudgetStorage'
-import { useBudgetOperations } from '@/composables/budgets/useBudgetOperations'
+import { useFetchBudgets } from '@/composables/budgets/budget-read/useFetchBudgets'
+import { useBudgetUtils } from '@/composables/budgets/budget-read/useBudgetUtils'
 
 const loading = ref(true)
 const showCreateModal = ref(false)
@@ -135,13 +136,14 @@ const showEditModal = ref(false)
 const showImportModal = ref(false)
 const selectedBudget = ref<BudgetResponse | null>(null)
 const budgetStore = useBudgetStore()
-const { loadAllBudgets, resetBudgetData } = useBudgetOperations()
+const { fetchBudgets } = useFetchBudgets()
+const { resetBudgetData } = useBudgetUtils()
 const router = useRouter()
 
 onMounted(async () => {
   try {
     resetBudgetData()
-    await loadAllBudgets()
+    await fetchBudgets()
   } finally {
     loading.value = false
   }
@@ -164,7 +166,7 @@ const closeEditModal = () => {
 }
 
 const handleBudgetUpdated = async () => {
-  await loadAllBudgets()
+  await fetchBudgets()
 }
 
 const handleBudgetImported = (budget: BudgetResponse) => {

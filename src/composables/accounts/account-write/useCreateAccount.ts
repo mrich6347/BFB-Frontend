@@ -1,14 +1,14 @@
 import { ref, readonly } from 'vue'
 import { useAccountStore } from '@/stores/account.store'
-import { useBudgetOperations } from '@/composables/budgets/useBudgetOperations'
 import { AccountService } from '@/services/account.service'
 import type { CreateAccountDto } from '@/types/DTO/account.dto'
 import { v4 as uuidv4 } from 'uuid'
 import { parseFormattedNumberToDecimal } from '@/utils/numberFormatUtil'
+import { useBudgetUtils } from '../../budgets/budget-read/useBudgetUtils'
 
 export const useCreateAccount = () => {
   const accountStore = useAccountStore()
-  const { setReadyToAssign } = useBudgetOperations()
+  const { setReadyToAssign } = useBudgetUtils()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 

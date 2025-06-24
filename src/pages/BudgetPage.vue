@@ -22,7 +22,7 @@ import { onMounted, ref } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import BudgetHeader from '@/components/budget/BudgetHeader.vue'
 import { useBudgetStore } from '@/stores/budget.store'
-import { useBudgetOperations } from '@/composables/budgets/useBudgetOperations'
+import { useBudgetUtils } from '@/composables/budgets/budget-read/useBudgetUtils'
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 import BudgetCategoryList from '@/components/budget/BudgetCategoryList.vue'
 import AutoAssignPanel from '@/components/budget/AutoAssignPanel.vue'
@@ -30,7 +30,7 @@ import AutoAssignPanel from '@/components/budget/AutoAssignPanel.vue'
 const route = useRoute()
 const router = useRouter()
 const budgetStore = useBudgetStore()
-const { ensureCurrentMonth } = useBudgetOperations()
+const { ensureCurrentMonth } = useBudgetUtils()
 const { ensureDataLoaded } = useMainDataOperations()
 const budgetId = route.params.budgetId as string
 

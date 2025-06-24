@@ -1,11 +1,11 @@
 import { ref, readonly } from 'vue'
 import { useAccountStore } from '@/stores/account.store'
-import { useBudgetOperations } from '@/composables/budgets/useBudgetOperations'
+import { useBudgetUtils } from '@/composables/budgets/budget-read/useBudgetUtils'
 import { AccountService } from '@/services/account.service'
 
 export const useReopenAccount = () => {
   const accountStore = useAccountStore()
-  const { setReadyToAssign } = useBudgetOperations()
+  const { setReadyToAssign } = useBudgetUtils()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
