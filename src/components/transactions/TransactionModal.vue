@@ -19,7 +19,7 @@
           name="date"
           label="Date"
           :validation="[['required'], ['date_max', maxDate]]"
-          validation-messages="{
+          :validation-messages="{
             date_max: 'Future dates are not allowed'
           }"
           validation-visibility="live"
@@ -85,7 +85,7 @@
             <Button
               type="button"
               variant="outline"
-              :class="{ 'bg-destructive text-destructive-foreground': amountType === 'outflow' }"
+              :class="amountType === 'outflow' ? 'bg-destructive text-destructive-foreground' : ''"
               @click="amountType = 'outflow'"
             >
               Outflow
@@ -93,7 +93,7 @@
             <Button
               type="button"
               variant="outline"
-              :class="{ 'bg-green-600 text-white': amountType === 'inflow' }"
+              :class="amountType === 'inflow' ? 'bg-green-600 text-white' : ''"
               @click="amountType = 'inflow'"
             >
               Inflow

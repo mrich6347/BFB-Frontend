@@ -5,7 +5,7 @@
         <!-- Account Info -->
         <div class="flex items-center gap-4">
           <h1 class="text-2xl font-bold text-foreground">{{ account?.name || 'Account' }}</h1>
-          <Badge variant="secondary" class="text-xs">
+          <Badge variant="neutral" class="text-xs">
             {{ formatAccountType(account?.account_type) }}
           </Badge>
         </div>
