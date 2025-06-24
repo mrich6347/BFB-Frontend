@@ -54,7 +54,7 @@ import Button from '@/components/shadcn-ui/button.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { AccountResponse } from '@/types/DTO/account.dto'
-import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
+import { useCloseAccount } from '@/composables/accounts/account-write/useCloseAccount'
 import { useFetchAllCategoryData } from '@/composables/categories/category-read/useFetchAllCategoryData'
 import { useToast } from 'vue-toast-notification'
 
@@ -68,7 +68,7 @@ const emit = defineEmits<{
   closed: []
 }>()
 
-const { closeAccount, isLoading } = useAccountOperations()
+const { closeAccount, isLoading } = useCloseAccount()
 const { fetchAllCategoryData } = useFetchAllCategoryData()
 const $toast = useToast()
 

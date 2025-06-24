@@ -1,7 +1,10 @@
 import { ref, readonly } from 'vue'
 import { useTransactionStore } from '@/stores/transaction.store'
 import { useBudgetStore } from '@/stores/budget.store'
-import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
+import { useUpdateAccountBalance } from '@/composables/accounts/account-write/useUpdateAccountBalance'
+import { useSetAccountBalance } from '@/composables/accounts/account-write/useSetAccountBalance'
+import { useUpdateAccountBalanceOnClearedToggle } from '@/composables/accounts/account-write/useUpdateAccountBalanceOnClearedToggle'
+import { useRemoveAccountBalance } from '@/composables/accounts/account-write/useRemoveAccountBalance'
 import { useFetchCategoryBalances } from '@/composables/categories/category-read/useFetchCategoryBalances'
 import { TransactionService } from '@/services/transaction.service'
 import type {
@@ -13,12 +16,10 @@ import type {
 export const useTransactionOperations = () => {
   const transactionStore = useTransactionStore()
   const budgetStore = useBudgetStore()
-  const {
-    updateAccountBalance,
-    setAccountBalance,
-    updateAccountBalanceOnClearedToggle,
-    removeAccountBalance
-  } = useAccountOperations()
+  const { updateAccountBalance } = useUpdateAccountBalance()
+  const { setAccountBalance } = useSetAccountBalance()
+  const { updateAccountBalanceOnClearedToggle } = useUpdateAccountBalanceOnClearedToggle()
+  const { removeAccountBalance } = useRemoveAccountBalance()
   const { fetchCategoryBalances } = useFetchCategoryBalances()
 
   const isLoading = ref(false)

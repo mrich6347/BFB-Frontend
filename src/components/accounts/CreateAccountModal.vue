@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
+import { useCreateAccount } from '@/composables/accounts/account-write/useCreateAccount'
 import { useFetchAllCategoryData } from '@/composables/categories/category-read/useFetchAllCategoryData'
 import type { CreateAccountDto } from '@/types/DTO/account.dto'
 import AccountForm from './forms/AccountForm.vue';
@@ -33,7 +33,7 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-const { createAccount, isLoading } = useAccountOperations()
+const { createAccount, isLoading } = useCreateAccount()
 const { fetchAllCategoryData } = useFetchAllCategoryData()
 
 const close = () => {

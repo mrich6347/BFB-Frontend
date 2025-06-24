@@ -88,7 +88,7 @@ import type { AccountResponse } from '@/types/DTO/account.dto'
 import { formatCurrency } from '@/utils/currencyUtil'
 import { parseFormattedNumberToDecimal } from '@/utils/numberFormatUtil'
 import { TrackingAccountService } from '@/services/tracking-account.service'
-import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
+import { useSetAccountBalance } from '@/composables/accounts/account-write/useSetAccountBalance'
 import { useToast } from 'vue-toast-notification'
 
 const props = defineProps<{
@@ -101,7 +101,7 @@ const emit = defineEmits<{
   (e: 'updated'): void
 }>()
 
-const { setAccountBalance } = useAccountOperations()
+const { setAccountBalance } = useSetAccountBalance()
 const toast = useToast()
 const isLoading = ref(false)
 

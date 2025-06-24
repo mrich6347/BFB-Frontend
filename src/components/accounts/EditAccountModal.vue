@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
+import { useUpdateAccount } from '@/composables/accounts/account-write/useUpdateAccount'
 import type { UpdateAccountDto, AccountResponse } from '@/types/DTO/account.dto'
 import AccountForm from './forms/AccountForm.vue';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
@@ -36,7 +36,7 @@ const emit = defineEmits<{
   updated: []
 }>()
 
-const { updateAccount, isLoading } = useAccountOperations()
+const { updateAccount, isLoading } = useUpdateAccount()
 const $toast = useToast()
 
 const initialValues = computed(() => {

@@ -110,7 +110,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { CheckCircle } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { AccountResponse } from '@/types/DTO/account.dto'
-import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
+import { useReconcileAccount } from '@/composables/accounts/account-write/useReconcileAccount'
 import { useTransactionStore } from '@/stores/transaction.store'
 import { useToast } from 'vue-toast-notification'
 
@@ -124,7 +124,7 @@ const emit = defineEmits<{
   reconciled: []
 }>()
 
-const { reconcileAccount, isLoading } = useAccountOperations()
+const { reconcileAccount, isLoading } = useReconcileAccount()
 const transactionStore = useTransactionStore()
 const $toast = useToast()
 

@@ -152,7 +152,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/s
 import Button from '@/components/shadcn-ui/button.vue'
 import { useCategoryStore } from '@/stores/category.store'
 import { useAccountStore } from '@/stores/account.store'
-import { useAccountOperations } from '@/composables/accounts/useAccountOperations'
+import { useGetTransferOptions } from '@/composables/accounts/account-read/useGetTransferOptions'
 import { TransferService } from '@/services/transfer.service'
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { AccountResponse } from '@/types/DTO/account.dto'
@@ -171,7 +171,7 @@ const emit = defineEmits<{
 
 const categoryStore = useCategoryStore()
 const accountStore = useAccountStore()
-const { getTransferOptions } = useAccountOperations()
+const { getTransferOptions } = useGetTransferOptions()
 const amountType = ref<'inflow' | 'outflow'>('outflow')
 const payeeField = ref(null)
 const transferOptions = ref<AccountResponse[]>([])
