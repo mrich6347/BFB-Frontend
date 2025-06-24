@@ -173,7 +173,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toast-notification'
 import { UserProfileService } from '../services/user-profile.service'
-import { getLastVisitedBudget } from '../utils/lastVisitedBudgetStorage'
+
 import type { CreateUserProfileDto, UpdateUserProfileDto, UserProfileResponse } from '../types/DTO/user-profile.dto'
 
 const router = useRouter()
@@ -357,12 +357,7 @@ const handleCancel = () => {
 }
 
 const handleBackToBudget = () => {
-  const lastVisitedBudget = getLastVisitedBudget()
-  if (lastVisitedBudget) {
-    router.push(`/budget/${lastVisitedBudget}`)
-  } else {
-    router.push('/dashboard')
-  }
+  router.back()
 }
 
 onMounted(() => {

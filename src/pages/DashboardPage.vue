@@ -131,7 +131,7 @@ import CardContent from '@/components/shadcn-ui/card-content.vue'
 import Section from '@/components/shadcn-ui/section.vue'
 import EditBudgetModal from '@/components/budget/EditBudgetModal.vue'
 import type { BudgetResponse } from '@/types/DTO/budget.dto'
-import { saveLastVisitedBudget } from '@/utils/lastVisitedBudgetStorage'
+
 import { useFetchBudgets } from '@/composables/budgets/budget-read/useFetchBudgets'
 import { useBudgetUtils } from '@/composables/budgets/budget-read/useBudgetUtils'
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
@@ -168,17 +168,12 @@ const goToBudget = async (budgetId: string) => {
     const success = await ensureDataLoaded(budgetId)
 
     if (success) {
-      // Save this budget as the last visited budget
-      saveLastVisitedBudget(budgetId)
-      // Navigate to the budget page
       router.push(`/budget/${budgetId}`)
     } else {
       console.error('Failed to load budget data')
-      // Could show an error toast here
     }
   } catch (error) {
     console.error('Error loading budget:', error)
-    // Could show an error toast here
   } finally {
     loadingBudgetId.value = null
   }
@@ -198,8 +193,7 @@ const handleBudgetUpdated = async () => {
   await fetchBudgets()
 }
 
-const handleBudgetImported = (budget: BudgetResponse) => {
-  // Budget is already added to store by the modal
+const handleBudgetImported = () => {
   showImportModal.value = false
 }
 </script>

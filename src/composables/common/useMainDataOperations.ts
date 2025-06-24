@@ -6,7 +6,7 @@ import { useCategoryStore } from '../../stores/category.store'
 import { useTransactionStore } from '../../stores/transaction.store'
 import { useUserProfileStore } from '../../stores/user-profile.store'
 import { useSharedGoalsStore } from '../../stores/shared-goals.store'
-import { clearLastVisitedBudget } from '../../utils/lastVisitedBudgetStorage'
+
 import type { MainDataResponse } from '../../types/DTO/mainData.dto'
 import type { UserDateContext } from '../../utils/dateContext'
 
@@ -138,9 +138,8 @@ export function useMainDataOperations() {
                                error.response?.status === 404
 
       if (isBudgetNotFound) {
-        // Clear localStorage to prevent repeated attempts to load non-existent budget
-        clearLastVisitedBudget()
-        console.log('Budget not found, cleared localStorage')
+        // Budget not found - this is handled gracefully now
+        console.log('Budget not found')
 
         // Don't set error for budget not found - just silently redirect
         // This prevents showing error messages to users for deleted/missing budgets
