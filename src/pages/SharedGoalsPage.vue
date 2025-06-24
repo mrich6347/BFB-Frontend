@@ -393,7 +393,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { PlusIcon, TargetIcon, UsersIcon, CalendarIcon, AlertCircleIcon, MailIcon, UserPlusIcon, RefreshCwIcon, TrophyIcon } from 'lucide-vue-next'
 import { useSharedGoalOperations } from '../composables/shared-goals/useSharedGoalOperations'
 import { useGoalInvitations } from '../composables/shared-goals/useGoalInvitations'

@@ -13,6 +13,7 @@ import SharedGoalsPage from '../pages/SharedGoalsPage.vue'
 import { supabase } from '../lib/supabaseClient'
 import { getLastVisitedBudget } from '../utils/lastVisitedBudgetStorage'
 
+
 const routes = [
   {
     path: '/',

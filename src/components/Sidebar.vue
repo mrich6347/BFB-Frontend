@@ -291,11 +291,21 @@ const props = defineProps<{
 
 type SectionTitle = AccountType | 'CLOSED'
 
-const mainNavItems = computed(() => [
-  { name: 'Budget', to: `/budget/${props.budgetId}`, icon: BarChart2Icon },
-  { name: 'Reports', to: '/reports', icon: PieChartIcon },
-  { name: 'Shared Goals', to: '/shared-goals', icon: TargetIcon },
-])
+const mainNavItems = computed(() => {
+  const items = []
+
+  // Only add Budget link if we have a valid budgetId
+  if (props.budgetId) {
+    items.push({ name: 'Budget', to: `/budget/${props.budgetId}`, icon: BarChart2Icon })
+  }
+
+  items.push(
+    { name: 'Reports', to: '/reports', icon: PieChartIcon },
+    { name: 'Shared Goals', to: '/shared-goals', icon: TargetIcon }
+  )
+
+  return items
+})
 
 const accountStore = useAccountStore()
 
@@ -336,6 +346,8 @@ const toggleSection = (sectionTitle: SectionTitle) => {
     saveExpandedAccounts(budgetId, expandedSections.value)
   }
 }
+
+
 
 const isSettingsExpanded = ref(false)
 const isCreateAccountModalOpen = ref(false)
