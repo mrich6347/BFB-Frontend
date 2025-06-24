@@ -42,7 +42,6 @@ api.interceptors.response.use(
         let errorMessage = 'An error occurred. Please try again.';
 
         if (error.response) {
-            // The request was made and the server responded with a status code outside of 2xx
             const responseData = error.response.data;
 
             if (responseData && responseData.message) {
@@ -53,7 +52,6 @@ api.interceptors.response.use(
                 errorMessage = responseData;
             }
 
-            // Handle specific status codes
             if (error.response.status === 401) {
                 // Unauthorized - possibly token expired
                 const authStore = useAuthStore();

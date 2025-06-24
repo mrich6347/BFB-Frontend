@@ -89,7 +89,6 @@ const routes = [
     name: 'NotFound',
     component: NotFoundPage
   },
-  // TODO: Add routes for authenticated areas (e.g., dashboard)
 ]
 
 const router = createRouter({
