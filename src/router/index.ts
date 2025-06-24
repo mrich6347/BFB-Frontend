@@ -98,7 +98,7 @@ const router = createRouter({
 
 // Navigation guard for protected routes and last visited budget redirect
 router.beforeEach(async (to, from, next) => {
-  // Get current session
+  // Get current session from local storage
   const { data } = await supabase.auth.getSession()
   const isAuthenticated = !!data.session
 
