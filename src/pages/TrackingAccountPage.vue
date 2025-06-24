@@ -68,6 +68,6 @@ const handleBalanceUpdated = async () => {
 }
 
 onMounted(() => {
-  isLoading.value = true
+  isLoading.value = false
 })
 </script>
