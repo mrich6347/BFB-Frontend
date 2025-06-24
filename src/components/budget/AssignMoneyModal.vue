@@ -86,7 +86,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { X } from 'lucide-vue-next'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
-import CategorySelector from '@/components/shared/CategorySelector.vue'
+import CategorySelector from '@/components/categories/CategorySelector.vue'
 
 interface Props {
   isOpen: boolean

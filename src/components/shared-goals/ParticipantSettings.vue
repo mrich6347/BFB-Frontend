@@ -100,7 +100,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import CategorySelector from '../shared/CategorySelector.vue'
+import CategorySelector from '@/components/categories/CategorySelector.vue'
 import { useGoalProgress } from '../../composables/shared-goals/useGoalProgress'
 import { useCategoryStore } from '../../stores/category.store'
 import { useSharedGoalsStore } from '../../stores/shared-goals.store'

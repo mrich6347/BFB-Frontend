@@ -72,7 +72,7 @@ import { X } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 import { useBudgetStore } from '@/stores/budget.store'
-import CategorySelector from '@/components/shared/CategorySelector.vue'
+import CategorySelector from '@/components/categories/CategorySelector.vue'
 
 interface Props {
   isOpen: boolean
