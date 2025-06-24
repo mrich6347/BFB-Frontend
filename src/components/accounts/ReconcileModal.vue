@@ -129,15 +129,17 @@ const transactionStore = useTransactionStore()
 const $toast = useToast()
 
 const step = ref(1)
-const actualBalance = ref<number | null>(null)
+const actualBalance = ref<string>('')
 
 const clearedBalance = computed(() => {
   return props.account?.cleared_balance || 0
 })
 
 const adjustmentAmount = computed(() => {
-  if (actualBalance.value === null) return 0
-  return actualBalance.value - clearedBalance.value
+  if (!actualBalance.value || actualBalance.value === '') return 0
+  const balance = parseFloat(actualBalance.value)
+  if (isNaN(balance)) return 0
+  return balance - clearedBalance.value
 })
 
 const getBalanceColor = (balance: number) => {
@@ -146,7 +148,7 @@ const getBalanceColor = (balance: number) => {
 
 const close = () => {
   step.value = 1
-  actualBalance.value = null
+  actualBalance.value = ''
   emit('close')
 }
 
@@ -195,7 +197,7 @@ const reconcileWithAdjustment = async () => {
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     step.value = 1
-    actualBalance.value = null
+    actualBalance.value = ''
   }
 })
 </script>

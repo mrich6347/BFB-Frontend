@@ -47,8 +47,6 @@ const initialValues = computed(() => {
     name: props.account.name,
     account_type: props.account.account_type,
     account_balance: props.account.account_balance,
-    interest_rate: props.account.interest_rate,
-    minimum_monthly_payment: props.account.minimum_monthly_payment,
     budget_id: props.account.budget_id
   }
 })

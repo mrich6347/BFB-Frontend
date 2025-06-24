@@ -40,19 +40,20 @@ const close = () => {
   emit('close')
 }
 
-const handleFormSubmit = async (formData: CreateAccountDto) => {
+const handleFormSubmit = async (formData: CreateAccountDto | { name: string }) => {
   try {
-    const createdAccount = await createAccount(formData)
+    if ('account_type' in formData) {
+      const createdAccount = await createAccount(formData)
 
-    // If this is a credit card account, refresh category data to show the new payment category
-    if (createdAccount.account_type === 'CREDIT') {
-      await fetchAllCategoryData(props.budgetId)
+      // If this is a credit card account, refresh category data to show the new payment category
+      if (createdAccount.account_type === 'CREDIT') {
+        await fetchAllCategoryData(props.budgetId)
+      }
+
+      close()
     }
-
-    close()
   } catch (error) {
-    // Error is already handled by composable
-    // Just prevent modal from closing
+    console.error('Failed to create account:', error)
   }
 }
 
