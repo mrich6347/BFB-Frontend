@@ -59,8 +59,8 @@
       <div v-if="showInvitations" class="mb-8">
         <div class="bg-card rounded-lg border border-border shadow-sm p-6">
           <InvitationManager
-            @invitation-accepted="handleInvitationAccepted"
-            @invitation-declined="handleInvitationDeclined"
+            @invitation-accepted="handleInvitationVisibility($event)"
+            @invitation-declined="handleInvitationVisibility($event)"
           />
         </div>
       </div>
@@ -362,7 +362,6 @@
   <CreateGoalModal
     :is-open="isCreateModalOpen"
     @update:is-open="isCreateModalOpen = $event"
-    @goal-created="handleGoalCreated"
   />
 
   <!-- Goal Details Modal -->
@@ -370,9 +369,6 @@
     :is-open="isGoalDetailsModalOpen"
     :goal="selectedGoal"
     @update:is-open="isGoalDetailsModalOpen = $event"
-    @goal-updated="handleGoalUpdated"
-    @goal-left="handleGoalLeft"
-    @goal-deleted="handleGoalDeleted"
   />
 
   <!-- Invite User Modal -->
@@ -380,14 +376,12 @@
     :is-open="isInviteModalOpen"
     :goal="selectedGoalForInvite"
     @update:is-open="isInviteModalOpen = $event"
-    @invitation-sent="handleInvitationSent"
   />
 
   <!-- User Profile Setup Modal -->
   <UserProfileSetup
     :is-open="showProfileSetup"
     @update:is-open="showProfileSetup = $event"
-    @profile-created="handleProfileCreated"
   />
 </template>
 
@@ -404,7 +398,6 @@ import { useUserProfileStore } from '../stores/user-profile.store'
 import Sidebar from '../components/Sidebar.vue'
 import CreateGoalModal from '../components/shared-goals/CreateGoalModal.vue'
 import GoalDetailsModal from '../components/shared-goals/GoalDetailsModal.vue'
-import { useAuthStore } from '../stores/auth.store'
 import InviteUserModal from '../components/shared-goals/InviteUserModal.vue'
 import InvitationManager from '../components/shared-goals/InvitationManager.vue'
 import UserProfileSetup from '../components/shared-goals/UserProfileSetup.vue'
@@ -417,7 +410,6 @@ const { refreshPageData, isRefreshing, refreshError, clearRefreshError } = useSh
 const sharedGoalsStore = useSharedGoalsStore()
 const budgetStore = useBudgetStore()
 const userProfileStore = useUserProfileStore()
-const authStore = useAuthStore()
 
 const isCreateModalOpen = ref(false)
 const isGoalDetailsModalOpen = ref(false)
@@ -434,6 +426,28 @@ const completedGoals = computed(() => goals.value.filter(goal => goal.status ===
 const invitations = computed(() => sharedGoalsStore.invitations)
 const currentBudgetId = computed(() => budgetStore.currentBudget?.id || '')
 const hasUserProfile = computed(() => !!userProfileStore.currentProfile)
+
+
+// Refresh shared goals data when page is mounted to ensure fresh data
+onMounted(async () => {
+  const currentBudgetId = budgetStore.currentBudget?.id
+  if (currentBudgetId) {
+    // Clear any previous refresh errors
+    clearRefreshError()
+
+    // Refresh page data to get the latest goals and invitations
+    const result = await refreshPageData(currentBudgetId)
+
+    if (result) {
+      console.log('Shared goals page data refreshed successfully on mount', {
+        goalsCount: result.goals.length,
+        invitationsCount: result.invitations.length
+      })
+    } else {
+      console.error('Failed to refresh shared goals page data on mount')
+    }
+  }
+})
 
 // Methods
 const formatCurrency = (amount: number): string => {
@@ -476,26 +490,6 @@ const handleGoalClick = (goal: any) => {
   isGoalDetailsModalOpen.value = true
 }
 
-const handleGoalCreated = (goal: SharedGoalResponse) => {
-  console.log('Goal created:', goal)
-  // Goal is already added to store by the composable
-}
-
-const handleGoalUpdated = (goal: SharedGoalResponse) => {
-  console.log('Goal updated:', goal)
-  // Goal is already updated in store by the composable
-}
-
-const handleGoalLeft = (goalId: string) => {
-  console.log('Left goal:', goalId)
-  // Goal is already removed from store by the composable
-}
-
-const handleGoalDeleted = (goalId: string) => {
-  console.log('Goal deleted:', goalId)
-  // Goal is already removed from store by the composable
-}
-
 const openInviteModal = (goal: any) => {
   // Convert readonly goal to mutable object for the modal
   selectedGoalForInvite.value = {
@@ -517,20 +511,8 @@ const openInviteModal = (goal: any) => {
   isInviteModalOpen.value = true
 }
 
-const handleInvitationSent = (invitation: InvitationResponse) => {
-  console.log('Invitation sent:', invitation)
-  // Invitation is already added to store by the composable
-}
-
-const handleInvitationAccepted = (invitation: InvitationResponse) => {
-  console.log('Invitation accepted:', invitation)
+const handleInvitationVisibility = (invitation: InvitationResponse) => {
   showInvitations.value = false
-  // Refresh goals data to show the user as a participant
-  // This will happen automatically via main data service
-}
-
-const handleInvitationDeclined = (invitation: InvitationResponse) => {
-  console.log('Invitation declined:', invitation)
 }
 
 const handleLeaveGoal = async (goal: any) => {
@@ -570,31 +552,4 @@ const handleRefreshData = async () => {
     }
   }
 }
-
-const handleProfileCreated = () => {
-  console.log('Profile created successfully')
-  // The profile is already updated in the store by the composable
-  // The UI will automatically update to show the Create Goal button
-}
-
-// Refresh shared goals data when page is mounted to ensure fresh data
-onMounted(async () => {
-  const currentBudgetId = budgetStore.currentBudget?.id
-  if (currentBudgetId) {
-    // Clear any previous refresh errors
-    clearRefreshError()
-
-    // Refresh page data to get the latest goals and invitations
-    const result = await refreshPageData(currentBudgetId)
-
-    if (result) {
-      console.log('Shared goals page data refreshed successfully on mount', {
-        goalsCount: result.goals.length,
-        invitationsCount: result.invitations.length
-      })
-    } else {
-      console.error('Failed to refresh shared goals page data on mount')
-    }
-  }
-})
 </script>
