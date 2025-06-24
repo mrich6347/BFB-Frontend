@@ -37,7 +37,7 @@
                 @change="handleFileSelect"
                 class="hidden"
               />
-              <Button @click="$refs.fileInput?.click()" variant="outline">
+              <Button @click="fileInput?.click()" variant="outline">
                 Browse Files
               </Button>
             </div>
@@ -226,6 +226,9 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const budgetStore = useBudgetStore()
+
+// Refs
+const fileInput = ref<HTMLInputElement>()
 
 // State
 const selectedFile = ref<File | null>(null)

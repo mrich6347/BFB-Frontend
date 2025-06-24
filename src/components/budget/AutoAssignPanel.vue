@@ -7,11 +7,6 @@
 
     <!-- Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
-      <!-- Loading State -->
-      <div v-if="autoAssignStore.isLoading" class="flex-1 flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-
       <!-- Applying Animation Overlay -->
       <div v-if="isApplying" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-background border border-border rounded-xl shadow-2xl p-8 max-w-lg mx-4 min-w-[400px] w-full max-h-[80vh] transform transition-all duration-300 ease-out">

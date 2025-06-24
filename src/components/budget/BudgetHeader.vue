@@ -113,8 +113,8 @@ const showAssignModal = ref(false)
 const assignModalPosition = ref({ x: 0, y: 0 })
 
 // Computed property for available categories
-const availableCategories = computed(() => {
-  return categoryStore.categories
+const availableCategories = computed((): CategoryResponse[] => {
+  return categoryStore.categories as CategoryResponse[]
 })
 
 // Computed property for Ready to Assign color based on value

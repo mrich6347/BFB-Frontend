@@ -151,7 +151,7 @@ const modalStyle = computed(() => {
   }
 
   return {
-    position: 'fixed',
+    position: 'fixed' as const,
     left: `${left}px`,
     top: `${top}px`,
     zIndex: 60
