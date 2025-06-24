@@ -141,7 +141,7 @@ import Button from '@/components/shadcn-ui/button.vue'
 import { X, Plus, Trash2 } from 'lucide-vue-next'
 import { useCategoryStore } from '@/stores/category.store'
 import { useAutoAssignStore } from '@/stores/auto-assign.store'
-import { useAutoAssignOperations } from '@/composables/auto-assign/useAutoAssignOperations'
+import { useFetchAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-read/useFetchAutoAssignConfiguration'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { AutoAssignConfigurationSummary, AutoAssignConfigurationItem } from '@/services/auto-assign.service'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
@@ -161,7 +161,7 @@ const emit = defineEmits<{
 
 const categoryStore = useCategoryStore()
 const autoAssignStore = useAutoAssignStore()
-const { loadConfiguration } = useAutoAssignOperations()
+const { fetchConfiguration } = useFetchAutoAssignConfiguration()
 
 const configName = ref('')
 const selectedCategories = ref<AutoAssignConfigurationItem[]>([])
@@ -271,7 +271,7 @@ const loadConfigurationData = async () => {
     configName.value = props.configuration.name
 
     // Load full configuration details
-    const fullConfig = await loadConfiguration(
+    const fullConfig = await fetchConfiguration(
       props.configuration.budget_id,
       props.configuration.name
     )

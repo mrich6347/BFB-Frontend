@@ -130,7 +130,10 @@ import { ref, onMounted, computed } from 'vue'
 import Button from '@/components/shadcn-ui/button.vue'
 import { Plus, Edit, Trash2, Play } from 'lucide-vue-next'
 import { useAutoAssignStore } from '@/stores/auto-assign.store'
-import { useAutoAssignOperations } from '@/composables/auto-assign/useAutoAssignOperations'
+import { useDeleteAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-write/useDeleteAutoAssignConfiguration'
+import { useApplyAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-write/useApplyAutoAssignConfiguration'
+import { useCreateAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-write/useCreateAutoAssignConfiguration'
+import { useUpdateAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-write/useUpdateAutoAssignConfiguration'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { useFetchCategoryBalances } from '@/composables/categories/category-read/useFetchCategoryBalances'
@@ -145,14 +148,10 @@ const emit = defineEmits<{
 }>()
 
 const autoAssignStore = useAutoAssignStore()
-const {
-  deleteConfiguration: deleteConfigurationOp,
-  applyConfiguration: applyConfigurationOp,
-  createConfiguration: createConfigurationOp,
-  updateConfiguration: updateConfigurationOp,
-  isLoading: autoAssignLoading,
-  error: autoAssignError
-} = useAutoAssignOperations()
+const { deleteConfiguration: deleteConfigurationOp, isLoading: deleteLoading, error: deleteError } = useDeleteAutoAssignConfiguration()
+const { applyConfiguration: applyConfigurationOp, isLoading: applyLoading, error: applyError } = useApplyAutoAssignConfiguration()
+const { createConfiguration: createConfigurationOp, isLoading: createLoading, error: createError } = useCreateAutoAssignConfiguration()
+const { updateConfiguration: updateConfigurationOp, isLoading: updateLoading, error: updateError } = useUpdateAutoAssignConfiguration()
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
 const { fetchCategoryBalances } = useFetchCategoryBalances()
