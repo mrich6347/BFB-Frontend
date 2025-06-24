@@ -68,8 +68,6 @@ const handleBalanceUpdated = async () => {
 }
 
 onMounted(() => {
-  // Tracking account pages are always accessed from within a budget context
-  // so main data should already be loaded. Just set loading to false.
-  isLoading.value = false
+  isLoading.value = true
 })
 </script>
