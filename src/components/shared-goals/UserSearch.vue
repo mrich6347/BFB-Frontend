@@ -97,6 +97,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useUserProfileOperations } from '../../composables/user-profiles/useUserProfileOperations'
+import { useUserProfileStore } from '../../stores/user-profile.store'
 import type { PublicUserProfileResponse } from '../../types/DTO/user-profile.dto'
 
 interface Props {
@@ -120,7 +121,12 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-const { debouncedSearchUsers, searchResults, isSearching, error, clearError, clearSearchResults } = useUserProfileOperations()
+// Get operations from composable
+const { debouncedSearchUsers, clearError, clearSearchResults } = useUserProfileOperations()
+
+// Get state from store
+const userProfileStore = useUserProfileStore()
+const { searchResults, isSearching, error } = userProfileStore
 
 const searchQuery = ref('')
 const selectedIndex = ref(-1)
@@ -128,7 +134,7 @@ const selectedUser = ref<PublicUserProfileResponse | null>(props.modelValue ?? n
 const showResults = ref(false)
 
 const filteredResults = computed(() => {
-  return searchResults.value.filter(user =>
+  return searchResults.value.filter((user: PublicUserProfileResponse) =>
     !props.excludeUsernames.includes(user.username)
   )
 })

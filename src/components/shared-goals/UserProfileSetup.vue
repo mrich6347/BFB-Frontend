@@ -89,6 +89,7 @@ import { ref, computed, watch } from 'vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../shadcn-ui'
 import Button from '../shadcn-ui/button.vue'
 import { useUserProfileOperations } from '../../composables/user-profiles/useUserProfileOperations'
+import { useUserProfileStore } from '../../stores/user-profile.store'
 import type { CreateUserProfileDto } from '../../types/DTO/user-profile.dto'
 
 interface Props {
@@ -103,7 +104,12 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const { createProfile, isLoading, error, clearError } = useUserProfileOperations()
+// Get operations from composable
+const { createProfile, clearError } = useUserProfileOperations()
+
+// Get state from store
+const userProfileStore = useUserProfileStore()
+const { isLoading, error } = userProfileStore
 
 const formData = ref<CreateUserProfileDto>({
   username: '',

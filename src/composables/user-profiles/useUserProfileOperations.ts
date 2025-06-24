@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue'
+import { ref } from 'vue'
 import { useUserProfileStore } from '../../stores/user-profile.store'
 import { UserProfileService } from '../../services/user-profile.service'
 import type {
@@ -9,22 +9,14 @@ import type {
 } from '../../types/DTO/user-profile.dto'
 
 export function useUserProfileOperations(): {
-  // Operations
+  // Operations only - components should access store directly for state
   createProfile: (createUserProfileDto: CreateUserProfileDto) => Promise<UserProfileResponse | null>
   getCurrentProfile: () => Promise<UserProfileResponse | null>
   updateProfile: (updateUserProfileDto: UpdateUserProfileDto) => Promise<UserProfileResponse | null>
   searchUsers: (username: string) => Promise<PublicUserProfileResponse[]>
   debouncedSearchUsers: (username: string, delay?: number) => Promise<PublicUserProfileResponse[]>
-  // Removed findByUsername - username availability is now checked during create/update
   clearSearchResults: () => void
   clearError: () => void
-
-  // State (from store)
-  currentProfile: Ref<UserProfileResponse | null>
-  searchResults: Ref<PublicUserProfileResponse[]>
-  isLoading: Ref<boolean>
-  isSearching: Ref<boolean>
-  error: Ref<string | null>
 } {
   const userProfileStore = useUserProfileStore()
   const debounceTimer = ref<NodeJS.Timeout | null>(null)
@@ -129,24 +121,14 @@ export function useUserProfileOperations(): {
     userProfileStore.clearError()
   }
 
-  // Get fresh store reference to ensure we're using the same instance
-  const store = useUserProfileStore()
-
   return {
-    // Operations
+    // Operations only - components should access store directly for state
     createProfile,
     getCurrentProfile,
     updateProfile,
     searchUsers,
     debouncedSearchUsers,
     clearSearchResults,
-    clearError,
-
-    // State (from store) - use fresh store reference
-    currentProfile: store.currentProfile,
-    searchResults: store.searchResults,
-    isLoading: store.isLoading,
-    isSearching: store.isSearching,
-    error: store.error
+    clearError
   }
 }
