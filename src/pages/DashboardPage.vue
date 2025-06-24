@@ -56,6 +56,7 @@
               :key="budget.id"
               @click="goToBudget(budget.id)"
               class="hover:shadow-md transition-all duration-200 cursor-pointer relative group"
+              :style="{ opacity: loadingBudgetId === budget.id ? 0.5 : 1, pointerEvents: loadingBudgetId === budget.id ? 'none' : 'auto' }"
             >
               <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
                 <Button
@@ -71,7 +72,11 @@
                 <CardTitle class="truncate">{{ budget.name }}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p class="text-sm text-muted-foreground">
+                <div v-if="loadingBudgetId === budget.id" class="flex items-center justify-center py-4">
+                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  <span class="ml-2 text-sm text-muted-foreground">Loading...</span>
+                </div>
+                <p v-else class="text-sm text-muted-foreground">
                   Last Used On: {{ formatDate(budget.updated_at, budget.date_format) }}
                 </p>
               </CardContent>
@@ -129,6 +134,7 @@ import type { BudgetResponse } from '@/types/DTO/budget.dto'
 import { saveLastVisitedBudget } from '@/utils/lastVisitedBudgetStorage'
 import { useFetchBudgets } from '@/composables/budgets/budget-read/useFetchBudgets'
 import { useBudgetUtils } from '@/composables/budgets/budget-read/useBudgetUtils'
+import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 
 const loading = ref(true)
 const showCreateModal = ref(false)
@@ -138,7 +144,11 @@ const selectedBudget = ref<BudgetResponse | null>(null)
 const budgetStore = useBudgetStore()
 const { fetchBudgets } = useFetchBudgets()
 const { resetBudgetData } = useBudgetUtils()
+const { ensureDataLoaded } = useMainDataOperations()
 const router = useRouter()
+
+// Loading state for when user clicks a budget
+const loadingBudgetId = ref<string | null>(null)
 
 onMounted(async () => {
   try {
@@ -149,10 +159,29 @@ onMounted(async () => {
   }
 })
 
-const goToBudget = (budgetId: string) => {
-  // Save this budget as the last visited budget
-  saveLastVisitedBudget(budgetId)
-  router.push(`/budget/${budgetId}`)
+const goToBudget = async (budgetId: string) => {
+  try {
+    // Show loading state for this specific budget
+    loadingBudgetId.value = budgetId
+
+    // Load all data for this budget
+    const success = await ensureDataLoaded(budgetId)
+
+    if (success) {
+      // Save this budget as the last visited budget
+      saveLastVisitedBudget(budgetId)
+      // Navigate to the budget page
+      router.push(`/budget/${budgetId}`)
+    } else {
+      console.error('Failed to load budget data')
+      // Could show an error toast here
+    }
+  } catch (error) {
+    console.error('Error loading budget:', error)
+    // Could show an error toast here
+  } finally {
+    loadingBudgetId.value = null
+  }
 }
 
 const openEditModal = (budget: BudgetResponse) => {

@@ -102,8 +102,7 @@ export function useMainDataOperations() {
         sharedGoalsStore.setInvitations(mainData.invitations)
       }
 
-      // Set loading states to false
-      categoryStore.setIsLoading(false)
+      // All data distributed to stores successfully
 
     } catch (error: any) {
       throw new Error(`Failed to distribute main data to stores: ${error.message}`)
@@ -184,7 +183,7 @@ export function useMainDataOperations() {
     const hasBudgetData = budgetStore.currentBudget?.id === budgetId
 
     // Check if we have essential data in other stores (categories are a good indicator)
-    const hasCategoryData = categoryStore.categories.length > 0 && !categoryStore.isLoading
+    const hasCategoryData = categoryStore.categories.length > 0
 
     // Check if we have account data
     const hasAccountData = accountStore.accounts.length > 0

@@ -11,7 +11,7 @@ import AccountPage from '../pages/AccountPage.vue'
 import ProfileSettingsPage from '../pages/ProfileSettingsPage.vue'
 import SharedGoalsPage from '../pages/SharedGoalsPage.vue'
 import { supabase } from '../lib/supabaseClient'
-import { getLastVisitedBudget } from '../utils/lastVisitedBudgetStorage'
+
 
 
 const routes = [
@@ -108,14 +108,8 @@ router.beforeEach(async (to, from, next) => {
     return next({ path: '/' })
   }
 
-  // Handle last visited budget redirect for landing page
-  if (to.path === '/' && isAuthenticated && !to.query.force) {
-    const lastVisitedBudget = getLastVisitedBudget()
-    if (lastVisitedBudget) {
-      // Redirect to last visited budget
-      return next({ path: `/budget/${lastVisitedBudget}` })
-    }
-  }
+  // No automatic redirects - keep it simple
+  // App.vue handles redirecting to dashboard
 
   // Proceed as normal
   next()

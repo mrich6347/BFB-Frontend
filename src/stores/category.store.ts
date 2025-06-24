@@ -9,7 +9,6 @@ export const useCategoryStore = defineStore('categoryStore', () => {
   const categoryGroups = ref<CategoryGroupResponse[]>([])
   const categories = ref<CategoryResponse[]>([])
   const categoryBalances = ref<CategoryBalanceResponse[]>([])
-  const isLoading = ref(true)
 
   // Getters
   const getCategoryGroupById = computed(() => (id: string) => {
@@ -237,15 +236,10 @@ export const useCategoryStore = defineStore('categoryStore', () => {
     }
   }
 
-  const setIsLoading = (loading: boolean) => {
-    isLoading.value = loading
-  }
-
   const reset = () => {
     categoryGroups.value = []
     categories.value = []
     categoryBalances.value = []
-    isLoading.value = true
   }
 
   // Helper methods to get categories with balances
@@ -284,7 +278,6 @@ export const useCategoryStore = defineStore('categoryStore', () => {
     categoryGroups: readonly(categoryGroups),
     categories: readonly(categories),
     categoryBalances: readonly(categoryBalances),
-    isLoading: readonly(isLoading),
 
     // Getters
     getCategoryGroupById,
@@ -317,7 +310,6 @@ export const useCategoryStore = defineStore('categoryStore', () => {
     reorderCategories,
     setCategoryBalances,
     updateCategoryBalance,
-    setIsLoading,
     reset
   }
 })

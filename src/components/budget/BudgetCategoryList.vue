@@ -1,12 +1,7 @@
 <template>
   <div class="space-y-1 pb-16">
-    <!-- Loading State -->
-    <div v-if="categoryStore.isLoading" class="flex justify-center items-center min-h-[200px]">
-      <div class="text-muted-foreground">Loading categories...</div>
-    </div>
-
     <!-- Empty State -->
-    <div v-else-if="sortedCategoryGroups.length === 0" class="flex flex-col items-center justify-center min-h-[200px] p-4">
+    <div v-if="sortedCategoryGroups.length === 0" class="flex flex-col items-center justify-center min-h-[200px] p-4">
       <div class="text-muted-foreground mb-4 text-center">
         <p class="text-lg font-medium mb-2">No categories found</p>
         <p class="mb-4">Start by creating a category group, then add categories to it.</p>
