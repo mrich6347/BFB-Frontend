@@ -161,5 +161,7 @@ const chartOptions = computed(() => ({
 onMounted(loadBalanceHistory)
 
 // Watch for account ID changes
-watch(() => props.accountId, loadBalanceHistory)
+watch(() => props.accountId, () => {
+  loadBalanceHistory()
+})
 </script>

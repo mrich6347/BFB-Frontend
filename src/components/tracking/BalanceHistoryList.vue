@@ -95,5 +95,7 @@ const formatDate = (dateString: string): string => {
 onMounted(loadBalanceHistory)
 
 // Watch for account ID changes
-watch(() => props.accountId, loadBalanceHistory)
+watch(() => props.accountId, () => {
+  loadBalanceHistory()
+})
 </script>

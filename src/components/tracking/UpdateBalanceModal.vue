@@ -133,7 +133,7 @@ const handleSubmit = async (data: any) => {
   try {
     isLoading.value = true
 
-    const newBalance = parseFormattedNumberToDecimal(data.new_balance)
+    const newBalance = parseFloat(parseFormattedNumberToDecimal(data.new_balance))
     const currentBalance = props.account.working_balance || 0
 
     // Check if balance actually changed

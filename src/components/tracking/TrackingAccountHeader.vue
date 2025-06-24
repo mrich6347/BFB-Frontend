@@ -6,7 +6,7 @@
           <div>
             <h1 class="text-2xl font-bold text-foreground">{{ account?.name }}</h1>
             <div class="flex items-center gap-2 mt-1">
-              <Badge variant="secondary">{{ formatAccountType(account?.account_type) }}</Badge>
+              <Badge variant="neutral">{{ formatAccountType(account?.account_type) }}</Badge>
             </div>
           </div>
         </div>
