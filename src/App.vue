@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { RouterView } from 'vue-router'
 import { useTheme } from '@/composables/common/useTheme'
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
-import { getLastVisitedBudget, saveLastVisitedBudget } from '@/utils/lastVisitedBudgetStorage'
+import { saveLastVisitedBudget } from '@/utils/lastVisitedBudgetStorage'
 import AppLoader from '@/components/common/AppLoader.vue'
 
 // Initialize theme
@@ -32,12 +32,8 @@ onMounted(async () => {
       await router.push('/dashboard')
     }
   } else {
-    // We're not on a budget route, check if we should redirect to last visited budget
-    const lastVisitedBudget = getLastVisitedBudget()
-    if (lastVisitedBudget && route.path === '/') {
-      // Only redirect from landing page, not from other non-budget pages
-      await router.push(`/budget/${lastVisitedBudget}`)
-    }
+    // We're not on a budget route - no automatic redirect to last visited budget
+    // Users should manually select a budget from the dashboard
   }
 })
 </script>
