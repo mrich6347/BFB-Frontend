@@ -27,7 +27,7 @@
       <div v-if="searchResults.length === 0 && !isSearching && searchQuery.length >= minSearchLength" class="p-4 text-center text-gray-500">
         <p>No users found matching "{{ searchQuery }}"</p>
       </div>
-      
+
       <div v-else-if="searchResults.length > 0" class="divide-y divide-gray-100">
         <button
           v-for="(user, index) in searchResults"
@@ -124,18 +124,18 @@ const { debouncedSearchUsers, searchResults, isSearching, error, clearError, cle
 
 const searchQuery = ref('')
 const selectedIndex = ref(-1)
-const selectedUser = ref<PublicUserProfileResponse | null>(props.modelValue || null)
+const selectedUser = ref<PublicUserProfileResponse | null>(props.modelValue ?? null)
 const showResults = ref(false)
 
 const filteredResults = computed(() => {
-  return searchResults.value.filter(user => 
+  return searchResults.value.filter(user =>
     !props.excludeUsernames.includes(user.username)
   )
 })
 
 const handleSearch = async () => {
   clearError()
-  
+
   if (searchQuery.value.length < props.minSearchLength) {
     clearSearchResults()
     showResults.value = false
@@ -145,7 +145,7 @@ const handleSearch = async () => {
 
   showResults.value = true
   selectedIndex.value = -1
-  
+
   try {
     await debouncedSearchUsers(searchQuery.value)
   } catch (error) {
@@ -159,7 +159,7 @@ const selectUser = (user: PublicUserProfileResponse) => {
   showResults.value = false
   selectedIndex.value = -1
   clearSearchResults()
-  
+
   emit('update:modelValue', user)
   emit('userSelected', user)
 }
@@ -180,17 +180,17 @@ const clearSearch = () => {
 
 const navigateDown = () => {
   if (filteredResults.value.length === 0) return
-  
-  selectedIndex.value = selectedIndex.value < filteredResults.value.length - 1 
-    ? selectedIndex.value + 1 
+
+  selectedIndex.value = selectedIndex.value < filteredResults.value.length - 1
+    ? selectedIndex.value + 1
     : 0
 }
 
 const navigateUp = () => {
   if (filteredResults.value.length === 0) return
-  
-  selectedIndex.value = selectedIndex.value > 0 
-    ? selectedIndex.value - 1 
+
+  selectedIndex.value = selectedIndex.value > 0
+    ? selectedIndex.value - 1
     : filteredResults.value.length - 1
 }
 
@@ -211,7 +211,7 @@ const handleClickOutside = (event: MouseEvent) => {
 
 // Watch for external changes to modelValue
 watch(() => props.modelValue, (newValue) => {
-  selectedUser.value = newValue
+  selectedUser.value = newValue ?? null
 })
 
 onMounted(() => {
@@ -222,9 +222,3 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 </script>
-
-<style scoped>
-.user-search-container {
-  /* This class is used for click-outside detection */
-}
-</style>
