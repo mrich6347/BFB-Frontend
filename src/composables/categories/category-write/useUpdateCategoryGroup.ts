@@ -13,16 +13,13 @@ export const useUpdateCategoryGroup = () => {
     error.value = null
 
     try {
-      // Composable responsibility: Prep the data
       const requestData = {
         ...formData,
         name: formData.name?.trim()
       }
 
-      // Call service
       const response = await CategoryGroupService.updateCategoryGroup(id, requestData)
 
-      // Store responsibility: Know HOW to find and update the correct group
       categoryStore.updateCategoryGroup(id, response)
 
       return response

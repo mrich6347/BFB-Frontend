@@ -24,14 +24,10 @@ export const useUnhideCategory = () => {
         targetGroup = firstGroup.id
       }
 
-      // Call service
       const response = await CategoryService.unhideCategory(id, targetGroup)
 
-      // Composable responsibility: Coordinate cross-store updates
-      // Update Ready to Assign with the accurate value from the backend
       budgetStore.setReadyToAssign(response.readyToAssign)
 
-      // Store responsibility: Know HOW to unhide the category
       categoryStore.unhideCategory(id, targetGroup)
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to unhide category'

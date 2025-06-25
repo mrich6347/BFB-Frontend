@@ -15,22 +15,17 @@ export const useUpdateCategory = () => {
     error.value = null
 
     try {
-      // Composable responsibility: Prep the data
       const requestData = {
         ...formData,
         name: formData.name?.trim()
       }
 
-      // Call service
       const response = await CategoryService.updateCategory(id, requestData)
 
-      // Composable responsibility: Coordinate cross-store updates
-      // Update Ready to Assign in budget store if needed
       if (response.readyToAssign !== undefined) {
         budgetStore.setReadyToAssign(response.readyToAssign)
       }
 
-      // Store responsibility: Know HOW to find and update the correct category
       categoryStore.updateCategory(id, response.category)
 
       return response.category

@@ -13,7 +13,6 @@ export const useUpdateBudget = () => {
     error.value = null
 
     try {
-      // Composable responsibility: Prep the data
       const requestData: Partial<CreateBudgetDto> = {
         ...formData
       }
@@ -22,10 +21,8 @@ export const useUpdateBudget = () => {
         requestData.name = formData.name.trim()
       }
 
-      // Call service
       const updatedBudget = await BudgetService.updateBudget(id, requestData as CreateBudgetDto)
 
-      // Store responsibility: Know HOW to find and update the correct budget
       budgetStore.updateBudget(id, updatedBudget)
 
       return updatedBudget

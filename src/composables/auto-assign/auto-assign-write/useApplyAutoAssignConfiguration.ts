@@ -13,17 +13,13 @@ export const useApplyAutoAssignConfiguration = () => {
     error.value = null
 
     try {
-      // Composable responsibility: Format/validate data before sending
       const requestData = {
         ...formData,
         name: formData.name.trim()
       }
 
-      // Call service
       const result = await AutoAssignService.applyConfiguration(requestData)
 
-      // Composable responsibility: Coordinate cross-store updates
-      // Update Ready to Assign in budget store
       budgetStore.setReadyToAssign(result.readyToAssign)
 
       return result

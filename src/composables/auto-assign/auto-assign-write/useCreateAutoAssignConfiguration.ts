@@ -13,17 +13,14 @@ export const useCreateAutoAssignConfiguration = () => {
     error.value = null
 
     try {
-      // Composable responsibility: Format/validate data before sending
       const requestData = {
         ...formData,
         name: formData.name.trim(),
         items: formData.items.filter(item => item.amount > 0) // Remove zero amounts
       }
 
-      // Call service to get data
       const newConfig = await AutoAssignService.createConfiguration(requestData)
 
-      // Store responsibility: Know HOW to add the configuration to state
       autoAssignStore.addConfiguration(newConfig)
       autoAssignStore.setCurrentConfiguration(newConfig)
 

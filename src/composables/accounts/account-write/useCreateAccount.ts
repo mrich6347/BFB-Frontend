@@ -34,20 +34,12 @@ export const useCreateAccount = () => {
     error.value = null
 
     try {
-      // Composable responsibility: Format/validate data before sending
       const preparedAccount = prepareAccountCreation(request)
 
-      // Call service to get data
       const response = await AccountService.createAccount(preparedAccount)
 
-      // Update Ready to Assign in budget store
       setReadyToAssign(response.readyToAssign)
-
-      // Store responsibility: Know HOW to add the account to state
       accountStore.addAccount(response.account)
-
-      // If this is a credit card account, we need to refresh categories
-      // This will be handled by the calling component since it involves category store
 
       return response.account
     } catch (err) {

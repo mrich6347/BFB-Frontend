@@ -13,16 +13,13 @@ export const useCreateBudget = () => {
     error.value = null
 
     try {
-      // Composable responsibility: Format/validate data before sending
       const requestData = {
         ...formData,
         name: formData.name.trim()
       }
 
-      // Call service to get data
       const newBudget = await BudgetService.createBudget(requestData)
 
-      // Store responsibility: Know HOW to add the budget to state
       budgetStore.addBudget(newBudget)
       budgetStore.setCurrentBudget(newBudget)
 

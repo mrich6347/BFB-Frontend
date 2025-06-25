@@ -14,11 +14,8 @@ export const useHideCategory = () => {
     error.value = null
 
     try {
-      // Call service
       const response = await CategoryService.hideCategory(id)
 
-      // Composable responsibility: Coordinate cross-store updates
-      // Update Ready to Assign with the accurate value from the backend
       budgetStore.setReadyToAssign(response.readyToAssign)
 
       // Store responsibility: Know HOW to hide the category

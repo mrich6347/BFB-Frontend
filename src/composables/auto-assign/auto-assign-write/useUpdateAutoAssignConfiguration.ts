@@ -13,7 +13,6 @@ export const useUpdateAutoAssignConfiguration = () => {
     error.value = null
 
     try {
-      // Composable responsibility: Prep the data
       const requestData: UpdateAutoAssignConfigurationDto = {
         ...formData
       }
@@ -26,10 +25,8 @@ export const useUpdateAutoAssignConfiguration = () => {
         requestData.items = formData.items.filter(item => item.amount > 0) // Remove zero amounts
       }
 
-      // Call service
       const updatedConfig = await AutoAssignService.updateConfiguration(budgetId, name, requestData)
 
-      // Store responsibility: Know HOW to find and update the correct configuration
       autoAssignStore.updateConfiguration(name, updatedConfig)
 
       return updatedConfig
