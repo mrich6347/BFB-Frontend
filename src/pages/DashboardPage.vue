@@ -35,7 +35,8 @@
                 <Plus class="h-5 w-5 mr-2" />
                 New Budget
             </Button>
-            <Button variant="outline" class="ml-2" @click="showImportModal = true">
+            <!-- TODO: unhide this button when YNAB import is implemented -->
+            <Button variant="outline" class="ml-2" @click="showImportModal = true" v-if="false">
               <Import class="h-5 w-5 mr-2" />
               Import From YNAB
             </Button>
