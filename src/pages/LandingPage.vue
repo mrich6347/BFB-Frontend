@@ -240,9 +240,6 @@
           <h2 class="text-3xl md:text-5xl font-bold mb-6 text-foreground">
             Ready to Take Control of Your <span class="text-primary">Finances?</span>
           </h2>
-          <p class="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Join thousands of users who have transformed their financial future with BFB's powerful budgeting tools and collaborative features.
-          </p>
           <div class="flex flex-wrap justify-center gap-4">
             <Button size="lg" @click="handleSignUp" v-if="!user">
               Get Started Free
