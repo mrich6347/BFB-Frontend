@@ -1,27 +1,31 @@
-# Vue TypeScript Supabase Authentication Starter
+## Hey, Notable Team! 👋
 
-A modern starter template for Vue 3 with TypeScript and Supabase authentication integration.
+(Please note this project is still VERY much a work in progress, but gives a good idea of the direction I am headed in)
 
-## Features
+### 🏗️ Frontend Architecture Overview
 
-- Vue 3 with Composition API
-- TypeScript support
-- Supabase authentication (email/password)
-- Tailwind CSS for styling
-- Vue Router with protected routes
-- Dark mode support
-- Responsive design
+This frontend follows a **layered architecture** with clear separation of concerns:
 
-## Getting Started
+**First Level - Presentation Layer:**
+- **Pages** (`/src/pages/`) - Top-level route components and page layouts
+- **Components** (`/src/components/`) - Reusable UI components organized by domain
 
-### Prerequisites
+**Second Level - Business Logic Layer:**
+- **Composables** (`/src/composables/`) - (Similar to React Hooks)
 
-- Node.js (v16 or higher)
-- npm or yarn
-- Run Npm Install
-- Simply update the .env
-- Then run npm run dev
 
-### Installation
+**Third Level - Service Layer:**
+- **Services** (`/src/services/`) - API communication layer handling HTTP requests to backend
 
-1. Clone this repository
+**Fourth Level - State Management Layer:**
+    - **Stores** (`/src/stores/`) - Pinia stores for managing application state
+
+
+### 🔧 Technology Stack
+- **Vue 3**: Composition API with `<script setup>` syntax
+- **TypeScript**: Full type safety throughout the application
+- **Pinia**: State management with TypeScript support
+- **Vue Router**: Client-side routing with protected routes
+- **Tailwind CSS**: Utility-first CSS framework to support light/dark mode
+- **Vite**: Fast build tool and development server
+
