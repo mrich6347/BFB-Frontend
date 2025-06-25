@@ -22,7 +22,7 @@ This frontend follows a **layered architecture** with clear separation of concer
 
 
 ### 🔧 Technology Stack
-- **Vue 3**: Composition API with `<script setup>` syntax
+- **Vue 3** 
 - **TypeScript**: Full type safety throughout the application
 - **Pinia**: State management with TypeScript support
 - **Vue Router**: Client-side routing with protected routes
