@@ -269,19 +269,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive, watch } from 'vue'
+import { computed } from 'vue'
 import { ChevronRightIcon, ChevronDownIcon, PlusIcon, Edit, GripVertical } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import Badge from '@/components/shadcn-ui/Badge.vue'
-import { useCategoryStore } from '@/stores/category.store'
-import { useMoveMoneyBetweenCategories } from '@/composables/categories/category-write/useMoveMoneyBetweenCategories'
-import { useMoveMoneyToReadyToAssign } from '@/composables/categories/category-write/useMoveMoneyToReadyToAssign'
-import { usePullFromReadyToAssign } from '@/composables/categories/category-write/usePullFromReadyToAssign'
-import { useReorderCategoryGroups } from '@/composables/categories/category-write/useReorderCategoryGroups'
-import { useReorderCategories } from '@/composables/categories/category-write/useReorderCategories'
-import { useUpdateCategoryBalance } from '@/composables/categories/category-write/useUpdateCategoryBalance'
 import { useBudgetStore } from '@/stores/budget.store'
-import { useAccountStore } from '@/stores/account.store'
 import type { CategoryGroupResponse } from '@/types/DTO/category-group.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 import CategoryGroupModal from './CategoryGroupModal.vue'
@@ -291,622 +283,94 @@ import PullMoneyModal from './PullMoneyModal.vue'
 import UnhideCategoryModal from './UnhideCategoryModal.vue'
 import CalculationInput from './CalculationInput.vue'
 import draggable from 'vuedraggable'
-import { saveExpandedGroups, loadExpandedGroups } from '@/utils/expandedGroupsStorage'
+
+// Import new composables
+import { useCategoryListState } from '@/composables/categories/category-ui/useCategoryListState'
+import { useCategoryDragAndDrop } from '@/composables/categories/category-ui/useCategoryDragAndDrop'
+import { useCategoryModals } from '@/composables/categories/category-ui/useCategoryModals'
+import { useMoneyMovement } from '@/composables/categories/category-ui/useMoneyMovement'
+import { useCategoryAnimations } from '@/composables/categories/category-ui/useCategoryAnimations'
 
 // Props
 const props = defineProps<{
   activeFilter?: string
 }>()
 
-const categoryStore = useCategoryStore()
-const { moveMoney } = useMoveMoneyBetweenCategories()
-const { moveMoneyToReadyToAssign } = useMoveMoneyToReadyToAssign()
-const { pullFromReadyToAssign } = usePullFromReadyToAssign()
-const { reorderCategoryGroups } = useReorderCategoryGroups()
-const { reorderCategories } = useReorderCategories()
-const { updateCategoryBalance } = useUpdateCategoryBalance()
 const budgetStore = useBudgetStore()
-const accountStore = useAccountStore()
 
-const expandedGroups = ref<Set<string>>(new Set())
-const categoryLists = reactive<Record<string, CategoryResponse[]>>({})
-const categoryGroupsList = ref<CategoryGroupResponse[]>([])
-
-// Computed property to get visible category groups (filtered based on credit card accounts)
-const sortedCategoryGroups = computed(() => {
-  return categoryStore.visibleCategoryGroups
-})
-
-// Computed property to separate regular groups from hidden categories group
-// Also filters out groups that have no visible categories when a filter is applied
-const regularCategoryGroups = computed(() => {
-  return sortedCategoryGroups.value.filter(group => {
-    // Always exclude Hidden Categories system group
-    if (group.name === 'Hidden Categories' && group.is_system_group) {
-      return false
-    }
-
-    // If no filter is applied, show all groups
-    if (!props.activeFilter || props.activeFilter === 'all') {
-      return true
-    }
-
-    // Check if this group has any categories that match the current filter
-    const categoriesInGroup = getCategoriesForGroup(group.id)
-    return categoriesInGroup.length > 0
-  })
-})
-
-const hiddenCategoriesGroup = computed(() => {
-  return sortedCategoryGroups.value.find(group =>
-    group.name === 'Hidden Categories' && group.is_system_group
-  )
-})
-
-// Check if hidden categories group has any categories
-const hasHiddenCategories = computed(() => {
-  if (!hiddenCategoriesGroup.value) return false
-  const hiddenCategories = getCategoriesForGroup(hiddenCategoriesGroup.value.id)
-  return hiddenCategories.length > 0
-})
-
-// Update categoryGroupsList when regularCategoryGroups changes
-watch(() => regularCategoryGroups.value, (newGroups) => {
-  categoryGroupsList.value = [...newGroups]
-}, { immediate: true })
-
-// Get categories for a specific group with filtering applied
-const getCategoriesForGroup = (groupId: string) => {
-  const categories = categoryStore.getCategoriesByGroupWithBalances(groupId)
-
-  // Apply filter if specified
-  if (!props.activeFilter || props.activeFilter === 'all') {
-    return categories
-  }
-
-  if (props.activeFilter === 'overspent') {
-    return categories.filter(category => category.available < 0)
-  }
-
-  if (props.activeFilter === 'moneyAvailable') {
-    return categories.filter(category => category.available > 0)
-  }
-
-  return categories
-}
-
-// Get categories from the reactive categoryLists
-const getReactiveCategoriesForGroup = (groupId: string) => {
-  if (!categoryLists[groupId]) {
-    categoryLists[groupId] = [...getCategoriesForGroup(groupId)]
-  }
-  return categoryLists[groupId]
-}
-
-// Get totals for a specific group
-const getGroupTotals = (groupId: string) => {
-  return categoryStore.getGroupTotalsWithBalances(groupId)
-}
-
-// Initialize category lists for each group
-const initializeCategoryLists = () => {
-  sortedCategoryGroups.value.forEach(group => {
-    const newCategoriesForGroup = getCategoriesForGroup(group.id)
-
-    if (categoryLists[group.id]) {
-      // Update existing array in place to maintain reactivity
-      categoryLists[group.id].splice(0, categoryLists[group.id].length, ...newCategoriesForGroup)
-    } else {
-      // Create new array if it doesn't exist
-      categoryLists[group.id] = [...newCategoriesForGroup]
-    }
-  })
-}
-
-// Watch for changes in categories and update the categoryLists
-watch(() => categoryStore.getCategoriesWithBalances, (newCategories) => {
-  // Update existing arrays in place to maintain reactivity with draggable components
-  sortedCategoryGroups.value.forEach(group => {
-    const newCategoriesForGroup = getCategoriesForGroup(group.id)
-
-    if (categoryLists[group.id]) {
-      // Update existing array in place
-      categoryLists[group.id].splice(0, categoryLists[group.id].length, ...newCategoriesForGroup)
-    } else {
-      // Create new array if it doesn't exist
-      categoryLists[group.id] = [...newCategoriesForGroup]
-    }
-  })
-}, { deep: true })
-
-// Watch for changes in budget month and update the categoryLists
-watch(() => [budgetStore.currentYear, budgetStore.currentMonth], () => {
-  // Update existing arrays in place to maintain reactivity with draggable components
-  sortedCategoryGroups.value.forEach(group => {
-    const newCategoriesForGroup = getCategoriesForGroup(group.id)
-
-    if (categoryLists[group.id]) {
-      // Update existing array in place
-      categoryLists[group.id].splice(0, categoryLists[group.id].length, ...newCategoriesForGroup)
-    } else {
-      // Create new array if it doesn't exist
-      categoryLists[group.id] = [...newCategoriesForGroup]
-    }
-  })
-}, { deep: true })
-
-// Watch for changes in category groups and update the categoryLists
-watch(() => sortedCategoryGroups.value, (newGroups) => {
-  newGroups.forEach(group => {
-    if (!categoryLists[group.id]) {
-      categoryLists[group.id] = [...getCategoriesForGroup(group.id)]
-    }
-  })
-}, { immediate: true })
-
-// Watch for changes in active filter and update the categoryLists
-watch(() => props.activeFilter, () => {
-  // Update existing arrays in place to maintain reactivity with draggable components
-  sortedCategoryGroups.value.forEach(group => {
-    const newCategoriesForGroup = getCategoriesForGroup(group.id)
-
-    if (categoryLists[group.id]) {
-      // Update existing array in place
-      categoryLists[group.id].splice(0, categoryLists[group.id].length, ...newCategoriesForGroup)
-    } else {
-      // Create new array if it doesn't exist
-      categoryLists[group.id] = [...newCategoriesForGroup]
-    }
-  })
-})
-
-// Watch for changes in the current budget ID to load the appropriate expanded groups
-watch(() => budgetStore.currentBudget?.id, (newBudgetId) => {
-  if (newBudgetId) {
-    loadExpandedGroupsForBudget(newBudgetId)
-  }
-})
-
-// Watch for changes in category groups to ensure expansion state is set
-watch(() => sortedCategoryGroups.value, (newGroups) => {
-  const budgetId = budgetStore.currentBudget?.id
-  if (budgetId && newGroups.length > 0) {
-    // If we don't have any expanded groups set yet, load them
-    if (expandedGroups.value.size === 0) {
-      loadExpandedGroupsForBudget(budgetId)
-    }
-  }
-}, { immediate: true })
-
-// Helper function to load expanded groups for a budget
-const loadExpandedGroupsForBudget = (budgetId: string) => {
-  const savedExpandedGroups = loadExpandedGroups(budgetId)
-
-  // Clear the current set
-  expandedGroups.value.clear()
-
-  // If we have saved state (even if empty), use it
-  if (savedExpandedGroups !== null) {
-    savedExpandedGroups.forEach(groupId => {
-      // Only add if the group exists in the current budget
-      if (sortedCategoryGroups.value.some(group => group.id === groupId)) {
-        expandedGroups.value.add(groupId)
-      }
-    })
-  } else {
-    // If no saved state, expand all groups by default
-    sortedCategoryGroups.value.forEach(group => expandedGroups.value.add(group.id))
-  }
-}
-
-// Initialize category lists and load expanded groups from local storage
-onMounted(() => {
-  initializeCategoryLists()
-
-  // Get the current budget ID
-  const budgetId = budgetStore.currentBudget?.id
-  if (budgetId) {
-    loadExpandedGroupsForBudget(budgetId)
-  } else {
-    // If no budget ID, expand all groups by default
-    sortedCategoryGroups.value.forEach(group => expandedGroups.value.add(group.id))
-  }
-})
-
-const toggleGroup = (groupId: string) => {
-  if (expandedGroups.value.has(groupId)) {
-    expandedGroups.value.delete(groupId)
-  } else {
-    expandedGroups.value.add(groupId)
-  }
-
-  // Save the updated expanded groups to local storage
-  const budgetId = budgetStore.currentBudget?.id
-  if (budgetId) {
-    saveExpandedGroups(budgetId, Array.from(expandedGroups.value))
-  }
-}
-
-// Handle change event from category group draggable
-const onGroupChange = async (event: any) => {
-  // Only process if this is a moved event
-  if (!event.moved) {
-    console.log('Not a group move event, ignoring', event)
-    return
-  }
-
-  // Allow reordering of all groups, including system groups like Credit Card Payments
-
-  console.log('Group drag event detected:', event)
-
-  // Get the category group IDs in the new order
-  const groupIds = categoryGroupsList.value.map(group => group.id)
-  console.log('New category group order:', groupIds)
-
-  // Validate that all group IDs are valid UUIDs
-  const validGroupIds = groupIds.filter(id => id && typeof id === 'string' && id.trim() !== '')
-  if (validGroupIds.length !== groupIds.length) {
-    console.error('Invalid group IDs detected:', groupIds)
-    // Reset to original order
-    categoryGroupsList.value = [...sortedCategoryGroups.value]
-    return
-  }
-
-  try {
-    // Call composable to handle the reorder
-    console.log('Calling reorderCategoryGroups in composable')
-    await reorderCategoryGroups(validGroupIds)
-    console.log('Group reorder completed successfully')
-  } catch (error) {
-    console.error('Failed to reorder category groups:', error)
-    // Reset to original order if there's an error
-    categoryGroupsList.value = [...sortedCategoryGroups.value]
-  }
-}
-
-// Handle change event from category draggable
-const onChange = async (event: any, groupId: string) => {
-  // Only process if this is a moved event
-  if (!event.moved) {
-    console.log('Not a move event, ignoring', event)
-    return
-  }
-
-  // Prevent reordering of credit card payment categories
-  const movedCategory = event.moved.element
-  if (isCreditCardPaymentCategory(movedCategory)) {
-    console.log('Cannot reorder credit card payment categories')
-    // Revert the change by resetting the list
-    categoryLists[groupId] = [...getCategoriesForGroup(groupId)]
-    return
-  }
-
-  console.log('Drag event detected:', event)
-
-  // Get the category IDs in the new order
-  const categoryIds = categoryLists[groupId].map(category => category.id)
-  console.log('New category order:', categoryIds)
-
-  // Validate that all category IDs are valid UUIDs
-  const validCategoryIds = categoryIds.filter(id => id && typeof id === 'string' && id.trim() !== '')
-  if (validCategoryIds.length !== categoryIds.length) {
-    console.error('Invalid category IDs detected:', categoryIds)
-    // Reset to original order
-    categoryLists[groupId] = [...getCategoriesForGroup(groupId)]
-    return
-  }
-
-  try {
-    // Call composable to handle the reorder
-    console.log('Calling reorderCategories in composable')
-    await reorderCategories(validCategoryIds)
-    console.log('Reorder completed successfully')
-  } catch (error) {
-    console.error('Failed to reorder categories:', error)
-    // Reset to original order if there's an error
-    categoryLists[groupId] = [...getCategoriesForGroup(groupId)]
-  }
-}
-
-const getBadgeVariant = (amount: number | undefined | null): 'positive' | 'negative' | 'neutral' => {
-  // Handle null, undefined, or NaN values
-  if (amount === null || amount === undefined || isNaN(amount)) {
-    amount = 0
-  }
-
-  if (amount < 0) return 'negative'
-  if (amount === 0) return 'neutral'
-  return 'positive'
-}
-
-// Check if a category is a credit card payment category (non-editable)
-const isCreditCardPaymentCategory = (category: CategoryResponse): boolean => {
-  const categoryGroup = categoryStore.getCategoryGroupById(category.category_group_id)
-  return categoryGroup?.name === 'Credit Card Payments' && categoryGroup?.is_system_group === true
-}
-
-
-
-// Modal states
-const showCategoryGroupModal = ref(false)
-const showCategoryModal = ref(false)
-const showMoveMoneyModal = ref(false)
-const showPullMoneyModal = ref(false)
-const showUnhideCategoryModal = ref(false)
-const selectedCategoryGroup = ref<CategoryGroupResponse | undefined>(undefined)
-const selectedCategory = ref<CategoryResponse | undefined>(undefined)
-const selectedSourceCategory = ref<CategoryResponse | null>(null)
-const selectedDestinationCategory = ref<CategoryResponse | null>(null)
-const selectedCategoryToUnhide = ref<CategoryResponse | null>(null)
-const modalMode = ref<'create' | 'edit'>('create')
-const selectedGroupId = ref<string>('')
-const moveMoneyModalPosition = ref({ x: 0, y: 0 })
-const pullMoneyModalPosition = ref({ x: 0, y: 0 })
-
-// Open modals
-const openCreateCategoryGroupModal = () => {
-  modalMode.value = 'create'
-  selectedCategoryGroup.value = undefined
-  showCategoryGroupModal.value = true
-}
-
-const openEditCategoryGroupModal = (group: CategoryGroupResponse) => {
-  modalMode.value = 'edit'
-  selectedCategoryGroup.value = group
-  showCategoryGroupModal.value = true
-}
-
-const openCreateCategoryModal = (groupId: string) => {
-  modalMode.value = 'create'
-  selectedCategory.value = undefined
-  selectedGroupId.value = groupId
-  showCategoryModal.value = true
-}
-
-const openEditCategoryModal = (category: CategoryResponse) => {
-  modalMode.value = 'edit'
-  selectedCategory.value = category
-  selectedGroupId.value = category.category_group_id
-  showCategoryModal.value = true
-}
-
-
-
-// Handle modal events
-const handleCategoryGroupCreated = (categoryGroup: CategoryGroupResponse) => {
-  // Add the new group to expandedGroups
-  expandedGroups.value.add(categoryGroup.id)
-  showCategoryGroupModal.value = false
-
-  // Save the updated expanded groups to local storage
-  const budgetId = budgetStore.currentBudget?.id
-  if (budgetId) {
-    saveExpandedGroups(budgetId, Array.from(expandedGroups.value))
-  }
-}
-
-const handleCategoryGroupUpdated = (categoryGroup: CategoryGroupResponse) => {
-  showCategoryGroupModal.value = false
-}
-
-const handleCategoryGroupDeleted = (categoryGroupId: string) => {
-  // Remove the deleted group from expandedGroups
-  expandedGroups.value.delete(categoryGroupId)
-  showCategoryGroupModal.value = false
-
-  // Save the updated expanded groups to local storage
-  const budgetId = budgetStore.currentBudget?.id
-  if (budgetId) {
-    saveExpandedGroups(budgetId, Array.from(expandedGroups.value))
-  }
-}
-
-const handleCategoryCreated = (category: CategoryResponse) => {
-  // Ensure the category group is expanded
-  expandedGroups.value.add(category.category_group_id)
-  showCategoryModal.value = false
-
-  // Save the updated expanded groups to local storage
-  const budgetId = budgetStore.currentBudget?.id
-  if (budgetId) {
-    saveExpandedGroups(budgetId, Array.from(expandedGroups.value))
-  }
-
-  // Update the category lists
-  initializeCategoryLists()
-
-  // Add highlight animation to the new category
-  setTimeout(() => {
-    const categoryElement = document.querySelector(`[data-category-id="${category.id}"]`)
-    if (categoryElement) {
-      categoryElement.classList.add('highlight-new')
-
-      // Remove the class after animation completes
-      setTimeout(() => {
-        categoryElement.classList.remove('highlight-new')
-      }, 2000)
-    }
-  }, 100)
-}
-
-// Method to flash categories with green background when money is assigned
-const flashCategoriesWithMoney = (categoryIds: string[]) => {
-  categoryIds.forEach((categoryId, index) => {
-    // Stagger the animations slightly for a nice effect
-    setTimeout(() => {
-      const categoryElement = document.querySelector(`[data-category-id="${categoryId}"]`)
-      if (categoryElement) {
-        categoryElement.classList.add('flash-money-added')
-
-        // Remove the class after animation completes
-        setTimeout(() => {
-          categoryElement.classList.remove('flash-money-added')
-        }, 1000)
-      }
-    }, index * 100) // 100ms delay between each category flash
-  })
-}
+// Use composables
+const {
+  expandedGroups,
+  categoryLists,
+  categoryGroupsList,
+  sortedCategoryGroups,
+  hiddenCategoriesGroup,
+  hasHiddenCategories,
+  getCategoriesForGroup,
+  getGroupTotals,
+  initializeCategoryLists,
+  toggleGroup
+} = useCategoryListState(computed(() => props.activeFilter))
+
+const {
+  onGroupChange,
+  onChange,
+  isCreditCardPaymentCategory
+} = useCategoryDragAndDrop(
+  categoryGroupsList,
+  categoryLists,
+  sortedCategoryGroups,
+  getCategoriesForGroup
+)
+
+const budgetId = computed(() => budgetStore.currentBudget?.id)
+
+const {
+  showCategoryGroupModal,
+  showCategoryModal,
+  showUnhideCategoryModal,
+  selectedCategoryGroup,
+  selectedCategory,
+  selectedCategoryToUnhide,
+  modalMode,
+  selectedGroupId,
+  openCreateCategoryGroupModal,
+  openEditCategoryGroupModal,
+  openCreateCategoryModal,
+  openEditCategoryModal,
+  openUnhideCategoryModal,
+  handleCategoryGroupCreated,
+  handleCategoryGroupUpdated,
+  handleCategoryGroupDeleted,
+  handleCategoryCreated,
+  handleCategoryUpdated,
+  handleCategoryHidden,
+  handleCategoryUnhidden
+} = useCategoryModals(expandedGroups, budgetId, initializeCategoryLists)
+
+const {
+  showMoveMoneyModal,
+  showPullMoneyModal,
+  selectedSourceCategory,
+  selectedDestinationCategory,
+  moveMoneyModalPosition,
+  pullMoneyModalPosition,
+  availableDestinationCategories,
+  availableSourceCategories,
+  handleAvailableClick,
+  handleMoveMoney,
+  handleMoveToReadyToAssign,
+  handlePullMoney,
+  handlePullFromReadyToAssign,
+  updateCategoryAssigned
+} = useMoneyMovement()
+
+const { flashCategoriesWithMoney, getBadgeVariant } = useCategoryAnimations()
 
 // Expose the flash method to parent components
 defineExpose({
   flashCategoriesWithMoney
 })
-
-const handleCategoryUpdated = (category: CategoryResponse) => {
-  showCategoryModal.value = false
-  // Optimistic updates in the store will handle UI updates automatically
-}
-
-const handleCategoryHidden = (categoryId: string) => {
-  showCategoryModal.value = false
-  // Store hide operation will handle UI updates automatically
-}
-
-const openUnhideCategoryModal = (category: CategoryResponse) => {
-  selectedCategoryToUnhide.value = category
-  showUnhideCategoryModal.value = true
-}
-
-const handleCategoryUnhidden = (categoryId: string) => {
-  showUnhideCategoryModal.value = false
-  selectedCategoryToUnhide.value = null
-  // Store unhide operation will handle UI updates automatically
-}
-
-const updateCategoryAssigned = async (categoryId: string, assignedValue: number) => {
-  try {
-    await updateCategoryBalance(categoryId, assignedValue)
-  } catch (error) {
-    console.error('Failed to update category assigned value:', error)
-  }
-}
-
-// Move money functionality
-const availableDestinationCategories = computed(() => {
-  if (!selectedSourceCategory.value) return []
-
-  // Get the Hidden Categories group
-  const hiddenGroup = categoryStore.categoryGroups.find(group =>
-    group.name === 'Hidden Categories' && group.is_system_group
-  )
-
-  return categoryStore.getCategoriesWithBalances.filter(category =>
-    category.id !== selectedSourceCategory.value?.id &&
-    (!hiddenGroup || category.category_group_id !== hiddenGroup.id) // Exclude hidden categories
-  )
-})
-
-// Pull money functionality
-const availableSourceCategories = computed(() => {
-  if (!selectedDestinationCategory.value) return []
-
-  // Get the Hidden Categories group
-  const hiddenGroup = categoryStore.categoryGroups.find(group =>
-    group.name === 'Hidden Categories' && group.is_system_group
-  )
-
-  return categoryStore.getCategoriesWithBalances.filter(category =>
-    category.id !== selectedDestinationCategory.value?.id &&
-    category.available &&
-    category.available > 0 &&
-    (!hiddenGroup || category.category_group_id !== hiddenGroup.id) // Exclude hidden categories
-  )
-})
-
-const handleAvailableClick = (category: CategoryResponse, event: MouseEvent) => {
-  // Handle positive balances - move money out
-  if (category.available && category.available > 0) {
-    selectedSourceCategory.value = category
-
-    // Get the position of the clicked element for modal positioning
-    const rect = (event.target as HTMLElement).getBoundingClientRect()
-    moveMoneyModalPosition.value = {
-      x: rect.left + rect.width / 2,
-      y: rect.bottom + 8
-    }
-
-    showMoveMoneyModal.value = true
-    return
-  }
-
-  // Handle negative balances - pull money in
-  if (category.available && category.available < 0) {
-    selectedDestinationCategory.value = category
-
-    // Get the position of the clicked element for modal positioning
-    const rect = (event.target as HTMLElement).getBoundingClientRect()
-    pullMoneyModalPosition.value = {
-      x: rect.left + rect.width / 2,
-      y: rect.bottom + 8
-    }
-
-    showPullMoneyModal.value = true
-    return
-  }
-}
-
-const handleMoveMoney = async (destinationCategoryId: string, amount: number) => {
-  if (!selectedSourceCategory.value) return
-
-  showMoveMoneyModal.value = false
-
-  try {
-    await moveMoney(
-      selectedSourceCategory.value.id,
-      destinationCategoryId,
-      amount
-    )
-  } catch (error) {
-    console.error('Failed to move money:', error)
-  }
-}
-
-const handleMoveToReadyToAssign = async (amount: number) => {
-  if (!selectedSourceCategory.value) return
-  showMoveMoneyModal.value = false
-
-  try {
-    await moveMoneyToReadyToAssign(
-      selectedSourceCategory.value.id,
-      amount
-    )
-  } catch (error) {
-    console.error('Failed to move money to Ready to Assign:', error)
-  }
-}
-
-const handlePullMoney = async (sourceCategoryId: string, amount: number) => {
-  if (!selectedDestinationCategory.value) return
-
-  try {
-    await moveMoney(
-      sourceCategoryId,
-      selectedDestinationCategory.value.id,
-      amount
-    )
-    showPullMoneyModal.value = false
-  } catch (error) {
-    console.error('Failed to pull money:', error)
-  }
-}
-
-const handlePullFromReadyToAssign = async (amount: number) => {
-  if (!selectedDestinationCategory.value) return
-
-  // Close modal immediately for optimistic update
-  showPullMoneyModal.value = false
-
-  try {
-    await pullFromReadyToAssign(
-      selectedDestinationCategory.value.id,
-      amount
-    )
-  } catch (error) {
-    console.error('Failed to pull money from Ready to Assign:', error)
-    // Note: Error handling for optimistic updates is handled in the composable
-    // The UI will automatically rollback if the server operation fails
-  }
-}
 
 </script>
 
