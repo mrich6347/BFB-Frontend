@@ -17,21 +17,38 @@
 
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { onMounted, ref } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import BudgetHeader from '@/components/budget/BudgetHeader.vue'
-
-
 import BudgetCategoryList from '@/components/budget/BudgetCategoryList.vue'
 import AutoAssignPanel from '@/components/budget/AutoAssignPanel.vue'
+import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 
 const route = useRoute()
+const router = useRouter()
 const budgetId = route.params.budgetId as string
 
 // Reference to the category list component
 const categoryListRef = ref<InstanceType<typeof BudgetCategoryList> | null>(null)
 const activeFilter = ref('all')
+
+const { ensureDataLoaded } = useMainDataOperations()
+
+// Ensure data is loaded when the component mounts
+onMounted(async () => {
+  try {
+    const success = await ensureDataLoaded(budgetId)
+    if (!success) {
+      console.error('Failed to load budget data')
+      // Redirect back to dashboard if data loading fails
+      router.push('/dashboard')
+    }
+  } catch (error) {
+    console.error('Error loading budget data:', error)
+    router.push('/dashboard')
+  }
+})
 
 const handleFilterChanged = (filter: string) => {
   activeFilter.value = filter

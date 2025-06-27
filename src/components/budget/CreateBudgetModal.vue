@@ -41,6 +41,9 @@ const handleSubmit = async (formData: CreateBudgetDto) => {
   try {
     const budget = await createBudget(formData)
     close()
+
+    // Navigate to the budget page
+    // The BudgetPage will handle loading all the data via ensureDataLoaded
     router.push(`/budget/${budget.id}`)
   } catch (error) {
     // Error is already handled by composable

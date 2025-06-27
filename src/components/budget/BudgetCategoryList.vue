@@ -463,26 +463,41 @@ watch(() => props.activeFilter, () => {
 // Watch for changes in the current budget ID to load the appropriate expanded groups
 watch(() => budgetStore.currentBudget?.id, (newBudgetId) => {
   if (newBudgetId) {
-    // Load expanded groups from local storage for the new budget
-    const savedExpandedGroups = loadExpandedGroups(newBudgetId)
-
-    // Clear the current set
-    expandedGroups.value.clear()
-
-    // If we have saved state (even if empty), use it
-    if (savedExpandedGroups !== null) {
-      savedExpandedGroups.forEach(groupId => {
-        // Only add if the group exists in the current budget
-        if (sortedCategoryGroups.value.some(group => group.id === groupId)) {
-          expandedGroups.value.add(groupId)
-        }
-      })
-    } else {
-      // If no saved state, expand all groups by default
-      sortedCategoryGroups.value.forEach(group => expandedGroups.value.add(group.id))
-    }
+    loadExpandedGroupsForBudget(newBudgetId)
   }
 })
+
+// Watch for changes in category groups to ensure expansion state is set
+watch(() => sortedCategoryGroups.value, (newGroups) => {
+  const budgetId = budgetStore.currentBudget?.id
+  if (budgetId && newGroups.length > 0) {
+    // If we don't have any expanded groups set yet, load them
+    if (expandedGroups.value.size === 0) {
+      loadExpandedGroupsForBudget(budgetId)
+    }
+  }
+}, { immediate: true })
+
+// Helper function to load expanded groups for a budget
+const loadExpandedGroupsForBudget = (budgetId: string) => {
+  const savedExpandedGroups = loadExpandedGroups(budgetId)
+
+  // Clear the current set
+  expandedGroups.value.clear()
+
+  // If we have saved state (even if empty), use it
+  if (savedExpandedGroups !== null) {
+    savedExpandedGroups.forEach(groupId => {
+      // Only add if the group exists in the current budget
+      if (sortedCategoryGroups.value.some(group => group.id === groupId)) {
+        expandedGroups.value.add(groupId)
+      }
+    })
+  } else {
+    // If no saved state, expand all groups by default
+    sortedCategoryGroups.value.forEach(group => expandedGroups.value.add(group.id))
+  }
+}
 
 // Initialize category lists and load expanded groups from local storage
 onMounted(() => {
@@ -491,23 +506,7 @@ onMounted(() => {
   // Get the current budget ID
   const budgetId = budgetStore.currentBudget?.id
   if (budgetId) {
-    // Load expanded groups from local storage
-    const savedExpandedGroups = loadExpandedGroups(budgetId)
-
-    // If we have saved state (even if empty), use it
-    if (savedExpandedGroups !== null) {
-      // Clear the current set and add the saved groups
-      expandedGroups.value.clear()
-      savedExpandedGroups.forEach(groupId => {
-        // Only add if the group still exists
-        if (sortedCategoryGroups.value.some(group => group.id === groupId)) {
-          expandedGroups.value.add(groupId)
-        }
-      })
-    } else {
-      // If no saved state, expand all groups by default
-      sortedCategoryGroups.value.forEach(group => expandedGroups.value.add(group.id))
-    }
+    loadExpandedGroupsForBudget(budgetId)
   } else {
     // If no budget ID, expand all groups by default
     sortedCategoryGroups.value.forEach(group => expandedGroups.value.add(group.id))
