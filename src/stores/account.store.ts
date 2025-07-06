@@ -8,7 +8,9 @@ export const useAccountStore = defineStore('accountStore', () => {
 
   // Getters
   const getAccountsByType = computed(() => (type: AccountType) => {
-    return accounts.value.filter(account => account.account_type === type && account.is_active !== false);
+    return accounts.value
+      .filter(account => account.account_type === type && account.is_active !== false)
+      .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
   })
 
   const accountExistsByName = computed(() => (name: string, excludeAccountId?: string) => {
@@ -61,6 +63,16 @@ export const useAccountStore = defineStore('accountStore', () => {
     }
   }
 
+  const reorderAccounts = (accountIds: string[]) => {
+    // Update local display_order values
+    accountIds.forEach((id, index) => {
+      const accountIndex = accounts.value.findIndex(account => account.id === id)
+      if (accountIndex !== -1) {
+        accounts.value[accountIndex].display_order = index
+      }
+    })
+  }
+
   const reset = () => {
     accounts.value = []
   }
@@ -82,6 +94,7 @@ export const useAccountStore = defineStore('accountStore', () => {
     updateAccount,
     removeAccount,
     updateAccountBalances,
+    reorderAccounts,
     reset
   }
 })

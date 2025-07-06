@@ -1,4 +1,4 @@
-import type { AccountResponse, CreateAccountDto, AccountWithReadyToAssignResponse, UpdateAccountDto, CloseAccountResponse } from "../types/DTO/account.dto"
+import type { AccountResponse, CreateAccountDto, AccountWithReadyToAssignResponse, UpdateAccountDto, CloseAccountResponse, ReorderAccountsDto } from "../types/DTO/account.dto"
 import api from "./common/api"
 
 export class AccountService {
@@ -30,5 +30,9 @@ export class AccountService {
             actual_balance: actualBalance
         })
         return response.data
+    }
+
+    static async reorderAccounts(request: ReorderAccountsDto): Promise<void> {
+        await api.post(`${this.BASE_PATH}/reorder`, request)
     }
 }

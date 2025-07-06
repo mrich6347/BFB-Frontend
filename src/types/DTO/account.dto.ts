@@ -27,6 +27,10 @@ export interface CloseAccountResponse {
     readyToAssign: number;
 }
 
+export interface ReorderAccountsDto {
+    account_ids: string[];
+}
+
 
 export interface AccountResponse {
     id: string;
@@ -38,5 +42,6 @@ export interface AccountResponse {
     uncleared_balance: number;
     working_balance: number;
     is_active: boolean;
+    display_order: number;
 }
 

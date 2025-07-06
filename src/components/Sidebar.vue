@@ -65,18 +65,37 @@
             <span>{{ formatCurrency(section.total) }}</span>
           </button>
           <div v-if="expandedSections[section.title as SectionTitle]" class="mb-4">
-            <router-link
-              v-for="account in section.accounts"
-              :key="account.id"
-              :to="`/budget/${props.budgetId}/account/${account.id}`"
-              class="flex items-center justify-between px-3 py-2 text-sm rounded-lg ml-2 min-w-0"
+            <draggable
+              v-model="accountLists[section.title as AccountType]"
+              item-key="id"
+              :animation="150"
+              handle=".account-drag-handle"
+              ghost-class="ghost-item"
+              chosen-class="sortable-chosen"
+              drag-class="sortable-drag"
+              @change="onChange($event, section.title as AccountType)"
+              class="account-list"
             >
-              <span class="text-foreground truncate flex-shrink min-w-0 mr-4">{{ account.name }}</span>
-              <span :class="[
-                'flex-shrink-0 tabular-nums',
-                account.working_balance < 0 ? 'text-destructive' : 'text-foreground'
-              ]">{{ formatCurrency(account.working_balance) }}</span>
-            </router-link>
+              <template #item="{ element: account }">
+                <div class="flex items-center justify-between px-3 py-2 text-sm rounded-lg ml-2 min-w-0 group hover:bg-muted/50 transition-colors account-item">
+                  <div class="flex items-center min-w-0 flex-1">
+                    <GripVertical
+                      class="w-4 h-4 mr-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab account-drag-handle flex-shrink-0"
+                    />
+                    <router-link
+                      :to="`/budget/${props.budgetId}/account/${account.id}`"
+                      class="flex items-center justify-between min-w-0 flex-1 text-decoration-none"
+                    >
+                      <span class="text-foreground truncate flex-shrink min-w-0 mr-4">{{ account.name }}</span>
+                      <span :class="[
+                        'flex-shrink-0 tabular-nums',
+                        account.working_balance < 0 ? 'text-destructive' : 'text-foreground'
+                      ]">{{ formatCurrency(account.working_balance) }}</span>
+                    </router-link>
+                  </div>
+                </div>
+              </template>
+            </draggable>
           </div>
         </template>
 
@@ -268,14 +287,15 @@ import {
   PanelLeftOpenIcon,
   DatabaseIcon,
   Loader2Icon,
-  TargetIcon
+  TargetIcon,
+  GripVertical
 } from 'lucide-vue-next'
 import { authService } from '../services/common/auth.service'
 import { formatCurrency } from '@/utils/currencyUtil'
 import router from '@/router'
 import CreateAccountModal from './accounts/CreateAccountModal.vue'
 import { useAccountStore } from '@/stores/account.store'
-import { AccountType } from '@/types/DTO/account.dto'
+import { AccountType, type AccountResponse } from '@/types/DTO/account.dto'
 import { useBudgetStore } from '@/stores/budget.store'
 import { DatabaseService } from '@/services/database.service'
 import { useToast } from 'vue-toast-notification'
@@ -283,6 +303,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import Button from '@/components/shadcn-ui/button.vue'
 import { saveExpandedAccounts, loadExpandedAccounts } from '@/utils/expandedAccountsStorage'
 import { useReopenAccount } from '@/composables/accounts/account-write/useReopenAccount'
+import draggable from 'vuedraggable'
+import { useAccountDragAndDrop } from '@/composables/accounts/account-ui/useAccountDragAndDrop'
 
 const budgetStore = useBudgetStore()
 const { reopenAccount } = useReopenAccount()
@@ -311,24 +333,46 @@ const mainNavItems = computed(() => {
 
 const accountStore = useAccountStore()
 
+// Create reactive account lists for drag and drop
+const accountLists = ref({
+  [AccountType.CASH]: [] as AccountResponse[],
+  [AccountType.CREDIT]: [] as AccountResponse[],
+  [AccountType.TRACKING]: [] as AccountResponse[]
+})
+
+// Helper function to get accounts for a type
+const getAccountsForType = (type: AccountType) => {
+  return accountStore.getAccountsByType(type)
+}
+
+// Initialize account lists
+const initializeAccountLists = () => {
+  accountLists.value[AccountType.CASH] = [...getAccountsForType(AccountType.CASH)]
+  accountLists.value[AccountType.CREDIT] = [...getAccountsForType(AccountType.CREDIT)]
+  accountLists.value[AccountType.TRACKING] = [...getAccountsForType(AccountType.TRACKING)]
+}
+
+// Set up drag and drop
+const { onChange } = useAccountDragAndDrop(accountLists.value, getAccountsForType)
+
 const accountSections = computed(() => [
   {
     title: AccountType.CASH,
-    total: accountStore.getAccountsByType(AccountType.CASH)
+    total: accountLists.value[AccountType.CASH]
       .reduce((sum, account) => sum + account.working_balance, 0),
-    accounts: accountStore.getAccountsByType(AccountType.CASH)
+    accounts: accountLists.value[AccountType.CASH]
   },
-    {
+  {
     title: AccountType.CREDIT,
-    total: accountStore.getAccountsByType(AccountType.CREDIT)
+    total: accountLists.value[AccountType.CREDIT]
       .reduce((sum, account) => sum + account.working_balance, 0),
-    accounts: accountStore.getAccountsByType(AccountType.CREDIT)
+    accounts: accountLists.value[AccountType.CREDIT]
   },
   {
     title: AccountType.TRACKING,
-    total: accountStore.getAccountsByType(AccountType.TRACKING)
+    total: accountLists.value[AccountType.TRACKING]
       .reduce((sum, account) => sum + account.working_balance, 0),
-    accounts: accountStore.getAccountsByType(AccountType.TRACKING)
+    accounts: accountLists.value[AccountType.TRACKING]
   }
 ])
 
@@ -403,16 +447,23 @@ const loadExpandedSectionsFromStorage = () => {
   }
 }
 
+// Watch for changes in accounts to update the draggable lists
+watch(() => accountStore.accounts, () => {
+  initializeAccountLists()
+}, { deep: true })
+
 // Watch for changes in the current budget ID to load the appropriate expanded sections
 watch(() => budgetStore.currentBudget?.id, (newBudgetId) => {
   if (newBudgetId) {
     loadExpandedSectionsFromStorage()
+    initializeAccountLists()
   }
 })
 
 // Load expanded sections on component mount
 onMounted(() => {
   loadExpandedSectionsFromStorage()
+  initializeAccountLists()
 })
 
 const nukeDatabase = async () => {
@@ -461,3 +512,24 @@ const populateDatabase = async () => {
   }
 }
 </script>
+
+<style scoped>
+.account-item.sortable-chosen {
+  background-color: var(--muted);
+  cursor: grabbing;
+  border: 1px solid var(--primary);
+}
+
+.ghost-item {
+  opacity: 0.7;
+  border: 1px dashed var(--primary);
+}
+
+.account-drag-handle {
+  cursor: grab;
+}
+
+.account-drag-handle:active {
+  cursor: grabbing;
+}
+</style>
