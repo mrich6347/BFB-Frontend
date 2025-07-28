@@ -1,6 +1,7 @@
 import { ref, readonly } from 'vue'
 import { useTransactionStore } from '@/stores/transaction.store'
 import { useBudgetStore } from '@/stores/budget.store'
+import { useCategoryStore } from '@/stores/category.store'
 import { useUpdateAccountBalance } from '@/composables/accounts/account-write/useUpdateAccountBalance'
 import { useSetAccountBalance } from '@/composables/accounts/account-write/useSetAccountBalance'
 import { useUpdateAccountBalanceOnClearedToggle } from '@/composables/accounts/account-write/useUpdateAccountBalanceOnClearedToggle'
@@ -11,13 +12,14 @@ import type {
   CreateTransactionDto,
   UpdateTransactionDto,
   TransactionResponse,
-  TransactionWithReadyToAssignResponse,
-  TransactionWithAccountsAndReadyToAssignResponse
+  TransactionWithReadyToAssignAndCategoryBalanceResponse,
+  TransactionWithAccountsAndReadyToAssignAndCategoryBalanceResponse
 } from '@/types/DTO/transaction.dto'
 
 export const useTransactionOperations = () => {
   const transactionStore = useTransactionStore()
   const budgetStore = useBudgetStore()
+  const categoryStore = useCategoryStore()
   const { updateAccountBalance } = useUpdateAccountBalance()
   const { setAccountBalance } = useSetAccountBalance()
   const { updateAccountBalanceOnClearedToggle } = useUpdateAccountBalanceOnClearedToggle()
@@ -53,6 +55,11 @@ export const useTransactionOperations = () => {
 
       // Update ready to assign value from server response
       budgetStore.setReadyToAssign(result.readyToAssign)
+
+      // Update category balance if provided
+      if (result.categoryBalance) {
+        categoryStore.updateCategoryBalance(result.categoryBalance.category_id, result.categoryBalance)
+      }
 
       // Handle both regular transactions and transfer transactions
       let newTransaction: TransactionResponse
@@ -107,6 +114,11 @@ export const useTransactionOperations = () => {
 
       // Update ready to assign value from server response
       budgetStore.setReadyToAssign(result.readyToAssign)
+
+      // Update category balance if provided
+      if (result.categoryBalance) {
+        categoryStore.updateCategoryBalance(result.categoryBalance.category_id, result.categoryBalance)
+      }
 
       // Handle both regular transactions and transfer transactions
       let updatedTransaction: TransactionResponse
