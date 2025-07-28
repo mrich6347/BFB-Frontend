@@ -1,4 +1,4 @@
-import type { CreateTransactionDto, UpdateTransactionDto, TransactionResponse, TransactionWithAccountsResponse, TransactionDeleteResponse } from '../types/DTO/transaction.dto'
+import type { CreateTransactionDto, UpdateTransactionDto, TransactionResponse, TransactionWithAccountsResponse, TransactionDeleteResponse, TransactionWithReadyToAssignResponse, TransactionWithAccountsAndReadyToAssignResponse } from '../types/DTO/transaction.dto'
 import { getCurrentUserDateContext } from '../utils/dateContext'
 import api from './common/api'
 
@@ -8,7 +8,7 @@ export class TransactionService {
   /**
    * Create a new transaction
    */
-  static async createTransaction(request: CreateTransactionDto): Promise<TransactionResponse | TransactionWithAccountsResponse> {
+  static async createTransaction(request: CreateTransactionDto): Promise<TransactionWithReadyToAssignResponse | TransactionWithAccountsAndReadyToAssignResponse> {
     // Add user date context to the request
     const userDateContext = getCurrentUserDateContext()
     const requestWithContext = {
@@ -16,7 +16,7 @@ export class TransactionService {
       ...userDateContext
     }
 
-    const response = await api.post<TransactionResponse | TransactionWithAccountsResponse>(this.BASE_PATH, requestWithContext)
+    const response = await api.post<TransactionWithReadyToAssignResponse | TransactionWithAccountsAndReadyToAssignResponse>(this.BASE_PATH, requestWithContext)
     return response.data
   }
 

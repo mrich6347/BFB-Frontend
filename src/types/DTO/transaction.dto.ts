@@ -55,3 +55,15 @@ export interface TransactionDeleteResponse {
   sourceAccount?: any; // AccountResponse from accounts module
   targetAccount?: any; // AccountResponse from accounts module
 }
+
+export interface TransactionWithReadyToAssignResponse {
+  transaction: TransactionResponse;
+  readyToAssign: number;
+}
+
+export interface TransactionWithAccountsAndReadyToAssignResponse {
+  transaction: TransactionResponse;
+  sourceAccount?: any; // AccountResponse from accounts module
+  targetAccount?: any; // AccountResponse from accounts module
+  readyToAssign: number;
+}

@@ -10,7 +10,9 @@ import { TransactionService } from '@/services/transaction.service'
 import type {
   CreateTransactionDto,
   UpdateTransactionDto,
-  TransactionResponse
+  TransactionResponse,
+  TransactionWithReadyToAssignResponse,
+  TransactionWithAccountsAndReadyToAssignResponse
 } from '@/types/DTO/transaction.dto'
 
 export const useTransactionOperations = () => {
@@ -49,9 +51,12 @@ export const useTransactionOperations = () => {
     try {
       const result = await TransactionService.createTransaction(transactionData)
 
+      // Update ready to assign value from server response
+      budgetStore.setReadyToAssign(result.readyToAssign)
+
       // Handle both regular transactions and transfer transactions
       let newTransaction: TransactionResponse
-      if ('transaction' in result) {
+      if ('sourceAccount' in result && 'targetAccount' in result) {
         // Transfer transaction - update both account balances using returned data
         newTransaction = result.transaction
 
@@ -66,7 +71,7 @@ export const useTransactionOperations = () => {
         }
       } else {
         // Regular transaction
-        newTransaction = result
+        newTransaction = result.transaction
 
         // Update account balance
         updateAccountBalance(
