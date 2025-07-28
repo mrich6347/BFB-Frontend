@@ -105,9 +105,12 @@ export const useTransactionOperations = () => {
     try {
       const result = await TransactionService.updateTransaction(id, transactionData)
 
+      // Update ready to assign value from server response
+      budgetStore.setReadyToAssign(result.readyToAssign)
+
       // Handle both regular transactions and transfer transactions
       let updatedTransaction: TransactionResponse
-      if ('transaction' in result) {
+      if ('sourceAccount' in result && 'targetAccount' in result) {
         // Transfer transaction - update both account balances using returned data
         updatedTransaction = result.transaction
 
@@ -122,7 +125,7 @@ export const useTransactionOperations = () => {
         }
       } else {
         // Regular transaction
-        updatedTransaction = result
+        updatedTransaction = result.transaction
 
         // Remove the old transaction's effect on account balance
         removeAccountBalance(
@@ -197,11 +200,14 @@ export const useTransactionOperations = () => {
     try {
       const result = await TransactionService.deleteTransaction(id)
 
+      // Update ready to assign value from server response
+      budgetStore.setReadyToAssign(result.readyToAssign)
+
       // Remove transaction from store
       transactionStore.removeTransaction(id)
 
       // Handle account balance updates
-      if (result && typeof result === 'object' && ('sourceAccount' in result || 'targetAccount' in result)) {
+      if (result.sourceAccount || result.targetAccount) {
         // Transfer transaction - update both account balances using returned data
         if (result.sourceAccount) {
           setAccountBalance(result.sourceAccount.id, result.sourceAccount)

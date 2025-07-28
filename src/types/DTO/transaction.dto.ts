@@ -67,3 +67,9 @@ export interface TransactionWithAccountsAndReadyToAssignResponse {
   targetAccount?: any; // AccountResponse from accounts module
   readyToAssign: number;
 }
+
+export interface TransactionDeleteWithReadyToAssignResponse {
+  sourceAccount?: any; // AccountResponse from accounts module
+  targetAccount?: any; // AccountResponse from accounts module
+  readyToAssign: number;
+}

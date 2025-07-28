@@ -1,4 +1,4 @@
-import type { CreateTransactionDto, UpdateTransactionDto, TransactionResponse, TransactionWithAccountsResponse, TransactionDeleteResponse, TransactionWithReadyToAssignResponse, TransactionWithAccountsAndReadyToAssignResponse } from '../types/DTO/transaction.dto'
+import type { CreateTransactionDto, UpdateTransactionDto, TransactionResponse, TransactionWithAccountsResponse, TransactionDeleteResponse, TransactionWithReadyToAssignResponse, TransactionWithAccountsAndReadyToAssignResponse, TransactionDeleteWithReadyToAssignResponse } from '../types/DTO/transaction.dto'
 import { getCurrentUserDateContext } from '../utils/dateContext'
 import api from './common/api'
 
@@ -39,7 +39,7 @@ export class TransactionService {
   /**
    * Update a transaction
    */
-  static async updateTransaction(id: string, request: UpdateTransactionDto): Promise<TransactionResponse | TransactionWithAccountsResponse> {
+  static async updateTransaction(id: string, request: UpdateTransactionDto): Promise<TransactionWithReadyToAssignResponse | TransactionWithAccountsAndReadyToAssignResponse> {
     // Add user date context to the request
     const userDateContext = getCurrentUserDateContext()
     const requestWithContext = {
@@ -47,7 +47,7 @@ export class TransactionService {
       ...userDateContext
     }
 
-    const response = await api.patch<TransactionResponse | TransactionWithAccountsResponse>(`${this.BASE_PATH}/${id}`, requestWithContext)
+    const response = await api.patch<TransactionWithReadyToAssignResponse | TransactionWithAccountsAndReadyToAssignResponse>(`${this.BASE_PATH}/${id}`, requestWithContext)
     return response.data
   }
 
@@ -62,8 +62,8 @@ export class TransactionService {
   /**
    * Delete a transaction
    */
-  static async deleteTransaction(id: string): Promise<void | TransactionDeleteResponse> {
-    const response = await api.delete<void | TransactionDeleteResponse>(`${this.BASE_PATH}/${id}`)
+  static async deleteTransaction(id: string): Promise<TransactionDeleteWithReadyToAssignResponse> {
+    const response = await api.delete<TransactionDeleteWithReadyToAssignResponse>(`${this.BASE_PATH}/${id}`)
     return response.data
   }
 }
