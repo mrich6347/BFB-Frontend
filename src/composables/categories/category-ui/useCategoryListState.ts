@@ -173,6 +173,22 @@ export function useCategoryListState(activeFilter?: Ref<string | undefined> | st
     })
   }, { deep: true })
 
+  // Watch for changes in filter and update the categoryLists
+  watch(() => filterRef.value, () => {
+    // Update existing arrays in place to maintain reactivity with draggable components
+    sortedCategoryGroups.value.forEach(group => {
+      const newCategoriesForGroup = getCategoriesForGroup(group.id)
+
+      if (categoryLists[group.id]) {
+        // Update existing array in place
+        categoryLists[group.id].splice(0, categoryLists[group.id].length, ...newCategoriesForGroup)
+      } else {
+        // Create new array if it doesn't exist
+        categoryLists[group.id] = [...newCategoriesForGroup]
+      }
+    })
+  })
+
   // Watch for changes in category groups and update the categoryLists
   watch(() => sortedCategoryGroups.value, (newGroups) => {
     newGroups.forEach(group => {
