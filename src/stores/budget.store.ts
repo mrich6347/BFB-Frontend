@@ -15,11 +15,19 @@ export const useBudgetStore = defineStore('budgetStore', () => {
   const readyToAssign = ref<number>(0)
 
   // Getters
-  const getBudgetById = computed(() => (id: string) =>
-    budgets.value.find(b => b.id === id)
-  )
+  const getBudgetById = computed(() => (id: string) => {
+    if (!Array.isArray(budgets.value)) {
+      console.error('budgets.value is not an array:', budgets.value)
+      return undefined
+    }
+    return budgets.value.find(b => b.id === id)
+  })
 
   const budgetExistsByName = computed(() => (name: string) => {
+    if (!Array.isArray(budgets.value)) {
+      console.error('budgets.value is not an array:', budgets.value)
+      return undefined
+    }
     return budgets.value.find(b => b.name.toLowerCase() === name.toLowerCase())
   })
 
@@ -33,14 +41,28 @@ export const useBudgetStore = defineStore('budgetStore', () => {
 
   // State mutations
   const setBudgets = (newBudgets: BudgetResponse[]) => {
+    if (!Array.isArray(newBudgets)) {
+      console.error('setBudgets received non-array:', newBudgets)
+      budgets.value = []
+      return
+    }
     budgets.value = newBudgets
   }
 
   const addBudget = (budget: BudgetResponse) => {
+    if (!Array.isArray(budgets.value)) {
+      console.error('budgets.value is not an array when adding budget:', budgets.value)
+      budgets.value = [budget]
+      return
+    }
     budgets.value.unshift(budget)
   }
 
   const updateBudget = (id: string, updates: Partial<BudgetResponse>) => {
+    if (!Array.isArray(budgets.value)) {
+      console.error('budgets.value is not an array when updating budget:', budgets.value)
+      return
+    }
     const index = budgets.value.findIndex(b => b.id === id)
     if (index !== -1) {
       budgets.value[index] = { ...budgets.value[index], ...updates }
@@ -53,6 +75,10 @@ export const useBudgetStore = defineStore('budgetStore', () => {
   }
 
   const removeBudget = (id: string) => {
+    if (!Array.isArray(budgets.value)) {
+      console.error('budgets.value is not an array when removing budget:', budgets.value)
+      return
+    }
     const index = budgets.value.findIndex(b => b.id === id)
     if (index !== -1) {
       budgets.value.splice(index, 1)

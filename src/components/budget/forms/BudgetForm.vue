@@ -166,7 +166,9 @@ const uniqueBudgetNameRule = (node: FormKitNode): boolean => {
     return true
   }
   
-  return !budgetStore.budgetExistsByName(value)
+  // Check if budget exists - if store has an error, treat as valid
+  const existingBudget = budgetStore.budgetExistsByName(value)
+  return !existingBudget
 }
 
 const handleSubmit = async (formData: CreateBudgetDto) => {
