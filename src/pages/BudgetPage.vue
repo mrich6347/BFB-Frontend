@@ -1,5 +1,8 @@
 <template>
-  <div class="flex h-screen">
+  <div v-if="isLoading" class="flex h-screen items-center justify-center">
+    <LoadingSpinner />
+  </div>
+  <div v-else class="flex h-screen">
     <Sidebar :budgetId="budgetId" />
     <div class="flex-1 flex flex-col">
       <!-- Sticky Budget Header -->
@@ -23,6 +26,7 @@ import Sidebar from '@/components/Sidebar.vue'
 import BudgetHeader from '@/components/budget/BudgetHeader.vue'
 import BudgetCategoryList from '@/components/budget/BudgetCategoryList.vue'
 import AutoAssignPanel from '@/components/budget/AutoAssignPanel.vue'
+import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 
 const route = useRoute()
@@ -33,7 +37,7 @@ const budgetId = route.params.budgetId as string
 const categoryListRef = ref<InstanceType<typeof BudgetCategoryList> | null>(null)
 const activeFilter = ref('all')
 
-const { ensureDataLoaded } = useMainDataOperations()
+const { ensureDataLoaded, isLoading } = useMainDataOperations()
 
 // Ensure data is loaded when the component mounts
 onMounted(async () => {
