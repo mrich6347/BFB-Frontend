@@ -38,6 +38,9 @@ const { ensureDataLoaded } = useMainDataOperations()
 // Ensure data is loaded when the component mounts
 onMounted(async () => {
   try {
+    // Save this budget as the last visited
+    localStorage.setItem('lastVisitedBudgetId', budgetId)
+    
     const success = await ensureDataLoaded(budgetId)
     if (!success) {
       console.error('Failed to load budget data')
