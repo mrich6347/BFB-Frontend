@@ -12,8 +12,6 @@ import type {
   CreateTransactionDto,
   UpdateTransactionDto,
   TransactionResponse,
-  TransactionWithReadyToAssignAndCategoryBalanceResponse,
-  TransactionWithAccountsAndReadyToAssignAndCategoryBalanceResponse
 } from '@/types/DTO/transaction.dto'
 
 export const useTransactionOperations = () => {
@@ -56,8 +54,14 @@ export const useTransactionOperations = () => {
       // Update ready to assign value from server response
       budgetStore.setReadyToAssign(result.readyToAssign)
 
-      // Update category balance if provided
-      if (result.categoryBalance) {
+      // Update category balance(s) if provided
+      if (result.categoryBalances && result.categoryBalances.length > 0) {
+        // Use the new categoryBalances array
+        result.categoryBalances.forEach((balance) => {
+          categoryStore.updateCategoryBalance(balance.category_id, balance)
+        })
+      } else if (result.categoryBalance) {
+        // Fall back to legacy categoryBalance for backward compatibility
         categoryStore.updateCategoryBalance(result.categoryBalance.category_id, result.categoryBalance)
       }
 
@@ -115,8 +119,14 @@ export const useTransactionOperations = () => {
       // Update ready to assign value from server response
       budgetStore.setReadyToAssign(result.readyToAssign)
 
-      // Update category balance if provided
-      if (result.categoryBalance) {
+      // Update category balance(s) if provided
+      if (result.categoryBalances && result.categoryBalances.length > 0) {
+        // Use the new categoryBalances array
+        result.categoryBalances.forEach((balance) => {
+          categoryStore.updateCategoryBalance(balance.category_id, balance)
+        })
+      } else if (result.categoryBalance) {
+        // Fall back to legacy categoryBalance for backward compatibility
         categoryStore.updateCategoryBalance(result.categoryBalance.category_id, result.categoryBalance)
       }
 
