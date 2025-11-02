@@ -3,18 +3,12 @@ import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { RouterView } from 'vue-router'
 import { useTheme } from '@/composables/common/useTheme'
-import { useBudgetStore } from '@/stores/budget.store'
-import { useFetchBudgets } from '@/composables/budgets/budget-read/useFetchBudgets'
-import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 
 // Initialize color theme
 useTheme()
 
 const route = useRoute()
 const router = useRouter()
-const budgetStore = useBudgetStore()
-const { fetchBudgets } = useFetchBudgets()
-const { ensureDataLoaded } = useMainDataOperations()
 
 onMounted(async () => {
   try {

@@ -5,6 +5,27 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Friendly Budget</title>
+    <script>
+      // Prevent flash of incorrect theme by applying theme before page loads
+      (function() {
+        const storedTheme = localStorage.getItem('theme');
+        const isDark = storedTheme ? storedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    <style>
+      /* Prevent white flash by setting dark background immediately */
+      html.dark {
+        background-color: oklch(0.15 0.03 265);
+      }
+      
+      body {
+        background-color: transparent;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
