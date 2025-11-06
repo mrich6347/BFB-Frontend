@@ -16,9 +16,12 @@ export interface UpdateAccountDto {
     name?: string;
 }
 
+import type { CategoryResponse } from './category.dto'
+
 export interface AccountWithReadyToAssignResponse {
     account: AccountResponse;
     readyToAssign: number;
+    category?: CategoryResponse; // Optional category (e.g., payment category for credit card accounts)
 }
 
 export interface CloseAccountResponse {

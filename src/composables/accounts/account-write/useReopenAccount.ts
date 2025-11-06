@@ -1,10 +1,12 @@
 import { ref, readonly } from 'vue'
 import { useAccountStore } from '@/stores/account.store'
+import { useCategoryStore } from '@/stores/category.store'
 import { useBudgetUtils } from '@/composables/budgets/budget-read/useBudgetUtils'
 import { AccountService } from '@/services/account.service'
 
 export const useReopenAccount = () => {
   const accountStore = useAccountStore()
+  const categoryStore = useCategoryStore()
   const { setReadyToAssign } = useBudgetUtils()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -23,8 +25,10 @@ export const useReopenAccount = () => {
       // Store responsibility: Know HOW to find and update the account status
       accountStore.updateAccount(accountId, response.account)
 
-      // If this is a credit card account, we need to refresh categories
-      // This will be handled by the calling component since it involves category store
+      // If a category was returned (e.g., credit card payment category reactivated), update it in the store
+      if (response.category) {
+        categoryStore.updateCategory(response.category.id, response.category)
+      }
 
       return response.account
     } catch (err) {
