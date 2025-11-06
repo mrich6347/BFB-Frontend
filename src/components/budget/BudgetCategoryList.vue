@@ -124,8 +124,8 @@
                       <Badge
                         :variant="getBadgeVariant(category.available)"
                         :class="[
-                          'cursor-pointer',
-                          category.available > 0 && 'hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-200 transform'
+                          'cursor-pointer transition-all duration-200 transform',
+                          category.available > 0 && 'hover:bg-emerald-200 hover:text-emerald-900 hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-200/60 hover:scale-[1.03]'
                         ]"
                         @click="handleAvailableClick(category, $event)"
                       >
