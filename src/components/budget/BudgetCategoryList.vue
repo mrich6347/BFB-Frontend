@@ -123,7 +123,10 @@
                     <div class="text-right">
                       <Badge
                         :variant="getBadgeVariant(category.available)"
-                        class="cursor-pointer"
+                        :class="[
+                          'cursor-pointer',
+                          category.available > 0 && 'hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-200 transform'
+                        ]"
                         @click="handleAvailableClick(category, $event)"
                       >
                         {{ formatCurrency(category.available) }}
