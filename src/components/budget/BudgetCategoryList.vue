@@ -103,10 +103,8 @@
                   >
                     <div class="flex items-center truncate">
                       <GripVertical
-                        v-if="!isCreditCardPaymentCategory(category)"
                         class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
                       />
-                      <div v-else class="h-3.5 w-3.5 mr-2"></div> <!-- Spacer for credit card payment categories -->
                       <span class="truncate">{{ category.name }}</span>
                       <Edit
                         v-if="!isCreditCardPaymentCategory(category)"

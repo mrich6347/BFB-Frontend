@@ -59,14 +59,6 @@ export function useCategoryDragAndDrop(
       return
     }
 
-    // Prevent reordering of credit card payment categories
-    const movedCategory = event.moved.element
-    if (isCreditCardPaymentCategory(movedCategory)) {
-      // Revert the change by resetting the list
-      categoryLists[groupId] = [...getCategoriesForGroup(groupId)]
-      return
-    }
-
     // Get the category IDs in the new order
     const categoryIds = categoryLists[groupId].map(category => category.id)
 
