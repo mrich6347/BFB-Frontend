@@ -185,22 +185,32 @@ export const useTransactionOperations = () => {
       throw new Error('Transaction not found')
     }
 
+    const transactionSnapshot = { ...originalTransaction }
     const newClearedStatus = !originalTransaction.is_cleared
+
+    // Optimistically update transaction and account balances
+    transactionStore.updateTransaction(id, { is_cleared: newClearedStatus })
+    updateAccountBalanceOnClearedToggle(
+      originalTransaction.account_id,
+      originalTransaction.amount,
+      newClearedStatus
+    )
 
     try {
       const updatedTransaction = await TransactionService.toggleCleared(id)
-
-      // Update account balance based on cleared status change
-      updateAccountBalanceOnClearedToggle(
-        originalTransaction.account_id,
-        originalTransaction.amount,
-        newClearedStatus
-      )
 
       // Update transaction in store with server response
       transactionStore.updateTransaction(id, updatedTransaction)
       return updatedTransaction
     } catch (err) {
+      // Roll back optimistic updates on failure
+      transactionStore.updateTransaction(id, transactionSnapshot)
+      updateAccountBalanceOnClearedToggle(
+        originalTransaction.account_id,
+        originalTransaction.amount,
+        transactionSnapshot.is_cleared
+      )
+
       error.value = err instanceof Error ? err.message : 'Failed to toggle cleared status'
       console.error('Error toggling cleared status:', err)
       throw err
