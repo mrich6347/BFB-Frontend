@@ -120,8 +120,9 @@ const availableCategories = computed((): CategoryResponse[] => {
 // Computed property for Ready to Assign color based on value
 const readyToAssignColorClass = computed(() => {
   const amount = budgetStore.readyToAssign
-  if (amount === 0) {
-    return 'bg-gray-500' // Grey for zero
+  // Use a small epsilon to handle floating point precision issues
+  if (Math.abs(amount) < 0.01) {
+    return 'bg-gray-500 opacity-75' // Greyed out for zero (with reduced opacity)
   } else if (amount < 0) {
     return 'bg-red-600' // Red for negative
   } else {
