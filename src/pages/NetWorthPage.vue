@@ -193,12 +193,30 @@ const accountGroups = computed(() => {
 
   const orderedTypes: AccountType[] = [AccountType.CASH, AccountType.TRACKING, AccountType.CREDIT]
 
-  return orderedTypes.map((type) => ({
-    type,
-    title: descriptors[type].title,
-    total: totals[type],
-    accounts: groups[type]?.slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)) ?? []
-  }))
+  return orderedTypes.map((type) => {
+    const sortedAccounts =
+      groups[type]
+        ?.slice()
+        .sort((a, b) => {
+          const balanceA = Number(a.account_balance ?? a.working_balance ?? 0)
+          const balanceB = Number(b.account_balance ?? b.working_balance ?? 0)
+
+          if (type === AccountType.CREDIT) {
+            // For debt, show the most negative balance first (ascending)
+            return balanceA - balanceB
+          }
+
+          // For cash and investments, show highest balance first (descending)
+          return balanceB - balanceA
+        }) ?? []
+
+    return {
+      type,
+      title: descriptors[type].title,
+      total: totals[type],
+      accounts: sortedAccounts
+    }
+  })
 })
 
 const totals = computed(() => {
