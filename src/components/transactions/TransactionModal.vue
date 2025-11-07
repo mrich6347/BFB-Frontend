@@ -33,20 +33,60 @@
         />
 
         <!-- Payee -->
-        <FormKit
-          type="select"
-          name="payee"
-          label="Payee"
-          :options="payeeOptions"
-          placeholder="Select or enter payee"
-          ref="payeeField"
-          :classes="{
-            input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
-            label: 'text-sm font-medium text-foreground',
-            outer: 'space-y-2 mb-4',
-            message: 'text-red-500 text-sm mt-1'
-          }"
-        />
+        <div class="space-y-2 mb-4">
+          <FormKit
+            v-if="payeeMode === 'select'"
+            type="select"
+            name="payee"
+            label="Payee"
+            v-model="selectedPayee"
+            :options="payeeOptions"
+            placeholder="Select transfer payee"
+            @input="onPayeeSelect"
+            :classes="{
+              input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
+              label: 'text-sm font-medium text-foreground',
+              outer: 'space-y-2',
+              message: 'text-red-500 text-sm mt-1'
+            }"
+          />
+          <FormKit
+            v-else
+            type="text"
+            name="payee"
+            label="Payee"
+            v-model="selectedPayee"
+            placeholder="Enter payee name"
+            :classes="{
+              input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
+              label: 'text-sm font-medium text-foreground',
+              outer: 'space-y-2',
+              message: 'text-red-500 text-sm mt-1'
+            }"
+          />
+
+          <div v-if="payeeMode === 'select'">
+            <Button
+              type="button"
+              variant="link"
+              class="h-auto px-0"
+              @click="switchToCustomPayee"
+            >
+              Enter custom payee...
+            </Button>
+          </div>
+
+          <div v-else>
+            <Button
+              type="button"
+              variant="link"
+              class="h-auto px-0"
+              @click="switchToTransferPayee"
+            >
+              Select transfer payee
+            </Button>
+          </div>
+        </div>
 
         <!-- Category -->
         <FormKit
@@ -173,9 +213,9 @@ const categoryStore = useCategoryStore()
 const accountStore = useAccountStore()
 const { getTransferOptions } = useGetTransferOptions()
 const amountType = ref<'inflow' | 'outflow'>('outflow')
-const payeeField = ref(null)
 const transferOptions = ref<AccountResponse[]>([])
 const selectedPayee = ref('')
+const payeeMode = ref<'select' | 'custom'>('select')
 
 // Prevent future dates - max date is today
 const maxDate = computed(() => {
@@ -183,24 +223,14 @@ const maxDate = computed(() => {
 })
 
 const payeeOptions = computed(() => {
-  const options = []
-
-  // Add transfer options at the top
-  if (transferOptions.value.length > 0) {
-    options.push({ label: '--- Transfers ---', value: '', disabled: true })
-    transferOptions.value.forEach(account => {
-      options.push({
-        label: TransferService.formatTransferPayee(account.name),
-        value: TransferService.formatTransferPayee(account.name)
-      })
-    })
-    options.push({ label: '--- Payees ---', value: '', disabled: true })
+  if (transferOptions.value.length === 0) {
+    return []
   }
 
-  // Add regular payee option (allow custom input)
-  options.push({ label: 'Enter custom payee...', value: 'custom' })
-
-  return options
+  return transferOptions.value.map(account => ({
+    label: TransferService.formatTransferPayee(account.name),
+    value: TransferService.formatTransferPayee(account.name)
+  }))
 })
 
 const categoryOptions = computed(() => {
@@ -262,7 +292,6 @@ watch(() => props.transaction, (transaction) => {
   }
 }, { immediate: true })
 
-// Watch for payee changes to update selectedPayee
 watch(() => selectedPayee.value, (newPayee) => {
   // For transfers, force outflow type
   if (TransferService.isTransferPayee(newPayee)) {
@@ -270,24 +299,70 @@ watch(() => selectedPayee.value, (newPayee) => {
   }
 })
 
+watch(
+  () => props.transaction,
+  transaction => {
+    if (transaction?.payee) {
+      selectedPayee.value = transaction.payee
+      payeeMode.value = TransferService.isTransferPayee(transaction.payee) ? 'select' : 'custom'
+    } else {
+      selectedPayee.value = ''
+      payeeMode.value = 'select'
+    }
+  },
+  { immediate: true }
+)
+
+const focusPayeeInput = () => {
+  nextTick(() => {
+    const payeeInput = document.querySelector('input[name="payee"]') as HTMLInputElement
+    if (payeeInput) {
+      payeeInput.focus()
+    }
+  })
+}
+
+const switchToCustomPayee = () => {
+  payeeMode.value = 'custom'
+  if (TransferService.isTransferPayee(selectedPayee.value) || selectedPayee.value === 'custom') {
+    selectedPayee.value = ''
+  }
+  focusPayeeInput()
+}
+
+const switchToTransferPayee = () => {
+  payeeMode.value = 'select'
+  if (!TransferService.isTransferPayee(selectedPayee.value)) {
+    selectedPayee.value = ''
+  }
+  focusPayeeInput()
+}
+
+const onPayeeSelect = (value?: string) => {
+  if (value === 'custom') {
+    switchToCustomPayee()
+    return
+  }
+  selectedPayee.value = value || ''
+}
+
 // Focus payee field when modal opens
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
-    nextTick(() => {
-      // Find the payee input field and focus it
-      const payeeInput = document.querySelector('input[name="payee"]') as HTMLInputElement
-      if (payeeInput) {
-        payeeInput.focus()
-      }
-    })
+    if (!props.transaction) {
+      payeeMode.value = 'select'
+      selectedPayee.value = ''
+    }
+    focusPayeeInput()
   }
 })
 
 const handleSubmit = (data: any) => {
-  // Update selectedPayee for transfer detection
-  selectedPayee.value = data.payee
+  const payeeValue = selectedPayee.value || ''
+  data.payee = payeeValue
+  selectedPayee.value = payeeValue
 
-  const isTransfer = TransferService.isTransferPayee(data.payee)
+  const isTransfer = TransferService.isTransferPayee(payeeValue)
 
   // For transfers, validate that category is selected
   if (isTransfer && !data.category_id) {
@@ -304,7 +379,8 @@ const handleSubmit = (data: any) => {
     ...data,
     amount,
     account_id: props.accountId,
-    category_id: data.category_id || undefined
+    category_id: data.category_id || undefined,
+    payee: payeeValue || undefined
   }
 
   emit('save', transactionData)
