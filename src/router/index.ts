@@ -6,7 +6,7 @@ import DashboardPage from '../pages/DashboardPage.vue'
 import NotFoundPage from '../pages/util-pages/NotFoundPage.vue'
 import BannedPage from '../pages/util-pages/BannedPage.vue'
 import BudgetPage from '../pages/BudgetPage.vue'
-import ReportsPage from '../pages/ReportsPage.vue'
+import NetWorthPage from '../pages/NetWorthPage.vue'
 import AccountPage from '../pages/AccountPage.vue'
 import ProfileSettingsPage from '../pages/ProfileSettingsPage.vue'
 import SharedGoalsPage from '../pages/SharedGoalsPage.vue'
@@ -47,9 +47,9 @@ const routes = [
     }
   },
   {
-    path: '/reports',
-    name: 'Reports',
-    component: ReportsPage,
+    path: '/net-worth',
+    name: 'NetWorth',
+    component: NetWorthPage,
     meta: {
       requiresAuth: true
     }

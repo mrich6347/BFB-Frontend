@@ -277,7 +277,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import ThemeToggle from './common/ThemeToggle.vue'
 import {
   BarChart2Icon,
-  PieChartIcon,
+  TrendingUpIcon,
   PlusIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -324,7 +324,7 @@ const mainNavItems = computed(() => {
   }
 
   items.push(
-    { name: 'Reports', to: '/reports', icon: PieChartIcon },
+    { name: 'Net Worth', to: '/net-worth', icon: TrendingUpIcon },
     { name: 'Shared Goals', to: '/shared-goals', icon: TargetIcon }
   )
 
