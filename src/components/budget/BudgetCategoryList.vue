@@ -17,7 +17,7 @@
 
     <div v-else>
       <!-- Header Row -->
-      <div class="grid grid-cols-[2fr_150px_150px_150px] gap-10 text-xs font-medium text-muted-foreground px-2 py-1 border-b">
+      <div class="grid grid-cols-[minmax(0,3fr)_minmax(0,130px)_minmax(0,130px)_minmax(0,130px)] gap-6 text-xs font-medium text-muted-foreground px-2 py-1 border-b">
         <div class="flex items-center gap-1">
           CATEGORY
           <PlusIcon
@@ -46,7 +46,7 @@
           <div :key="group.id" class="border-b last:border-b-0 category-group-item" :data-group-id="group.id">
             <!-- Group Header -->
             <div
-              class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 font-semibold px-2 py-1.5 cursor-pointer hover:bg-muted/50"
+              class="group grid grid-cols-[minmax(0,3fr)_minmax(0,130px)_minmax(0,130px)_minmax(0,130px)] gap-6 font-semibold px-2 py-1.5 cursor-pointer hover:bg-muted/50"
               @click="toggleGroup(group.id)"
             >
               <div class="flex items-center truncate">
@@ -98,7 +98,7 @@
               >
                 <template #item="{ element: category }">
                   <div
-                    class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 text-sm pl-8 pr-2 py-1.5 hover:bg-muted/50 transition-colors border-b border-border/40 last:border-b-0 category-item"
+                    class="group grid grid-cols-[minmax(0,3fr)_minmax(0,130px)_minmax(0,130px)_minmax(0,130px)] gap-6 text-sm pl-8 pr-2 py-1.5 hover:bg-muted/50 transition-colors border-b border-border/40 last:border-b-0 category-item"
                     :data-category-id="category.id"
                   >
                     <div class="flex items-center truncate">
@@ -145,7 +145,7 @@
         <div class="border-b last:border-b-0 category-group-item opacity-75" :data-group-id="hiddenCategoriesGroup.id">
           <!-- Hidden Group Header -->
           <div
-            class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 font-semibold px-2 py-1.5 cursor-pointer hover:bg-muted/30 bg-muted/10"
+            class="group grid grid-cols-[minmax(0,3fr)_minmax(0,130px)_minmax(0,130px)_minmax(0,130px)] gap-6 font-semibold px-2 py-1.5 cursor-pointer hover:bg-muted/30 bg-muted/10"
             @click="toggleGroup(hiddenCategoriesGroup.id)"
           >
             <div class="flex items-center truncate">
@@ -180,7 +180,7 @@
             >
               <template #item="{ element: category }">
                 <div
-                  class="group grid grid-cols-[2fr_150px_150px_150px] gap-10 text-sm pl-8 pr-2 py-1.5 hover:bg-muted/30 transition-colors border-b border-border/40 last:border-b-0 category-item opacity-75"
+                  class="group grid grid-cols-[minmax(0,3fr)_minmax(0,130px)_minmax(0,130px)_minmax(0,130px)] gap-6 text-sm pl-8 pr-2 py-1.5 hover:bg-muted/30 transition-colors border-b border-border/40 last:border-b-0 category-item opacity-75"
                   :data-category-id="category.id"
                 >
                   <div class="flex items-center truncate">
