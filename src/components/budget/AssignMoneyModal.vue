@@ -21,6 +21,7 @@
             @click="close"
             class="text-muted-foreground hover:text-foreground"
           >
+          
             <X class="h-4 w-4" />
           </button>
         </div>
