@@ -257,8 +257,8 @@ onMounted(() => {
 
 <style scoped>
 .auto-assign-panel {
-  width: 320px;
-  min-width: 320px;
+  width: 360px;
+  min-width: 360px;
 }
 
 /* Custom animations for the applying modal */
