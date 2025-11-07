@@ -125,7 +125,7 @@
                         :variant="getBadgeVariant(category.available)"
                         :class="[
                           'cursor-pointer transition-all duration-200 transform',
-                          category.available > 0 && 'hover:bg-emerald-200 hover:text-emerald-900 hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-200/60 hover:scale-[1.03]'
+                          category.available > 0 && 'hover:bg-emerald-400 hover:text-emerald-950 hover:border-emerald-600 hover:shadow-md hover:shadow-emerald-400/60 hover:scale-[1.03]'
                         ]"
                         @click="handleAvailableClick(category, $event)"
                       >
