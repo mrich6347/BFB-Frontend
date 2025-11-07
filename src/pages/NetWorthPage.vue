@@ -98,9 +98,9 @@
                       </span>
                       <span
                         class="text-sm font-medium tabular-nums"
-                        :class="account.account_balance < 0 ? 'text-destructive' : 'text-foreground'"
+                        :class="getNetWorthBalance(account) < 0 ? 'text-destructive' : 'text-foreground'"
                       >
-                        {{ formatCurrency(account.account_balance) }}
+                        {{ formatCurrency(getNetWorthBalance(account)) }}
                       </span>
                     </div>
                   </div>
@@ -156,6 +156,18 @@ const ynabReferenceNetWorth = 36786.22
 
 const currentBudgetId = computed(() => currentBudget.value?.id || '')
 
+const getNetWorthBalance = (account: AccountResponse) => {
+  if (account.working_balance !== undefined && account.working_balance !== null) {
+    const workingBalance = Number(account.working_balance)
+    if (!Number.isNaN(workingBalance)) {
+      return workingBalance
+    }
+  }
+
+  const accountBalance = Number(account.account_balance ?? 0)
+  return Number.isNaN(accountBalance) ? 0 : accountBalance
+}
+
 const accountGroups = computed(() => {
   const descriptors: Record<AccountType, { title: string }> = {
     [AccountType.CASH]: {
@@ -186,7 +198,7 @@ const accountGroups = computed(() => {
     if (!groups[type]) {
       return
     }
-    const balance = Number(account.account_balance ?? account.working_balance ?? 0)
+    const balance = getNetWorthBalance(account)
     groups[type].push(account)
     totals[type] += balance
   })
@@ -198,8 +210,8 @@ const accountGroups = computed(() => {
       groups[type]
         ?.slice()
         .sort((a, b) => {
-          const balanceA = Number(a.account_balance ?? a.working_balance ?? 0)
-          const balanceB = Number(b.account_balance ?? b.working_balance ?? 0)
+          const balanceA = getNetWorthBalance(a)
+          const balanceB = getNetWorthBalance(b)
 
           if (type === AccountType.CREDIT) {
             // For debt, show the most negative balance first (ascending)
@@ -225,7 +237,7 @@ const totals = computed(() => {
   let creditTotal = 0
 
   activeAccounts.value.forEach((account) => {
-    const balance = Number(account.account_balance ?? account.working_balance ?? 0)
+    const balance = getNetWorthBalance(account)
     switch (account.account_type) {
       case AccountType.CASH:
         cashTotal += balance
