@@ -1,10 +1,20 @@
 <template>
-  <div class="min-h-screen bg-background">
+  <div class="min-h-screen bg-background pb-20">
     <!-- Simple Header -->
     <div class="sticky top-0 z-10 bg-background border-b border-border">
-      <div class="px-4 py-3">
-        <h1 class="text-lg font-semibold text-foreground">{{ budgetStore.currentBudget?.name }}</h1>
-        <p class="text-sm text-muted-foreground">{{ budgetStore.currentMonthName }}</p>
+      <div class="px-4 py-3 space-y-2">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-lg font-semibold text-foreground">{{ budgetStore.currentBudget?.name }}</h1>
+            <p class="text-sm text-muted-foreground">{{ budgetStore.currentMonthName }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-muted-foreground">Ready to Assign</p>
+            <p class="text-lg font-semibold" :class="getReadyToAssignColorClass()">
+              {{ formatCurrency(budgetStore.readyToAssign) }}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -43,17 +53,33 @@
         <p class="text-muted-foreground text-center">No categories found</p>
       </div>
     </div>
+
+    <!-- Mobile Transaction Flow -->
+    <MobileTransactionFlow
+      @save-transaction="handleSaveTransaction"
+      @save-transfer="handleSaveTransfer"
+      @save-payment="handleSavePayment"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useToast } from 'vue-toast-notification'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
+import { useAccountStore } from '@/stores/account.store'
+import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
+import { AccountService } from '@/services/account.service'
 import { formatCurrency } from '@/utils/currencyUtil'
+import MobileTransactionFlow from '@/components/mobile/MobileTransactionFlow.vue'
+import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
+const accountStore = useAccountStore()
+const { createTransaction } = useTransactionOperations()
+const $toast = useToast()
 
 // Get categories for a specific group with balances
 const getCategoriesForGroup = (groupId: string) => {
@@ -88,6 +114,63 @@ const getAvailableColorClass = (amount: number) => {
     return 'text-red-600 dark:text-red-400'
   }
   return 'text-muted-foreground'
+}
+
+// Get color class for Ready to Assign
+const getReadyToAssignColorClass = () => {
+  const amount = budgetStore.readyToAssign
+  if (amount > 0) {
+    return 'text-emerald-600 dark:text-emerald-400'
+  } else if (amount < 0) {
+    return 'text-red-600 dark:text-red-400'
+  }
+  return 'text-foreground'
+}
+
+// Transaction handlers
+const handleSaveTransaction = async (data: CreateTransactionDto) => {
+  try {
+    await createTransaction(data)
+    // Optimistic update provides instant feedback, no toast needed
+  } catch (error) {
+    $toast.error('Failed to save transaction')
+  }
+}
+
+const handleSaveTransfer = async (data: CreateTransactionDto) => {
+  try {
+    await createTransaction(data)
+    // Optimistic update provides instant feedback, no toast needed
+  } catch (error) {
+    $toast.error('Failed to create transfer')
+  }
+}
+
+const handleSavePayment = async (creditCardAccountId: string, amount: number, fromAccountId: string, memo?: string) => {
+  try {
+    const response = await AccountService.makeCreditCardPayment(creditCardAccountId, {
+      amount,
+      from_account_id: fromAccountId,
+      memo
+    })
+
+    // Update stores with server response
+    budgetStore.setReadyToAssign(response.readyToAssign)
+    accountStore.updateAccount(creditCardAccountId, response.account) // Credit card account
+    accountStore.updateAccount(fromAccountId, response.sourceAccount) // Cash account
+
+    // Update payment category balance if provided
+    if (response.paymentCategoryBalance) {
+      categoryStore.updateCategoryBalance(
+        response.paymentCategoryBalance.category_id,
+        response.paymentCategoryBalance
+      )
+    }
+
+    // Optimistic update provides instant feedback, no toast needed
+  } catch (error) {
+    $toast.error('Failed to make payment')
+  }
 }
 </script>
 
