@@ -141,6 +141,11 @@ const groupedCategories = computed(() => {
     const group = categoryStore.categoryGroups.find(g => g.id === groupId)
     const groupName = group?.name || 'Uncategorized'
 
+    // Skip categories in the "Hidden Categories" system group
+    if (group?.name === 'Hidden Categories' && group?.is_system_group) {
+      return
+    }
+
     if (!groups[groupId]) {
       groups[groupId] = {
         groupId,
