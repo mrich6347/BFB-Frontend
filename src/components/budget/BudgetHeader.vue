@@ -20,18 +20,20 @@
             <div class="text-xs font-medium text-white">Ready to Assign</div>
             <div class="text-base font-bold text-white whitespace-nowrap">{{ formatCurrency(budgetStore.readyToAssign) }}</div>
           </div>
-          <div :class="['w-px', readyToAssignColorClass]"></div>
-          <button
-            @click="handleAssignClick"
-            :disabled="budgetStore.readyToAssign <= 0"
-            :class="[
-              'flex items-center px-4 cursor-pointer text-white font-medium transition-colors whitespace-nowrap',
-              readyToAssignColorClass,
-              budgetStore.readyToAssign <= 0 ? 'opacity-50 cursor-not-allowed' : ''
-            ]">
-            Assign
-            <ChevronDown class="w-3.5 h-3.5 ml-1" />
-          </button>
+          <template v-if="!isReadyToAssignZero">
+            <div :class="['w-px', readyToAssignColorClass]"></div>
+            <button
+              @click="handleAssignClick"
+              :disabled="budgetStore.readyToAssign <= 0"
+              :class="[
+                'flex items-center px-4 cursor-pointer text-white font-medium transition-colors whitespace-nowrap',
+                readyToAssignColorClass,
+                budgetStore.readyToAssign <= 0 ? 'opacity-50 cursor-not-allowed' : ''
+              ]">
+              Assign
+              <ChevronDown class="w-3.5 h-3.5 ml-1" />
+            </button>
+          </template>
         </div>
       </div>
 
@@ -118,6 +120,8 @@ const availableCategories = computed((): CategoryResponse[] => {
 })
 
 // Computed property for Ready to Assign color based on value
+const isReadyToAssignZero = computed(() => Math.abs(budgetStore.readyToAssign) < 0.01)
+
 const readyToAssignColorClass = computed(() => {
   const amount = budgetStore.readyToAssign
   // Use a small epsilon to handle floating point precision issues
