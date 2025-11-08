@@ -14,7 +14,12 @@ export const useHideCategory = () => {
     error.value = null
 
     try {
-      const response = await CategoryService.hideCategory(id)
+      // Get current year and month to pass to the backend
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = now.getMonth() + 1
+
+      const response = await CategoryService.hideCategory(id, year, month)
 
       budgetStore.setReadyToAssign(response.readyToAssign)
 

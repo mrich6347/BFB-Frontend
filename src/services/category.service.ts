@@ -30,8 +30,13 @@ export default class CategoryService {
     return response.data;
   }
 
-  static async hideCategory(id: string): Promise<{ readyToAssign: number }> {
-    const response = await api.patch(`/categories/${id}/hide`);
+  static async hideCategory(id: string, year?: number, month?: number): Promise<{ readyToAssign: number }> {
+    const params = new URLSearchParams();
+    if (year !== undefined) params.append('year', year.toString());
+    if (month !== undefined) params.append('month', month.toString());
+
+    const url = `/categories/${id}/hide${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await api.patch(url);
     return response.data;
   }
 
