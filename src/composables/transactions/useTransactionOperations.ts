@@ -424,8 +424,28 @@ export const useTransactionOperations = () => {
     // Create snapshot for rollback
     const transactionSnapshot = { ...transactionToDelete }
 
+    // Check if this is a transfer transaction and find the linked transaction
+    let linkedTransaction: TransactionResponse | undefined
+    let linkedTransactionSnapshot: TransactionResponse | undefined
+
+    if (transactionToDelete.transfer_id) {
+      // Find the linked transaction with the same transfer_id but different id
+      linkedTransaction = transactionStore.transactions.find(
+        t => t.transfer_id === transactionToDelete.transfer_id && t.id !== transactionToDelete.id
+      )
+
+      if (linkedTransaction) {
+        linkedTransactionSnapshot = { ...linkedTransaction }
+      }
+    }
+
     // Optimistically remove transaction from store (instant UI update)
     transactionStore.removeTransaction(id)
+
+    // If this is a transfer, also remove the linked transaction
+    if (linkedTransaction) {
+      transactionStore.removeTransaction(linkedTransaction.id)
+    }
 
     // Optimistically update account balance (instant UI update)
     removeAccountBalance(
@@ -433,6 +453,15 @@ export const useTransactionOperations = () => {
       transactionToDelete.amount,
       transactionToDelete.is_cleared
     )
+
+    // If this is a transfer, also update the linked account balance
+    if (linkedTransaction) {
+      removeAccountBalance(
+        linkedTransaction.account_id,
+        linkedTransaction.amount,
+        linkedTransaction.is_cleared
+      )
+    }
 
     try {
       const result = await TransactionService.deleteTransaction(id)
@@ -469,6 +498,16 @@ export const useTransactionOperations = () => {
         transactionToDelete.amount,
         transactionToDelete.is_cleared
       )
+
+      // If this was a transfer, also roll back the linked transaction
+      if (linkedTransactionSnapshot) {
+        transactionStore.addTransaction(linkedTransactionSnapshot)
+        updateAccountBalance(
+          linkedTransactionSnapshot.account_id,
+          linkedTransactionSnapshot.amount,
+          linkedTransactionSnapshot.is_cleared
+        )
+      }
 
       error.value = err instanceof Error ? err.message : 'Failed to delete transaction'
       console.error('Error deleting transaction:', err)
