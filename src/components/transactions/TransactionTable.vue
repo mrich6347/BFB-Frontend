@@ -69,7 +69,6 @@
         <table class="min-w-full text-sm border-collapse">
           <thead class="bg-muted/40 text-muted-foreground uppercase tracking-wide text-[0.65rem]">
             <tr>
-              <th class="px-4 py-3 font-medium text-left">Payee</th>
               <th class="px-4 py-3 font-medium text-left w-40">Category</th>
               <th class="px-4 py-3 font-medium text-left w-48">Memo</th>
               <th class="px-4 py-3 font-medium text-right w-28">Outflow</th>
