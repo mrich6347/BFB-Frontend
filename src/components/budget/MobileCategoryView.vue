@@ -26,11 +26,8 @@
         class="space-y-2"
       >
         <!-- Group Header -->
-        <div class="flex items-center justify-between px-3 py-2 bg-muted/50 rounded-md">
+        <div class="px-3 py-2 bg-muted/50 rounded-md">
           <h2 class="text-sm font-medium text-muted-foreground">{{ group.name }}</h2>
-          <span class="text-sm font-semibold" :class="getAvailableColorClass(getGroupTotal(group.id))">
-            {{ formatCurrency(getGroupTotal(group.id)) }}
-          </span>
         </div>
 
         <!-- Categories in Group -->
