@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { PlusIcon, TrashIcon, ArrowRightLeftIcon } from 'lucide-vue-next'
 import Button from '@/components/shadcn-ui/button.vue'
 import TransactionRow from './TransactionRow.vue'
@@ -277,6 +277,32 @@ const deleteSelectedTransactions = async () => {
     clearSelection()
   }
 }
+
+const handleGlobalKeydown = (event: KeyboardEvent) => {
+  if (!selectedTransactionIds.value.length) return
+
+  const target = event.target as HTMLElement | null
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+    return
+  }
+
+  if (showAddTransactionModal.value || showEditTransactionModal.value || showTransferModal.value) {
+    return
+  }
+
+  if (event.key === 'Delete' || (event.key === 'Backspace' && (event.metaKey || event.ctrlKey))) {
+    event.preventDefault()
+    deleteSelectedTransactions()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown)
+})
 
 const toggleClearedHandler = async (transaction: TransactionResponse) => {
   try {

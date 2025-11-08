@@ -56,15 +56,30 @@
             </p>
           </div>
 
-          <div v-else class="space-y-2 p-4">
+          <div v-else class="space-y-3 p-4">
             <div
               v-for="config in autoAssignStore.configurations"
               :key="config.name"
-              class="border border-border rounded-lg p-3 hover:bg-muted/50 transition-colors"
+              :class="[
+                'relative group overflow-hidden rounded-xl border border-border/80 bg-gradient-to-br from-background/95 via-muted/30 to-background shadow-[0_8px_22px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_32px_rgba(15,23,42,0.12)] focus-within:ring-2 focus-within:ring-primary/40',
+                budgetStore.readyToAssign < config.total_amount ? 'opacity-70 grayscale-[15%]' : ''
+              ]"
             >
-              <div class="flex items-center justify-between mb-2">
-                <h4 class="font-medium text-sm truncate">{{ config.name }}</h4>
-                <div class="flex items-center space-x-1">
+              <span class="absolute inset-y-3 left-3 w-1 rounded-full bg-primary/70 transition-all duration-300 group-hover:bg-primary group-hover:w-1.5"></span>
+              <div class="relative flex flex-col gap-4 px-6 py-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex items-start gap-3">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors duration-300 group-hover:bg-primary/15">
+                      <Sparkles class="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-semibold text-foreground">{{ config.name }}</h4>
+                      <p class="mt-1 text-xs text-muted-foreground">
+                        {{ config.item_count }} categories • {{ formatCurrency(config.total_amount) }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-1">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -84,23 +99,18 @@
                 </div>
               </div>
 
-              <div class="text-xs text-muted-foreground mb-3">
-                {{ config.item_count }} categories • {{ formatCurrency(config.total_amount) }}
-              </div>
-
-              <Button
-                @click="applyConfiguration(config)"
-                variant="outline"
-                size="sm"
-                class="w-full"
-                :disabled="budgetStore.readyToAssign < config.total_amount"
-              >
-                <Play class="h-3 w-3 mr-2" />
-                Apply
-              </Button>
-
-              <div v-if="budgetStore.readyToAssign < config.total_amount" class="text-xs text-destructive mt-1">
-                Insufficient Ready to Assign
+                <div class="flex flex-col gap-2">
+                  <Button
+                    @click="applyConfiguration(config)"
+                    variant="outline"
+                    size="sm"
+                    class="w-full justify-center font-medium transform transition-all duration-300 hover:-translate-y-[1px] hover:shadow-md"
+                    :disabled="budgetStore.readyToAssign < config.total_amount"
+                  >
+                    <Play class="h-3 w-3 mr-2" />
+                    Apply
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -123,7 +133,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import Button from '@/components/shadcn-ui/button.vue'
-import { Plus, Edit, Trash2, Play } from 'lucide-vue-next'
+import { Plus, Edit, Trash2, Play, Sparkles } from 'lucide-vue-next'
 import { useAutoAssignStore } from '@/stores/auto-assign.store'
 import { useDeleteAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-write/useDeleteAutoAssignConfiguration'
 import { useApplyAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-write/useApplyAutoAssignConfiguration'
