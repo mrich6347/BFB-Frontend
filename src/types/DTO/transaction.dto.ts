@@ -83,6 +83,7 @@ export interface TransactionWithReadyToAssignAndCategoryBalanceResponse {
 
 export interface TransactionWithAccountsAndReadyToAssignAndCategoryBalanceResponse {
   transaction: TransactionResponse;
+  linkedTransaction?: TransactionResponse; // The linked transfer transaction
   sourceAccount?: any; // AccountResponse from accounts module
   targetAccount?: any; // AccountResponse from accounts module
   readyToAssign: number;

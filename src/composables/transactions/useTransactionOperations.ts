@@ -112,6 +112,11 @@ export const useTransactionOperations = () => {
         if (result.targetAccount) {
           setAccountBalance(result.targetAccount.id, result.targetAccount)
         }
+
+        // Add linked transaction to store if provided (for optimistic updates)
+        if (result.linkedTransaction) {
+          transactionStore.addTransaction(result.linkedTransaction)
+        }
       } else {
         // Regular transaction - reconcile with server data
         newTransaction = result.transaction
