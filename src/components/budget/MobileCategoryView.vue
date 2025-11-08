@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-background pb-20">
-    <!-- Simple Header -->
-    <div class="sticky top-0 z-10 bg-background border-b border-border">
-      <div class="px-4 py-3 space-y-2">
+  <div class="h-screen flex flex-col bg-background">
+    <!-- Simple Header with safe area -->
+    <div class="sticky top-0 z-10 bg-background border-b border-border" style="padding-top: max(0.75rem, env(safe-area-inset-top));">
+      <div class="px-4 pb-3 space-y-2">
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-lg font-semibold text-foreground">{{ budgetStore.currentBudget?.name }}</h1>
@@ -18,8 +18,8 @@
       </div>
     </div>
 
-    <!-- Category List -->
-    <div class="p-4 space-y-6">
+    <!-- Category List - scrollable area -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-6" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));">
       <div
         v-for="group in visibleGroupsWithCategories"
         :key="group.id"

@@ -1,7 +1,7 @@
 <template>
   <div class="h-full flex flex-col">
     <!-- Header -->
-    <div class="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
+    <div class="sticky top-0 bg-background border-b border-border px-4 flex items-center justify-between" style="padding-top: max(0.75rem, env(safe-area-inset-top)); padding-bottom: 0.75rem;">
       <button @click="$emit('close')" class="p-2">
         <XIcon class="h-5 w-5" />
       </button>
