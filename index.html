@@ -3,8 +3,17 @@
   <head>
     <meta charset="UTF-8">
     <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Budget Friendly Budget</title>
+
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BFB">
+
+    <!-- Android PWA Support -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
     <script>
       // Prevent flash of incorrect theme by applying theme before page loads
       (function() {
@@ -21,9 +30,18 @@
       html.dark {
         background-color: oklch(0.15 0.03 265);
       }
-      
+
       body {
         background-color: transparent;
+      }
+
+      /* PWA Safe Area Support for iOS notch/home indicator */
+      @supports (padding: max(0px)) {
+        body {
+          padding-left: max(0px, env(safe-area-inset-left));
+          padding-right: max(0px, env(safe-area-inset-right));
+          padding-bottom: max(0px, env(safe-area-inset-bottom));
+        }
       }
     </style>
   </head>
