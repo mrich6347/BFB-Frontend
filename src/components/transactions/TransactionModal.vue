@@ -84,19 +84,6 @@
           />
         </div>
 
-        <!-- Cleared Status -->
-        <FormKit
-          type="checkbox"
-          name="is_cleared"
-          label="Mark as cleared"
-          :classes="{
-            input: 'mr-2',
-            label: 'text-sm font-medium text-foreground',
-            outer: 'space-y-2 mb-4',
-            wrapper: 'flex items-center'
-          }"
-        />
-
         <!-- Form Actions -->
         <div class="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" @click="$emit('close')">
@@ -155,15 +142,13 @@ const formData = computed(() => {
   if (props.transaction) {
     return {
       memo: props.transaction.memo || '',
-      amount: Math.abs(props.transaction.amount),
-      is_cleared: props.transaction.is_cleared
+      amount: Math.abs(props.transaction.amount)
     }
   }
 
   return {
     memo: '',
-    amount: 0,
-    is_cleared: false
+    amount: 0
   }
 })
 
