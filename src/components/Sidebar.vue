@@ -164,18 +164,6 @@
         >
           View Budgets
         </button>
-        <button @click="showNukeDatabaseConfirm = true"
-          class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-destructive bg-background dark:bg-background rounded-lg border border-border dark:border-border mb-2"
-        >
-          <DatabaseIcon class="w-5 h-5 mr-2" />
-          Nuke Database (ALL USERS)
-        </button>
-        <button @click="showPopulateDatabaseConfirm = true"
-          class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-600 bg-background dark:bg-background rounded-lg border border-border dark:border-border mb-2"
-        >
-          <DatabaseIcon class="w-5 h-5 mr-2" />
-          Populate Database
-        </button>
         <button @click="authService.logout()"
             class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground bg-background dark:bg-background rounded-lg border border-border dark:border-border"
         >
@@ -212,62 +200,6 @@
     :budgetId="props.budgetId"
   />
 
-  <!-- Nuke Database Confirmation Dialog -->
-  <Dialog :open="showNukeDatabaseConfirm" @update:open="(value) => !value && (showNukeDatabaseConfirm = false)">
-    <DialogContent class="sm:max-w-md">
-      <DialogHeader>
-        <DialogTitle class="text-destructive">Nuke Database - ALL USERS</DialogTitle>
-        <DialogDescription>
-          This will permanently delete ALL data for ALL users including budgets, accounts, categories, and transactions. This action cannot be undone.
-        </DialogDescription>
-      </DialogHeader>
-      <div class="flex flex-col gap-4">
-        <div class="bg-red-50 border border-red-200 rounded-lg p-3">
-          <p class="text-sm text-red-800 font-medium">
-            ⚠️ WARNING: This will delete EVERYTHING for EVERY user in the database!
-          </p>
-        </div>
-        <p class="text-sm text-muted-foreground">
-          Are you absolutely sure you want to proceed? This is intended for testing purposes only.
-        </p>
-        <div class="flex justify-end gap-2">
-          <Button variant="outline" @click="showNukeDatabaseConfirm = false">
-            Cancel
-          </Button>
-          <Button variant="destructive" :disabled="isNuking" @click="nukeDatabase">
-            <Loader2Icon v-if="isNuking" class="mr-2 h-4 w-4 animate-spin" />
-            {{ isNuking ? 'Nuking...' : 'Yes, Nuke ALL Data for ALL Users' }}
-          </Button>
-        </div>
-      </div>
-    </DialogContent>
-  </Dialog>
-
-  <!-- Populate Database Confirmation Dialog -->
-  <Dialog :open="showPopulateDatabaseConfirm" @update:open="(value) => !value && (showPopulateDatabaseConfirm = false)">
-    <DialogContent class="sm:max-w-md">
-      <DialogHeader>
-        <DialogTitle class="text-blue-600">Populate Database</DialogTitle>
-        <DialogDescription>
-          This will first wipe all existing data, then create a comprehensive sample budget with months of realistic activity including transactions, categories, and account balances.
-        </DialogDescription>
-      </DialogHeader>
-      <div class="flex flex-col gap-4">
-        <p class="text-sm text-muted-foreground">
-          This will give you a fully populated budget to explore the app's features. All existing data will be replaced.
-        </p>
-        <div class="flex justify-end gap-2">
-          <Button variant="outline" @click="showPopulateDatabaseConfirm = false">
-            Cancel
-          </Button>
-          <Button variant="default" :disabled="isPopulating" @click="populateDatabase" class="bg-blue-600 hover:bg-blue-700">
-            <Loader2Icon v-if="isPopulating" class="mr-2 h-4 w-4 animate-spin" />
-            {{ isPopulating ? 'Populating...' : 'Yes, Populate Database' }}
-          </Button>
-        </div>
-      </div>
-    </DialogContent>
-  </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -283,8 +215,6 @@ import {
   LogOutIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
-  DatabaseIcon,
-  Loader2Icon,
   TargetIcon,
   GripVertical
 } from 'lucide-vue-next'
@@ -295,10 +225,7 @@ import CreateAccountModal from './accounts/CreateAccountModal.vue'
 import { useAccountStore } from '@/stores/account.store'
 import { AccountType, type AccountResponse } from '@/types/DTO/account.dto'
 import { useBudgetStore } from '@/stores/budget.store'
-import { DatabaseService } from '@/services/database.service'
 import { useToast } from 'vue-toast-notification'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shadcn-ui'
-import Button from '@/components/shadcn-ui/button.vue'
 import { saveExpandedAccounts, loadExpandedAccounts } from '@/utils/expandedAccountsStorage'
 import { useReopenAccount } from '@/composables/accounts/account-write/useReopenAccount'
 import draggable from 'vuedraggable'
@@ -396,10 +323,6 @@ const toggleSection = (sectionTitle: SectionTitle) => {
 const isSettingsExpanded = ref(false)
 const isCreateAccountModalOpen = ref(false)
 const isCollapsed = ref(false)
-const showNukeDatabaseConfirm = ref(false)
-const isNuking = ref(false)
-const showPopulateDatabaseConfirm = ref(false)
-const isPopulating = ref(false)
 const isReopeningAccount = ref(false)
 const toast = useToast()
 
@@ -463,52 +386,6 @@ onMounted(() => {
   loadExpandedSectionsFromStorage()
   initializeAccountLists()
 })
-
-const nukeDatabase = async () => {
-  try {
-    isNuking.value = true
-    isSettingsExpanded.value = false
-
-    const result = await DatabaseService.nukeDatabase()
-
-    if (result.success) {
-      toast.success('Database has been successfully wiped for ALL users')
-      // Redirect to dashboard page
-      router.push('/dashboard')
-    } else {
-      toast.error('Failed to wipe database: ' + result.message)
-    }
-  } catch (error) {
-    console.error('Error nuking database:', error)
-    toast.error('An error occurred while wiping the database')
-  } finally {
-    isNuking.value = false
-    showNukeDatabaseConfirm.value = false
-  }
-}
-
-const populateDatabase = async () => {
-  try {
-    isPopulating.value = true
-    isSettingsExpanded.value = false
-
-    const result = await DatabaseService.populateDatabase()
-
-    if (result.success) {
-      toast.success('Database has been successfully populated with sample data')
-      // Redirect to dashboard page
-      router.push('/dashboard')
-    } else {
-      toast.error('Failed to populate database: ' + result.message)
-    }
-  } catch (error) {
-    console.error('Error populating database:', error)
-    toast.error('An error occurred while populating the database')
-  } finally {
-    isPopulating.value = false
-    showPopulateDatabaseConfirm.value = false
-  }
-}
 </script>
 
 <style scoped>
