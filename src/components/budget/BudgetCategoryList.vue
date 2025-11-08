@@ -56,16 +56,19 @@
                 <ChevronDownIcon v-if="expandedGroups.has(group.id)" class="h-4 w-4 mr-1 flex-shrink-0" />
                 <ChevronRightIcon v-else class="h-4 w-4 mr-1 flex-shrink-0" />
                 <span class="flex items-center gap-1 truncate">
-                  {{ group.name }}
+                  <span
+                    @click.stop="!group.is_system_group && openEditCategoryGroupModal(group)"
+                    :class="[
+                      !group.is_system_group ? 'cursor-pointer hover:bg-primary/10 hover:text-primary px-1 -mx-1 rounded transition-colors' : ''
+                    ]"
+                    :title="!group.is_system_group ? 'Click to edit' : ''"
+                  >
+                    {{ group.name }}
+                  </span>
                   <PlusIcon
                     v-if="!group.is_system_group"
                     class="h-4 w-4 cursor-pointer hover:text-primary bg-primary/20 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                     @click.stop="openCreateCategoryModal(group.id)"
-                  />
-                  <Edit
-                    v-if="!group.is_system_group"
-                    class="h-4 w-4 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                    @click.stop="openEditCategoryGroupModal(group)"
                   />
                   <span
                     v-if="group.is_system_group"
@@ -105,12 +108,16 @@
                       <GripVertical
                         class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
                       />
-                      <span class="truncate">{{ category.name }}</span>
-                      <Edit
-                        v-if="!isCreditCardPaymentCategory(category)"
-                        class="h-3.5 w-3.5 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1"
-                        @click="openEditCategoryModal(category)"
-                      />
+                      <span
+                        class="truncate"
+                        :class="[
+                          !isCreditCardPaymentCategory(category) ? 'cursor-pointer hover:bg-primary/10 hover:text-primary px-1 -mx-1 rounded transition-colors' : ''
+                        ]"
+                        :title="!isCreditCardPaymentCategory(category) ? 'Click to edit' : ''"
+                        @click="!isCreditCardPaymentCategory(category) && openEditCategoryModal(category)"
+                      >
+                        {{ category.name }}
+                      </span>
                     </div>
                     <div class="text-right text-xs">
                       <CalculationInput
@@ -187,7 +194,13 @@
                     <GripVertical
                       class="h-3.5 w-3.5 mr-2 text-muted-foreground cursor-grab drag-handle opacity-0 group-hover:opacity-100 transition-opacity"
                     />
-                    <span class="truncate text-muted-foreground">{{ category.name }}</span>
+                    <span
+                      class="truncate text-muted-foreground cursor-pointer hover:bg-primary/10 hover:text-primary px-1 -mx-1 rounded transition-colors"
+                      title="Click to edit"
+                      @click="openEditCategoryModal(category)"
+                    >
+                      {{ category.name }}
+                    </span>
                     <button
                       class="h-3.5 w-3.5 cursor-pointer hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-xs px-1 py-0.5 bg-primary/20 rounded text-primary"
                       @click="openUnhideCategoryModal(category)"
