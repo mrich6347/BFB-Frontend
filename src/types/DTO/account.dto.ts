@@ -41,7 +41,8 @@ export interface MakeCreditCardPaymentDto {
 }
 
 export interface MakeCreditCardPaymentResponse {
-    transaction: any; // TransactionResponse
+    transaction: any; // TransactionResponse (source/cash account)
+    linkedTransaction: any; // TransactionResponse (target/credit card account)
     account: AccountResponse; // The credit card account
     sourceAccount: AccountResponse; // The cash account money came from
     paymentCategoryBalance: any; // CategoryBalanceResponse

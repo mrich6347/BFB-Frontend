@@ -461,8 +461,11 @@ const handleSavePayment = async (amount: number, fromAccountId: string, memo?: s
       )
     }
 
-    // Add the actual transaction from server
-    transactionStore.addTransaction(response.transaction)
+    // Add both transactions from server (source and linked)
+    transactionStore.addTransaction(response.transaction) // Cash account transaction
+    if (response.linkedTransaction) {
+      transactionStore.addTransaction(response.linkedTransaction) // Credit card transaction
+    }
 
     // No success toast - instant UI feedback is enough
   } catch (error) {
