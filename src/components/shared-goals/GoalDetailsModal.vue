@@ -239,7 +239,12 @@ const formatCurrency = (amount: number): string => {
 }
 
 const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  // Parse as local date to avoid timezone issues
+  // If dateString is "2030-01-01", we want to display Jan 1, 2030, not Dec 31, 2029
+  const [year, month, day] = dateString.split('T')[0].split('-')
+  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'

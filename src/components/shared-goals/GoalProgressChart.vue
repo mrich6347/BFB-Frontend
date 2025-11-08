@@ -63,25 +63,10 @@
         </div>
       </div>
 
-      <!-- Participant Contributions (Collapsible) -->
-      <div v-if="goal.participants && goal.participants.length > 0" class="bg-card rounded-lg border">
-        <button
-          @click="showContributors = !showContributors"
-          class="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors rounded-lg"
-        >
-          <div class="flex items-center space-x-2">
-            <component
-              :is="showContributors ? ChevronDownIcon : ChevronRightIcon"
-              class="h-4 w-4 text-muted-foreground"
-            />
-            <h4 class="text-sm font-semibold text-foreground">Contributors ({{ participantsWithContributions.length }})</h4>
-          </div>
-          <div class="text-xs text-muted-foreground">
-            Click to {{ showContributors ? 'collapse' : 'expand' }}
-          </div>
-        </button>
-
-        <div v-if="showContributors" class="px-3 pb-3 space-y-2">
+      <!-- Participant Contributions -->
+      <div v-if="goal.participants && goal.participants.length > 0" class="bg-card rounded-lg p-4 border">
+        <h4 class="text-sm font-semibold text-foreground mb-3">Contributors</h4>
+        <div class="space-y-2">
           <div
             v-for="participant in participantsWithContributions"
             :key="participant.id"
@@ -118,8 +103,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { AlertCircleIcon, ChevronDownIcon, ChevronRightIcon } from 'lucide-vue-next'
+import { computed } from 'vue'
+import { AlertCircleIcon } from 'lucide-vue-next'
 import { useGoalProgress } from '../../composables/shared-goals/useGoalProgress'
 import type { SharedGoalResponse } from '../../types/DTO/shared-goal.dto'
 
@@ -130,8 +115,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-const showContributors = ref(false)
 
 const {
   formatProgressPercentage,
@@ -156,15 +139,17 @@ const projectionData = computed(() => {
   )
 })
 
-// Use participant data with backend-calculated percentages
+// Use participant data with backend-calculated percentages, sorted by percentage (highest first)
 const participantsWithContributions = computed(() => {
   if (!props.goal.participants) return []
 
-  return props.goal.participants.map(participant => ({
-    ...participant,
-    contribution_amount: participant.current_contribution || 0,
-    contribution_percentage: participant.contribution_percentage || 0
-  }))
+  return props.goal.participants
+    .map(participant => ({
+      ...participant,
+      contribution_amount: participant.current_contribution || 0,
+      contribution_percentage: participant.contribution_percentage || 0
+    }))
+    .sort((a, b) => b.contribution_percentage - a.contribution_percentage)
 })
 
 const formatDate = (date: Date): string => {

@@ -473,7 +473,17 @@ const formatCurrency = (amount: number): string => {
 }
 
 const formatDate = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date
+  // Parse as local date to avoid timezone issues
+  let dateObj: Date
+
+  if (typeof date === 'string') {
+    // If it's a string like "2030-01-01", parse it as local date
+    const [year, month, day] = date.split('T')[0].split('-')
+    dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+  } else {
+    dateObj = date
+  }
+
   return dateObj.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',

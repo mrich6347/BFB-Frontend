@@ -182,11 +182,18 @@ watch(
   () => props.goal,
   (goal) => {
     if (goal) {
+      // Parse target_date properly to avoid timezone issues
+      let targetDateString = ''
+      if (goal.target_date) {
+        const dateStr = typeof goal.target_date === 'string' ? goal.target_date : goal.target_date.toISOString()
+        targetDateString = dateStr.split('T')[0]
+      }
+
       formData.value = {
         name: goal.name,
         description: goal.description || '',
         target_amount: goal.target_amount,
-        target_date: goal.target_date ? new Date(goal.target_date).toISOString().split('T')[0] : ''
+        target_date: targetDateString
       }
       targetAmountInput.value = goal.target_amount.toString()
     }
