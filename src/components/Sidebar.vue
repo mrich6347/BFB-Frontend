@@ -77,22 +77,20 @@
               class="account-list"
             >
               <template #item="{ element: account }">
-                <div class="flex items-center justify-between px-3 py-2 text-sm rounded-lg ml-2 min-w-0 group hover:bg-muted/50 transition-colors account-item">
-                  <div class="flex items-center min-w-0 flex-1">
-                    <GripVertical
-                      class="w-4 h-4 mr-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab account-drag-handle flex-shrink-0"
-                    />
-                    <router-link
-                      :to="`/budget/${props.budgetId}/account/${account.id}`"
-                      class="flex items-center justify-between min-w-0 flex-1 text-decoration-none"
-                    >
-                      <span class="text-foreground truncate flex-shrink min-w-0 mr-4">{{ account.name }}</span>
-                      <span :class="[
-                        'flex-shrink-0 tabular-nums',
-                        account.working_balance < 0 ? 'text-destructive' : 'text-foreground'
-                      ]">{{ formatCurrency(account.working_balance) }}</span>
-                    </router-link>
-                  </div>
+                <div class="flex items-center justify-between text-sm rounded-lg ml-2 min-w-0 group hover:bg-muted/50 transition-colors account-item">
+                  <GripVertical
+                    class="w-4 h-4 ml-3 mr-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab account-drag-handle flex-shrink-0"
+                  />
+                  <router-link
+                    :to="`/budget/${props.budgetId}/account/${account.id}`"
+                    class="flex items-center justify-between min-w-0 flex-1 text-decoration-none py-2 pr-3"
+                  >
+                    <span class="text-foreground truncate flex-shrink min-w-0 mr-4">{{ account.name }}</span>
+                    <span :class="[
+                      'flex-shrink-0 tabular-nums',
+                      account.working_balance < 0 ? 'text-destructive' : 'text-foreground'
+                    ]">{{ formatCurrency(account.working_balance) }}</span>
+                  </router-link>
                 </div>
               </template>
             </draggable>
