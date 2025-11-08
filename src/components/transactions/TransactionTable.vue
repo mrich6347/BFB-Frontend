@@ -246,14 +246,6 @@ const deleteTransactionsHandler = async (transactionsToDelete: TransactionRespon
   const count = transactionsToDelete.length
   if (!count) return false
 
-  const confirmationMessage = count === 1
-    ? 'Are you sure you want to delete this transaction?'
-    : `Delete ${count} transactions?`
-
-  if (!confirm(confirmationMessage)) {
-    return false
-  }
-
   try {
     // Use bulk delete for multiple transactions for better performance
     if (count > 1) {
@@ -290,18 +282,19 @@ const handleGlobalKeydown = (event: KeyboardEvent) => {
     return
   }
 
-  if (event.key === 'Delete' || (event.key === 'Backspace' && (event.metaKey || event.ctrlKey))) {
+  if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault()
+    event.stopPropagation()
     deleteSelectedTransactions()
   }
 }
 
 onMounted(() => {
-  window.addEventListener('keydown', handleGlobalKeydown)
+  document.addEventListener('keydown', handleGlobalKeydown, true)
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleGlobalKeydown)
+  document.removeEventListener('keydown', handleGlobalKeydown, true)
 })
 
 const toggleClearedHandler = async (transaction: TransactionResponse) => {
