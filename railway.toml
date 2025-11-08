@@ -1,0 +1,16 @@
+[build]
+builder = "nixpacks"
+
+[build.nixpacksPlan]
+providers = ["node"]
+
+[build.nixpacksConfig]
+npmInstallCommand = "npm ci"
+
+[deploy]
+startCommand = "npm run preview"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
