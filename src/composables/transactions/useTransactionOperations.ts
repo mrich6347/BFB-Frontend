@@ -47,11 +47,41 @@ export const useTransactionOperations = () => {
   }
 
   const createTransaction = async (transactionData: CreateTransactionDto) => {
-    isLoading.value = true
+    // Don't set isLoading - we want instant UI feedback with optimistic updates
     error.value = null
+
+    // Create optimistic transaction with temporary ID
+    const optimisticTransaction: TransactionResponse = {
+      id: `temp-${Date.now()}-${Math.random()}`,
+      user_id: '', // Will be set by server
+      account_id: transactionData.account_id,
+      date: transactionData.date,
+      amount: transactionData.amount,
+      memo: transactionData.memo || '',
+      payee: transactionData.payee || '',
+      category_id: transactionData.category_id === 'ready-to-assign' ? undefined : transactionData.category_id,
+      is_cleared: transactionData.is_cleared ?? false,
+      is_reconciled: transactionData.is_reconciled ?? false,
+      transfer_id: transactionData.transfer_id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    // Optimistically add transaction to store (instant UI update)
+    transactionStore.addTransaction(optimisticTransaction)
+
+    // Optimistically update account balance (instant UI update)
+    updateAccountBalance(
+      optimisticTransaction.account_id,
+      optimisticTransaction.amount,
+      optimisticTransaction.is_cleared
+    )
 
     try {
       const result = await TransactionService.createTransaction(transactionData)
+
+      // Remove optimistic transaction
+      transactionStore.removeTransaction(optimisticTransaction.id)
 
       // Update ready to assign value from server response
       budgetStore.setReadyToAssign(result.readyToAssign)
@@ -83,10 +113,17 @@ export const useTransactionOperations = () => {
           setAccountBalance(result.targetAccount.id, result.targetAccount)
         }
       } else {
-        // Regular transaction
+        // Regular transaction - reconcile with server data
         newTransaction = result.transaction
 
-        // Update account balance
+        // Remove optimistic balance update
+        removeAccountBalance(
+          optimisticTransaction.account_id,
+          optimisticTransaction.amount,
+          optimisticTransaction.is_cleared
+        )
+
+        // Apply actual balance from server
         updateAccountBalance(
           newTransaction.account_id,
           newTransaction.amount,
@@ -94,19 +131,26 @@ export const useTransactionOperations = () => {
         )
       }
 
+      // Add actual transaction from server
       transactionStore.addTransaction(newTransaction)
       return newTransaction
     } catch (err) {
+      // Roll back optimistic updates on failure
+      transactionStore.removeTransaction(optimisticTransaction.id)
+      removeAccountBalance(
+        optimisticTransaction.account_id,
+        optimisticTransaction.amount,
+        optimisticTransaction.is_cleared
+      )
+
       error.value = err instanceof Error ? err.message : 'Failed to create transaction'
       console.error('Error creating transaction:', err)
       throw err
-    } finally {
-      isLoading.value = false
     }
   }
 
   const updateTransaction = async (id: string, transactionData: UpdateTransactionDto) => {
-    isLoading.value = true
+    // Don't set isLoading - we want instant UI feedback with optimistic updates
     error.value = null
 
     const originalTransaction = transactionStore.getTransactionById(id)
@@ -114,6 +158,36 @@ export const useTransactionOperations = () => {
       error.value = 'Transaction not found'
       throw new Error('Transaction not found')
     }
+
+    // Create snapshot for rollback
+    const transactionSnapshot = { ...originalTransaction }
+
+    // Create optimistic update
+    const optimisticUpdate: Partial<TransactionResponse> = {
+      ...transactionData,
+      category_id: transactionData.category_id === 'ready-to-assign' ? undefined : transactionData.category_id
+    }
+
+    // Optimistically update transaction in store (instant UI update)
+    transactionStore.updateTransaction(id, optimisticUpdate)
+
+    // Optimistically update account balances (instant UI update)
+    // Remove old transaction's effect
+    removeAccountBalance(
+      originalTransaction.account_id,
+      originalTransaction.amount,
+      originalTransaction.is_cleared
+    )
+
+    // Add new transaction's effect (account_id cannot change in updates)
+    const updatedAmount = transactionData.amount ?? originalTransaction.amount
+    const updatedIsCleared = transactionData.is_cleared ?? originalTransaction.is_cleared
+
+    updateAccountBalance(
+      originalTransaction.account_id,
+      updatedAmount,
+      updatedIsCleared
+    )
 
     try {
       const result = await TransactionService.updateTransaction(id, transactionData)
@@ -148,17 +222,17 @@ export const useTransactionOperations = () => {
           setAccountBalance(result.targetAccount.id, result.targetAccount)
         }
       } else {
-        // Regular transaction
+        // Regular transaction - reconcile with server data
         updatedTransaction = result.transaction
 
-        // Remove the old transaction's effect on account balance
+        // Remove optimistic balance update
         removeAccountBalance(
           originalTransaction.account_id,
-          originalTransaction.amount,
-          originalTransaction.is_cleared
+          updatedAmount,
+          updatedIsCleared
         )
 
-        // Add the new transaction's effect on account balance
+        // Apply actual balance from server
         updateAccountBalance(
           updatedTransaction.account_id,
           updatedTransaction.amount,
@@ -166,19 +240,36 @@ export const useTransactionOperations = () => {
         )
       }
 
+      // Update transaction with actual server data
       transactionStore.updateTransaction(id, updatedTransaction)
       return updatedTransaction
     } catch (err) {
+      // Roll back optimistic updates on failure
+      transactionStore.updateTransaction(id, transactionSnapshot)
+
+      // Rollback account balance changes
+      // Remove optimistic update
+      removeAccountBalance(
+        originalTransaction.account_id,
+        updatedAmount,
+        updatedIsCleared
+      )
+
+      // Restore original balance
+      updateAccountBalance(
+        originalTransaction.account_id,
+        originalTransaction.amount,
+        originalTransaction.is_cleared
+      )
+
       error.value = err instanceof Error ? err.message : 'Failed to update transaction'
       console.error('Error updating transaction:', err)
       throw err
-    } finally {
-      isLoading.value = false
     }
   }
 
   const toggleCleared = async (id: string) => {
-    isLoading.value = true
+    // Don't set isLoading - we want instant UI feedback with optimistic updates
     error.value = null
 
     const originalTransaction = transactionStore.getTransactionById(id)
@@ -190,7 +281,7 @@ export const useTransactionOperations = () => {
     const transactionSnapshot = { ...originalTransaction }
     const newClearedStatus = !originalTransaction.is_cleared
 
-    // Optimistically update transaction and account balances
+    // Optimistically update transaction and account balances (instant UI update)
     transactionStore.updateTransaction(id, { is_cleared: newClearedStatus })
     updateAccountBalanceOnClearedToggle(
       originalTransaction.account_id,
@@ -216,8 +307,6 @@ export const useTransactionOperations = () => {
       error.value = err instanceof Error ? err.message : 'Failed to toggle cleared status'
       console.error('Error toggling cleared status:', err)
       throw err
-    } finally {
-      isLoading.value = false
     }
   }
 
@@ -323,7 +412,7 @@ export const useTransactionOperations = () => {
   }
 
   const deleteTransaction = async (id: string) => {
-    isLoading.value = true
+    // Don't set isLoading - we want instant UI feedback with optimistic updates
     error.value = null
 
     const transactionToDelete = transactionStore.getTransactionById(id)
@@ -332,16 +421,26 @@ export const useTransactionOperations = () => {
       throw new Error('Transaction not found')
     }
 
+    // Create snapshot for rollback
+    const transactionSnapshot = { ...transactionToDelete }
+
+    // Optimistically remove transaction from store (instant UI update)
+    transactionStore.removeTransaction(id)
+
+    // Optimistically update account balance (instant UI update)
+    removeAccountBalance(
+      transactionToDelete.account_id,
+      transactionToDelete.amount,
+      transactionToDelete.is_cleared
+    )
+
     try {
       const result = await TransactionService.deleteTransaction(id)
 
       // Update ready to assign value from server response
       budgetStore.setReadyToAssign(result.readyToAssign)
 
-      // Remove transaction from store
-      transactionStore.removeTransaction(id)
-
-      // Handle account balance updates
+      // Handle account balance updates from server
       if (result.sourceAccount || result.targetAccount) {
         // Transfer transaction - update both account balances using returned data
         if (result.sourceAccount) {
@@ -352,13 +451,8 @@ export const useTransactionOperations = () => {
           setAccountBalance(result.targetAccount.id, result.targetAccount)
         }
       } else {
-        // Regular transaction
-        // Update account balance by removing the deleted transaction's effect
-        removeAccountBalance(
-          transactionToDelete.account_id,
-          transactionToDelete.amount,
-          transactionToDelete.is_cleared
-        )
+        // Regular transaction - server response confirms our optimistic update
+        // No additional balance update needed as we already did it optimistically
       }
 
       // Refresh category balances to reflect any credit card debt reversals
@@ -368,11 +462,17 @@ export const useTransactionOperations = () => {
         await fetchCategoryBalances(budgetStore.currentBudget.id)
       }
     } catch (err) {
+      // Roll back optimistic updates on failure
+      transactionStore.addTransaction(transactionSnapshot)
+      updateAccountBalance(
+        transactionToDelete.account_id,
+        transactionToDelete.amount,
+        transactionToDelete.is_cleared
+      )
+
       error.value = err instanceof Error ? err.message : 'Failed to delete transaction'
       console.error('Error deleting transaction:', err)
       throw err
-    } finally {
-      isLoading.value = false
     }
   }
 

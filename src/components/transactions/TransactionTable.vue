@@ -234,7 +234,7 @@ const deleteTransactionsHandler = async (transactionsToDelete: TransactionRespon
       // Use single delete for one transaction
       await deleteTransaction(transactionsToDelete[0].id)
     }
-    $toast.success(`Deleted ${count} transaction${count > 1 ? 's' : ''}`)
+    // No success toast - optimistic update provides instant feedback
     return true
   } catch (error) {
     $toast.error('Failed to delete selected transactions')
@@ -269,17 +269,20 @@ const handleSaveTransaction = async (transactionData: CreateTransactionDto | Upd
   if (isSubmitting.value) return // Prevent duplicate submissions
 
   isSubmitting.value = true
+
+  // Close modal immediately for instant feedback (optimistic)
+  closeModal()
+
   try {
     if (editingTransaction.value) {
       // Update existing transaction
       await updateTransaction(editingTransaction.value.id, transactionData as UpdateTransactionDto)
-      $toast.success('Transaction updated successfully')
+      // No success toast - optimistic update provides instant feedback
     } else {
       // Create new transaction
       await createTransaction(transactionData as CreateTransactionDto)
-      $toast.success('Transaction created successfully')
+      // No success toast - optimistic update provides instant feedback
     }
-    closeModal()
   } catch (error) {
     $toast.error('Failed to save transaction')
   } finally {
