@@ -136,23 +136,38 @@ const scrollToHighlighted = () => {
 // Input handlers
 const handleInputFocus = () => {
   if (props.disabled) return
-  
-  if (!isProgrammaticFocus.value) {
-    isSearching.value = true
-    searchQuery.value = ''
-  }
-  isProgrammaticFocus.value = false
+
+  isSearching.value = true
   showDropdown.value = true
+  searchQuery.value = '' // Clear for typing
   resetHighlight()
+  isProgrammaticFocus.value = false
+
+  // Keep dropdown open even if blur happens
+  setTimeout(() => {
+    if (isSearching.value) {
+      showDropdown.value = true
+    }
+  }, 50)
 }
 
-const handleInputBlur = () => {
-  // Delay to allow click events to fire
+const handleInputBlur = (event: FocusEvent) => {
+  // Don't close if focus is moving to a dropdown item
+  const relatedTarget = event.relatedTarget as HTMLElement
+  const container = searchInput.value?.closest('.relative')
+
+  if (container && relatedTarget && container.contains(relatedTarget)) {
+    return // Keep dropdown open if focus is moving within the component
+  }
+
+  // Delay to allow click events on dropdown items
   setTimeout(() => {
-    showDropdown.value = false
-    isSearching.value = false
-    searchQuery.value = displayText.value
-  }, 200)
+    // Only close if we're not actively searching
+    if (!isSearching.value) {
+      showDropdown.value = false
+      searchQuery.value = displayText.value
+    }
+  }, 150)
 }
 
 const handleInput = () => {
@@ -185,8 +200,8 @@ const handleInputKeydown = (event: KeyboardEvent) => {
 
 // Close dropdown
 const closeDropdown = () => {
-  showDropdown.value = false
   isSearching.value = false
+  showDropdown.value = false
   searchQuery.value = displayText.value
   searchInput.value?.blur()
 }
