@@ -53,6 +53,7 @@
             min="0.01"
             placeholder="0.00"
             class="w-full px-3 py-2 border rounded-md bg-background border-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            @keydown.enter="handleSubmit"
           />
           <div v-if="amountError" class="text-sm text-red-500">{{ amountError }}</div>
         </div>
