@@ -89,3 +89,13 @@ export interface TransactionWithAccountsAndReadyToAssignAndCategoryBalanceRespon
   categoryBalance?: any; // CategoryBalanceResponse from category-balances module (deprecated, use categoryBalances)
   categoryBalances?: any[]; // Array of CategoryBalanceResponse from category-balances module
 }
+
+export interface BulkDeleteTransactionsDto {
+  transaction_ids: string[];
+}
+
+export interface BulkDeleteTransactionsResponse {
+  deletedCount: number;
+  affectedAccounts: any[]; // Array of AccountResponse from accounts module
+  readyToAssign: number;
+}

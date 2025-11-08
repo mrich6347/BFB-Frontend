@@ -1,4 +1,4 @@
-import type { CreateTransactionDto, UpdateTransactionDto, TransactionResponse, TransactionWithAccountsResponse, TransactionDeleteResponse, TransactionWithReadyToAssignResponse, TransactionWithAccountsAndReadyToAssignResponse, TransactionDeleteWithReadyToAssignResponse, TransactionWithReadyToAssignAndCategoryBalanceResponse, TransactionWithAccountsAndReadyToAssignAndCategoryBalanceResponse } from '../types/DTO/transaction.dto'
+import type { CreateTransactionDto, UpdateTransactionDto, TransactionResponse, TransactionWithAccountsResponse, TransactionDeleteResponse, TransactionWithReadyToAssignResponse, TransactionWithAccountsAndReadyToAssignResponse, TransactionDeleteWithReadyToAssignResponse, TransactionWithReadyToAssignAndCategoryBalanceResponse, TransactionWithAccountsAndReadyToAssignAndCategoryBalanceResponse, BulkDeleteTransactionsDto, BulkDeleteTransactionsResponse } from '../types/DTO/transaction.dto'
 import { getCurrentUserDateContext } from '../utils/dateContext'
 import api from './common/api'
 
@@ -64,6 +64,15 @@ export class TransactionService {
    */
   static async deleteTransaction(id: string): Promise<TransactionDeleteWithReadyToAssignResponse> {
     const response = await api.delete<TransactionDeleteWithReadyToAssignResponse>(`${this.BASE_PATH}/${id}`)
+    return response.data
+  }
+
+  /**
+   * Bulk delete multiple transactions
+   */
+  static async bulkDeleteTransactions(transactionIds: string[]): Promise<BulkDeleteTransactionsResponse> {
+    const request: BulkDeleteTransactionsDto = { transaction_ids: transactionIds }
+    const response = await api.post<BulkDeleteTransactionsResponse>(`${this.BASE_PATH}/bulk-delete`, request)
     return response.data
   }
 }

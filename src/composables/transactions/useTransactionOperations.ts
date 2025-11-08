@@ -2,6 +2,7 @@ import { ref, readonly } from 'vue'
 import { useTransactionStore } from '@/stores/transaction.store'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
+import { useAccountStore } from '@/stores/account.store'
 import { useUpdateAccountBalance } from '@/composables/accounts/account-write/useUpdateAccountBalance'
 import { useSetAccountBalance } from '@/composables/accounts/account-write/useSetAccountBalance'
 import { useUpdateAccountBalanceOnClearedToggle } from '@/composables/accounts/account-write/useUpdateAccountBalanceOnClearedToggle'
@@ -18,6 +19,7 @@ export const useTransactionOperations = () => {
   const transactionStore = useTransactionStore()
   const budgetStore = useBudgetStore()
   const categoryStore = useCategoryStore()
+  const accountStore = useAccountStore()
   const { updateAccountBalance } = useUpdateAccountBalance()
   const { setAccountBalance } = useSetAccountBalance()
   const { updateAccountBalanceOnClearedToggle } = useUpdateAccountBalanceOnClearedToggle()
@@ -219,6 +221,107 @@ export const useTransactionOperations = () => {
     }
   }
 
+  const bulkDeleteTransactions = async (transactionIds: string[]) => {
+    if (!transactionIds || transactionIds.length === 0) {
+      return
+    }
+
+    // IMPORTANT: Don't set isLoading - we want instant UI feedback with optimistic updates
+    // The UI should not show any loading state during bulk delete
+
+    // Store snapshots for rollback in case of error
+    const transactionSnapshots = transactionIds
+      .map(id => transactionStore.getTransactionById(id))
+      .filter(t => t !== undefined) as TransactionResponse[]
+
+    // Calculate optimistic balance changes grouped by account
+    const balanceChangesByAccount = new Map<string, { clearedDelta: number; unclearedDelta: number }>()
+
+    transactionSnapshots.forEach(transaction => {
+      if (!balanceChangesByAccount.has(transaction.account_id)) {
+        balanceChangesByAccount.set(transaction.account_id, { clearedDelta: 0, unclearedDelta: 0 })
+      }
+      const changes = balanceChangesByAccount.get(transaction.account_id)!
+
+      if (transaction.is_cleared) {
+        changes.clearedDelta -= transaction.amount
+      } else {
+        changes.unclearedDelta -= transaction.amount
+      }
+    })
+
+    // Optimistically remove transactions from store (instant UI update)
+    transactionIds.forEach(id => {
+      transactionStore.removeTransaction(id)
+    })
+
+    // Optimistically update account balances (instant UI update)
+    balanceChangesByAccount.forEach((changes, accountId) => {
+      const account = accountStore.accounts.find(acc => acc.id === accountId)
+      if (account) {
+        const newClearedBalance = account.cleared_balance + changes.clearedDelta
+        const newUnclearedBalance = account.uncleared_balance + changes.unclearedDelta
+        const newWorkingBalance = newClearedBalance + newUnclearedBalance
+
+        accountStore.updateAccount(accountId, {
+          cleared_balance: newClearedBalance,
+          uncleared_balance: newUnclearedBalance,
+          working_balance: newWorkingBalance
+        })
+      }
+    })
+
+    // Now make the API call in the background (no loading state)
+    try {
+      const result = await TransactionService.bulkDeleteTransactions(transactionIds)
+
+      // Update ready to assign value from server response
+      budgetStore.setReadyToAssign(result.readyToAssign)
+
+      // Reconcile account balances with server response
+      if (result.affectedAccounts && result.affectedAccounts.length > 0) {
+        result.affectedAccounts.forEach(account => {
+          accountStore.updateAccount(account.id, account)
+        })
+      }
+
+      // Refresh category balances to reflect any credit card debt reversals
+      if (budgetStore.currentBudget?.id) {
+        // Small delay to ensure backend processing is complete
+        await new Promise(resolve => setTimeout(resolve, 100))
+        await fetchCategoryBalances(budgetStore.currentBudget.id)
+      }
+    } catch (err) {
+      // Rollback optimistic updates on error
+      console.error('Bulk delete failed, rolling back optimistic updates:', err)
+
+      // Restore deleted transactions
+      transactionSnapshots.forEach(transaction => {
+        transactionStore.addTransaction(transaction)
+      })
+
+      // Rollback account balance changes
+      balanceChangesByAccount.forEach((changes, accountId) => {
+        const account = accountStore.accounts.find(acc => acc.id === accountId)
+        if (account) {
+          // Reverse the optimistic changes
+          const newClearedBalance = account.cleared_balance - changes.clearedDelta
+          const newUnclearedBalance = account.uncleared_balance - changes.unclearedDelta
+          const newWorkingBalance = newClearedBalance + newUnclearedBalance
+
+          accountStore.updateAccount(accountId, {
+            cleared_balance: newClearedBalance,
+            uncleared_balance: newUnclearedBalance,
+            working_balance: newWorkingBalance
+          })
+        }
+      })
+
+      error.value = err instanceof Error ? err.message : 'Failed to bulk delete transactions'
+      throw err
+    }
+  }
+
   const deleteTransaction = async (id: string) => {
     isLoading.value = true
     error.value = null
@@ -299,6 +402,7 @@ export const useTransactionOperations = () => {
     createTransaction,
     updateTransaction,
     deleteTransaction,
+    bulkDeleteTransactions,
 
     // Transaction-specific operations
     toggleCleared,

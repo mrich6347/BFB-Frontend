@@ -116,6 +116,7 @@ const {
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  bulkDeleteTransactions,
   toggleCleared,
   isLoading
 } = useTransactionOperations()
@@ -225,8 +226,13 @@ const deleteTransactionsHandler = async (transactionsToDelete: TransactionRespon
   }
 
   try {
-    for (const transaction of transactionsToDelete) {
-      await deleteTransaction(transaction.id)
+    // Use bulk delete for multiple transactions for better performance
+    if (count > 1) {
+      const transactionIds = transactionsToDelete.map(t => t.id)
+      await bulkDeleteTransactions(transactionIds)
+    } else {
+      // Use single delete for one transaction
+      await deleteTransaction(transactionsToDelete[0].id)
     }
     $toast.success(`Deleted ${count} transaction${count > 1 ? 's' : ''}`)
     return true
