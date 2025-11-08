@@ -1,7 +1,7 @@
 <template>
   <div class="h-screen flex flex-col bg-background">
-    <!-- Simple Header with safe area -->
-    <div class="sticky top-0 z-10 bg-background border-b border-border" style="padding-top: max(0.75rem, env(safe-area-inset-top));">
+    <!-- Simple Header -->
+    <div class="sticky top-0 z-10 bg-background border-b border-border" style="padding-top: max(3rem, env(safe-area-inset-top));">
       <div class="px-4 pb-3 space-y-2">
         <div class="flex items-center justify-between">
           <div>
