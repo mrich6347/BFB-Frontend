@@ -43,9 +43,23 @@
           <CreditCardIcon class="w-4 h-4" />
           Make a Payment
         </Button>
-        <Button size="sm" @click="showAddTransactionModal = true" class="flex items-center gap-2">
+        <Button
+          v-if="isCashAccount"
+          size="sm"
+          variant="outline"
+          @click="openGotPaidModal"
+          class="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 hover:text-white border-green-600"
+        >
           <PlusIcon class="w-4 h-4" />
-          Add Transaction
+          I Got Paid
+        </Button>
+        <Button
+          size="sm"
+          @click="openAddTransactionModal"
+          class="flex items-center gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        >
+          <PlusIcon class="w-4 h-4" />
+          I Spent Money
         </Button>
       </div>
     </div>
@@ -107,6 +121,7 @@
       :transaction="editingTransaction"
       :account-id="accountId"
       :is-submitting="isSubmitting"
+      :default-transaction-type="defaultTransactionType"
       @close="closeModal"
       @save="handleSaveTransaction"
     />
@@ -175,6 +190,7 @@ const editingTransaction = ref<TransactionResponse | null>(null)
 const showReconciled = ref(false)
 const selectedTransactionIds = ref<string[]>([])
 const lastSelectedId = ref<string | null>(null)
+const defaultTransactionType = ref<'inflow' | 'outflow'>('outflow')
 
 // Check account type
 const currentAccount = computed(() => {
@@ -334,6 +350,18 @@ const toggleClearedHandler = async (transaction: TransactionResponse) => {
   } catch (error) {
     $toast.error('Failed to update transaction status')
   }
+}
+
+const openAddTransactionModal = () => {
+  defaultTransactionType.value = 'outflow'
+  editingTransaction.value = null
+  showAddTransactionModal.value = true
+}
+
+const openGotPaidModal = () => {
+  defaultTransactionType.value = 'inflow'
+  editingTransaction.value = null
+  showAddTransactionModal.value = true
 }
 
 const closeModal = () => {

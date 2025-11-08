@@ -42,28 +42,7 @@
           }"
         />
 
-        <!-- Amount Type Toggle -->
-        <div class="mb-4">
-          <label class="text-sm font-medium text-foreground mb-2 block">Transaction Type</label>
-          <div class="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              :class="amountType === 'outflow' ? 'bg-destructive text-destructive-foreground' : ''"
-              @click="amountType = 'outflow'"
-            >
-              Outflow
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              :class="amountType === 'inflow' ? 'bg-green-600 text-white' : ''"
-              @click="amountType = 'inflow'"
-            >
-              Inflow
-            </Button>
-          </div>
-        </div>
+
 
         <!-- Amount -->
         <div ref="amountFieldRef">
@@ -107,12 +86,15 @@ import { useCategoryStore } from '@/stores/category.store'
 import CategorySelector from '@/components/categories/CategorySelector.vue'
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   isOpen: boolean
   transaction?: TransactionResponse | null
   accountId: string
   isSubmitting?: boolean
-}>()
+  defaultTransactionType?: 'inflow' | 'outflow'
+}>(), {
+  defaultTransactionType: 'outflow'
+})
 
 const emit = defineEmits<{
   close: []
@@ -120,7 +102,7 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
-const amountType = ref<'inflow' | 'outflow'>('outflow')
+const amountType = ref<'inflow' | 'outflow'>(props.defaultTransactionType)
 const selectedCategoryId = ref<string | null>('')
 const categorySelectorRef = ref<InstanceType<typeof CategorySelector> | null>(null)
 const amountFieldRef = ref<HTMLDivElement | null>(null)
@@ -152,12 +134,21 @@ const formData = computed(() => {
   }
 })
 
+// Watch for changes to defaultTransactionType prop
+watch(() => props.defaultTransactionType, (newType) => {
+  if (!props.transaction) {
+    amountType.value = newType
+  }
+}, { immediate: true })
+
 // Set amount type and category based on transaction
 watch(() => props.transaction, (transaction) => {
   if (transaction) {
     amountType.value = transaction.amount < 0 ? 'outflow' : 'inflow'
     selectedCategoryId.value = transaction.category_id === null ? 'ready-to-assign' : (transaction.category_id || '')
   } else {
+    // Reset to default transaction type when creating a new transaction
+    amountType.value = props.defaultTransactionType
     selectedCategoryId.value = ''
   }
 }, { immediate: true })
