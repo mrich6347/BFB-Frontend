@@ -163,6 +163,7 @@ import { useTransactionOperations } from '@/composables/transactions/useTransact
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
 import { AccountService } from '@/services/account.service'
 import { useToast } from 'vue-toast-notification'
+import confetti from 'canvas-confetti'
 
 const props = defineProps<{
   accountId: string
@@ -191,6 +192,7 @@ const showReconciled = ref(false)
 const selectedTransactionIds = ref<string[]>([])
 const lastSelectedId = ref<string | null>(null)
 const defaultTransactionType = ref<'inflow' | 'outflow'>('outflow')
+const isGotPaidTransaction = ref(false)
 
 // Check account type
 const currentAccount = computed(() => {
@@ -355,19 +357,82 @@ const toggleClearedHandler = async (transaction: TransactionResponse) => {
 const openAddTransactionModal = () => {
   defaultTransactionType.value = 'outflow'
   editingTransaction.value = null
+  isGotPaidTransaction.value = false
   showAddTransactionModal.value = true
 }
 
 const openGotPaidModal = () => {
   defaultTransactionType.value = 'inflow'
   editingTransaction.value = null
+  isGotPaidTransaction.value = true
   showAddTransactionModal.value = true
+}
+
+const triggerConfetti = () => {
+  // Create a fun confetti burst from both bottom corners!
+  const count = 200
+
+  function fire(particleRatio: number, opts: any) {
+    confetti({
+      ...opts,
+      particleCount: Math.floor(count * particleRatio),
+    })
+  }
+
+  // Left corner
+  fire(0.25, {
+    angle: 60,
+    spread: 55,
+    origin: { x: 0, y: 1 },
+    startVelocity: 60,
+  })
+
+  fire(0.2, {
+    angle: 60,
+    spread: 70,
+    origin: { x: 0, y: 1 },
+    startVelocity: 50,
+  })
+
+  fire(0.35, {
+    angle: 60,
+    spread: 100,
+    origin: { x: 0, y: 1 },
+    decay: 0.91,
+    scalar: 0.8,
+    startVelocity: 55,
+  })
+
+  // Right corner
+  fire(0.25, {
+    angle: 120,
+    spread: 55,
+    origin: { x: 1, y: 1 },
+    startVelocity: 60,
+  })
+
+  fire(0.2, {
+    angle: 120,
+    spread: 70,
+    origin: { x: 1, y: 1 },
+    startVelocity: 50,
+  })
+
+  fire(0.35, {
+    angle: 120,
+    spread: 100,
+    origin: { x: 1, y: 1 },
+    decay: 0.91,
+    scalar: 0.8,
+    startVelocity: 55,
+  })
 }
 
 const closeModal = () => {
   showAddTransactionModal.value = false
   showEditTransactionModal.value = false
   editingTransaction.value = null
+  isGotPaidTransaction.value = false
 }
 
 const closeTransferModal = () => {
@@ -385,11 +450,20 @@ const handleSaveTransaction = async (transactionData: CreateTransactionDto | Upd
 
   isSubmitting.value = true
 
-  // Capture the editing transaction ID before closing modal
+  // Capture the editing transaction ID and "Got Paid" status before closing modal
   const transactionIdToUpdate = editingTransaction.value?.id
+  const shouldTriggerConfetti = isGotPaidTransaction.value && !transactionIdToUpdate
 
   // Close modal immediately for instant feedback (optimistic)
   closeModal()
+
+  // Trigger confetti IMMEDIATELY for "Got Paid" transactions (optimistic)!
+  if (shouldTriggerConfetti) {
+    // Small delay to let modal close animation start
+    setTimeout(() => {
+      triggerConfetti()
+    }, 100)
+  }
 
   try {
     if (transactionIdToUpdate) {
