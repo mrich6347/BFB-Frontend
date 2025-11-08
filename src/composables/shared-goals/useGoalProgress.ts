@@ -67,17 +67,17 @@ export function useGoalProgress() {
     targetAmount: number,
     currentAmount: number,
     participants: ParticipantWithProgressResponse[]
-  ): { monthsToCompletion: number | null; projectedDate: Date | null } => {
-    if (currentAmount >= targetAmount) {
-      return { monthsToCompletion: 0, projectedDate: new Date() }
-    }
-
+  ): { monthsToCompletion: number | null; projectedDate: Date | null; totalMonthlyContribution: number } => {
     const totalMonthlyContribution = participants.reduce((sum, participant) => {
       return sum + (participant.monthly_contribution || 0)
     }, 0)
 
+    if (currentAmount >= targetAmount) {
+      return { monthsToCompletion: 0, projectedDate: new Date(), totalMonthlyContribution }
+    }
+
     if (totalMonthlyContribution <= 0) {
-      return { monthsToCompletion: null, projectedDate: null }
+      return { monthsToCompletion: null, projectedDate: null, totalMonthlyContribution }
     }
 
     const remainingAmount = targetAmount - currentAmount
@@ -86,7 +86,7 @@ export function useGoalProgress() {
     const projectedDate = new Date()
     projectedDate.setMonth(projectedDate.getMonth() + monthsToCompletion)
 
-    return { monthsToCompletion, projectedDate }
+    return { monthsToCompletion, projectedDate, totalMonthlyContribution }
   }
 
   const formatProgressPercentage = (percentage: number): string => {

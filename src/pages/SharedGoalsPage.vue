@@ -59,7 +59,7 @@
       <div v-if="showInvitations" class="mb-8">
         <div class="bg-card rounded-lg border border-border shadow-sm p-6">
           <InvitationManager
-            @invitation-accepted="handleInvitationVisibility($event)"
+            @invitation-accepted="handleInvitationAccepted($event)"
             @invitation-declined="handleInvitationVisibility($event)"
           />
         </div>
@@ -384,6 +384,16 @@
     :is-open="showProfileSetup"
     @update:is-open="showProfileSetup = $event"
   />
+
+  <!-- Goal Onboarding Modal -->
+  <GoalOnboardingModal
+    :is-open="showOnboarding"
+    :goal-id="onboardingGoalId"
+    :goal-name="onboardingGoalName"
+    :budget-id="currentBudgetId"
+    @update:is-open="showOnboarding = $event"
+    @completed="handleOnboardingCompleted"
+  />
 </template>
 
 <script setup lang="ts">
@@ -402,6 +412,7 @@ import GoalDetailsModal from '../components/shared-goals/GoalDetailsModal.vue'
 import InviteUserModal from '../components/shared-goals/InviteUserModal.vue'
 import InvitationManager from '../components/shared-goals/InvitationManager.vue'
 import UserProfileSetup from '../components/shared-goals/UserProfileSetup.vue'
+import GoalOnboardingModal from '../components/shared-goals/GoalOnboardingModal.vue'
 import type { SharedGoalResponse, GoalStatus, InvitationResponse } from '../types/DTO/shared-goal.dto'
 
 const router = useRouter()
@@ -419,6 +430,9 @@ const isInviteModalOpen = ref(false)
 const selectedGoalForInvite = ref<SharedGoalResponse | null>(null)
 const showInvitations = ref(false)
 const showProfileSetup = ref(false)
+const showOnboarding = ref(false)
+const onboardingGoalId = ref('')
+const onboardingGoalName = ref('')
 
 // Computed
 const goals = computed(() => sharedGoalsStore.goals)
@@ -512,8 +526,24 @@ const openInviteModal = (goal: any) => {
   isInviteModalOpen.value = true
 }
 
+const handleInvitationAccepted = (invitation: InvitationResponse) => {
+  showInvitations.value = false
+  // Open onboarding modal for the accepted goal
+  onboardingGoalId.value = invitation.goal_id
+  onboardingGoalName.value = invitation.goal.name
+  showOnboarding.value = true
+}
+
 const handleInvitationVisibility = (invitation: InvitationResponse) => {
   showInvitations.value = false
+}
+
+const handleOnboardingCompleted = async () => {
+  // Refresh goals to show updated participant data
+  const currentBudgetId = budgetStore.currentBudget?.id
+  if (currentBudgetId) {
+    await refreshPageData(currentBudgetId)
+  }
 }
 
 const handleLeaveGoal = async (goal: any) => {

@@ -21,95 +21,93 @@
 
     <!-- Progress Content -->
     <div v-else class="space-y-4">
-      <!-- Progress Overview -->
-      <div class="bg-card rounded-lg p-6 border">
-        <div class="space-y-4">
-          <!-- Header -->
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-foreground">Goal Progress</h3>
-            <span :class="getProgressColor(goal.progress_percentage || 0)" class="text-lg font-bold">
-              {{ formatProgressPercentage(goal.progress_percentage || 0) }}%
-            </span>
-          </div>
-
-          <!-- Progress Bar -->
-          <div class="space-y-3">
-            <div class="bg-secondary rounded-full h-3">
+      <!-- Compact Progress Overview -->
+      <div class="bg-card rounded-lg p-4 border">
+        <div class="space-y-3">
+          <!-- Progress Bar with inline stats -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-sm">
+              <span class="font-medium text-foreground">{{ formatCurrency(goal.current_amount || 0) }}</span>
+              <span class="text-muted-foreground">of {{ formatCurrency(goal.target_amount) }}</span>
+            </div>
+            <div class="bg-secondary rounded-full h-2">
               <div
-                class="bg-green-500 h-3 rounded-full transition-all duration-500 ease-out"
+                class="bg-green-500 h-2 rounded-full transition-all duration-500 ease-out"
                 :style="{ width: `${Math.min((goal.progress_percentage || 0), 100)}%` }"
               ></div>
             </div>
-            <div class="flex items-center justify-between text-sm text-muted-foreground">
-              <span>{{ formatCurrency(goal.current_amount || 0) }}</span>
-              <span>{{ formatCurrency(goal.target_amount) }}</span>
-            </div>
           </div>
 
-          <!-- Key Stats -->
-          <div class="grid grid-cols-2 gap-6 pt-2">
-            <div class="text-center">
-              <div class="text-xl font-bold text-foreground">
-                {{ formatCurrency(goal.current_amount || 0) }}
+          <!-- Remaining and Projection -->
+          <div class="flex items-center justify-between pt-2 border-t border-border">
+            <div>
+              <div class="text-sm font-medium text-foreground">
+                {{ formatCurrency(goal.target_amount - (goal.current_amount || 0)) }} left
               </div>
-              <div class="text-xs text-muted-foreground">Current</div>
-            </div>
-            <div class="text-center">
-              <div class="text-xl font-bold text-foreground">
-                {{ formatCurrency(goal.target_amount - (goal.current_amount || 0)) }}
+              <div v-if="projectionData?.projectedDate" class="space-y-0.5">
+                <div class="text-xs text-muted-foreground">
+                  Est. {{ formatDate(projectionData.projectedDate) }}
+                </div>
+                <div class="text-xs text-muted-foreground/70">
+                  (based on {{ formatCurrency(projectionData.totalMonthlyContribution) }}/mo total)
+                </div>
               </div>
-              <div class="text-xs text-muted-foreground">Remaining</div>
+              <div v-else class="text-xs text-muted-foreground">
+                Set contributions for estimate
+              </div>
             </div>
-          </div>
-
-          <!-- Completion Estimate -->
-          <div v-if="projectionData?.projectedDate" class="pt-3 border-t border-border">
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-muted-foreground">Estimated Completion</span>
-              <span class="text-sm font-medium text-foreground">
-                {{ formatDate(projectionData.projectedDate) }}
-              </span>
+            <div :class="getProgressColor(goal.progress_percentage || 0)" class="text-2xl font-bold">
+              {{ formatProgressPercentage(goal.progress_percentage || 0) }}%
             </div>
-          </div>
-
-          <div v-else-if="projectionData?.monthsToCompletion === null" class="pt-3 border-t border-border">
-            <p class="text-sm text-muted-foreground text-center">
-              Set monthly contributions to see completion estimate
-            </p>
           </div>
         </div>
       </div>
 
-      <!-- Participant Contributions -->
-      <div v-if="goal.participants && goal.participants.length > 0" class="bg-card rounded-lg p-6 border">
-        <h4 class="text-lg font-semibold text-foreground mb-4">Contribution Breakdown</h4>
-        <div class="space-y-3">
+      <!-- Participant Contributions (Collapsible) -->
+      <div v-if="goal.participants && goal.participants.length > 0" class="bg-card rounded-lg border">
+        <button
+          @click="showContributors = !showContributors"
+          class="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors rounded-lg"
+        >
+          <div class="flex items-center space-x-2">
+            <component
+              :is="showContributors ? ChevronDownIcon : ChevronRightIcon"
+              class="h-4 w-4 text-muted-foreground"
+            />
+            <h4 class="text-sm font-semibold text-foreground">Contributors ({{ participantsWithContributions.length }})</h4>
+          </div>
+          <div class="text-xs text-muted-foreground">
+            Click to {{ showContributors ? 'collapse' : 'expand' }}
+          </div>
+        </button>
+
+        <div v-if="showContributors" class="px-3 pb-3 space-y-2">
           <div
             v-for="participant in participantsWithContributions"
             :key="participant.id"
-            class="flex items-center justify-between"
+            class="flex items-center justify-between py-2"
           >
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                <span class="text-sm font-medium text-primary">
+            <div class="flex items-center space-x-2 flex-1 min-w-0">
+              <div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <span class="text-xs font-medium text-primary">
                   {{ participant.user_profile.display_name?.charAt(0) || participant.user_profile.username.charAt(0) }}
                 </span>
               </div>
-              <div>
-                <div class="text-sm font-medium text-foreground">
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-foreground truncate">
                   {{ participant.user_profile.display_name || participant.user_profile.username }}
                 </div>
                 <div class="text-xs text-muted-foreground">
-                  {{ formatCurrency(participant.contribution_amount) }} contributed
+                  {{ formatCurrency(participant.contribution_amount) }}
+                  <span v-if="participant.monthly_contribution" class="ml-1">
+                    ({{ formatCurrency(participant.monthly_contribution) }}/mo)
+                  </span>
                 </div>
               </div>
             </div>
-            <div class="text-right">
-              <div class="text-lg font-bold text-foreground">
+            <div class="text-right flex-shrink-0 ml-2">
+              <div class="text-sm font-bold text-foreground">
                 {{ participant.contribution_percentage.toFixed(1) }}%
-              </div>
-              <div class="text-xs text-muted-foreground">
-                of total
               </div>
             </div>
           </div>
@@ -120,8 +118,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { AlertCircleIcon } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import { AlertCircleIcon, ChevronDownIcon, ChevronRightIcon } from 'lucide-vue-next'
 import { useGoalProgress } from '../../composables/shared-goals/useGoalProgress'
 import type { SharedGoalResponse } from '../../types/DTO/shared-goal.dto'
 
@@ -132,6 +130,8 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+const showContributors = ref(false)
 
 const {
   formatProgressPercentage,

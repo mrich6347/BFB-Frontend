@@ -101,7 +101,48 @@
           </p>
         </div>
 
+        <!-- Category Selection -->
+        <div>
+          <CategorySelector
+            v-model="selectedCategoryId"
+            :available-categories="availableCategories"
+            label="Link Category"
+            placeholder="Search categories..."
+            :error="errors.category"
+            @select="handleCategorySelect"
+          />
+          <p class="mt-1 text-xs text-muted-foreground">
+            Money in this category will count toward your contribution
+          </p>
+        </div>
 
+        <!-- Monthly Contribution (Optional) -->
+        <div>
+          <label for="monthly_contribution" class="block text-sm font-medium text-foreground mb-1">
+            Monthly Contribution (Optional)
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span class="text-muted-foreground">$</span>
+            </div>
+            <input
+              id="monthly_contribution"
+              v-model="monthlyContributionInput"
+              type="text"
+              placeholder="0.00"
+              class="block w-full pl-8 pr-3 py-2 border border-input rounded-md shadow-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors"
+              :class="{ 'border-destructive': errors.monthly_contribution }"
+              @input="validateMonthlyContribution"
+              @blur="formatMonthlyContribution"
+            />
+          </div>
+          <p v-if="errors.monthly_contribution" class="mt-1 text-sm text-destructive">
+            {{ errors.monthly_contribution }}
+          </p>
+          <p class="mt-1 text-xs text-muted-foreground">
+            Helps estimate when the goal will be reached
+          </p>
+        </div>
 
         <!-- Error Display -->
         <div v-if="error" class="rounded-md bg-destructive/10 border border-destructive/20 p-3">
@@ -143,8 +184,12 @@ import { ref, computed, watch } from 'vue'
 import { AlertCircleIcon } from 'lucide-vue-next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../shadcn-ui'
 import Button from '../shadcn-ui/button.vue'
+import CategorySelector from '../categories/CategorySelector.vue'
 import { useSharedGoalOperations } from '../../composables/shared-goals/useSharedGoalOperations'
+import { useGoalInvitations } from '../../composables/shared-goals/useGoalInvitations'
+import { useCategoryStore } from '../../stores/category.store'
 import type { CreateSharedGoalDto, SharedGoalResponse } from '../../types/DTO/shared-goal.dto'
+import type { CategoryResponse } from '../../types/DTO/category.dto'
 
 interface Props {
   isOpen: boolean
@@ -160,9 +205,21 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const { createGoal, error, clearError } = useSharedGoalOperations()
+const { updateParticipant } = useGoalInvitations()
+const categoryStore = useCategoryStore()
 
 const isSubmitting = ref(false)
 const targetAmountInput = ref('')
+const monthlyContributionInput = ref('')
+const selectedCategoryId = ref<string | null>(null)
+
+// Get available categories (exclude hidden categories)
+const availableCategories = computed(() => {
+  return categoryStore.categories.filter(cat => {
+    const group = categoryStore.getCategoryGroupById(cat.category_group_id)
+    return group?.name !== 'Hidden Categories'
+  })
+})
 
 const formData = ref<CreateSharedGoalDto>({
   name: '',
@@ -176,7 +233,9 @@ const errors = ref({
   name: '',
   description: '',
   target_amount: '',
-  target_date: ''
+  target_date: '',
+  category: '',
+  monthly_contribution: ''
 })
 
 // Computed
@@ -188,10 +247,13 @@ const minDate = computed(() => {
 const isFormValid = computed(() => {
   return formData.value.name.length > 0 &&
          formData.value.target_amount > 0 &&
+         selectedCategoryId.value !== null &&
          !errors.value.name &&
          !errors.value.description &&
          !errors.value.target_amount &&
-         !errors.value.target_date
+         !errors.value.target_date &&
+         !errors.value.category &&
+         !errors.value.monthly_contribution
 })
 
 // Validation methods
@@ -261,6 +323,42 @@ const validateTargetDate = () => {
   errors.value.target_date = ''
 }
 
+const handleCategorySelect = (category: CategoryResponse | null) => {
+  if (category) {
+    selectedCategoryId.value = category.id
+    errors.value.category = ''
+  } else {
+    selectedCategoryId.value = null
+  }
+}
+
+const validateMonthlyContribution = () => {
+  errors.value.monthly_contribution = ''
+
+  if (monthlyContributionInput.value) {
+    const amount = parseFloat(monthlyContributionInput.value.replace(/[^0-9.]/g, ''))
+    if (isNaN(amount) || amount < 0) {
+      errors.value.monthly_contribution = 'Please enter a valid amount'
+      return false
+    }
+    if (amount > 999999.99) {
+      errors.value.monthly_contribution = 'Amount is too large'
+      return false
+    }
+  }
+
+  return true
+}
+
+const formatMonthlyContribution = () => {
+  if (monthlyContributionInput.value) {
+    const amount = parseFloat(monthlyContributionInput.value.replace(/[^0-9.]/g, ''))
+    if (!isNaN(amount)) {
+      monthlyContributionInput.value = amount.toFixed(2)
+    }
+  }
+}
+
 const resetForm = () => {
   formData.value = {
     name: '',
@@ -270,11 +368,15 @@ const resetForm = () => {
     budget_id: props.budgetId
   }
   targetAmountInput.value = ''
+  monthlyContributionInput.value = ''
+  selectedCategoryId.value = null
   errors.value = {
     name: '',
     description: '',
     target_amount: '',
-    target_date: ''
+    target_date: '',
+    category: '',
+    monthly_contribution: ''
   }
   clearError()
 }
@@ -288,6 +390,12 @@ const handleSubmit = async () => {
     validateDescription()
     validateTargetAmount()
     validateTargetDate()
+    validateMonthlyContribution()
+
+    if (!selectedCategoryId.value) {
+      errors.value.category = 'Please select a category'
+      return
+    }
 
     if (!isFormValid.value) {
       return
@@ -302,6 +410,14 @@ const handleSubmit = async () => {
 
     const newGoal = await createGoal(submitData)
     if (newGoal) {
+      // Now set the category and monthly contribution for the creator
+      const participantData = {
+        category_id: selectedCategoryId.value,
+        monthly_contribution: monthlyContributionInput.value ? parseFloat(monthlyContributionInput.value) : undefined
+      }
+
+      await updateParticipant(newGoal.id, participantData)
+
       emit('goalCreated', newGoal)
       handleClose()
     }

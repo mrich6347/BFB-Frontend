@@ -2,9 +2,9 @@
   <Dialog :open="isOpen" @update:open="handleClose">
     <DialogContent class="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle class="flex items-center justify-between">
-          <span>{{ displayGoal?.name || 'Goal Details' }}</span>
-          <div class="flex items-center space-x-2">
+        <DialogTitle class="flex items-center justify-between pr-8">
+          <div class="flex items-center space-x-3">
+            <span>{{ displayGoal?.name || 'Goal Details' }}</span>
             <span
               class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
               :class="getStatusBadgeClass(displayGoal?.status)"
@@ -40,11 +40,20 @@
 
         <!-- Participants Section -->
         <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-medium text-foreground">Participants ({{ allParticipants.length }})</h3>
+          <button
+            @click="showParticipantsList = !showParticipantsList"
+            class="w-full flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+          >
+            <div class="flex items-center space-x-2">
+              <component
+                :is="showParticipantsList ? ChevronDownIcon : ChevronRightIcon"
+                class="h-4 w-4 text-muted-foreground"
+              />
+              <h3 class="text-sm font-medium text-foreground">Participants ({{ allParticipants.length }})</h3>
+            </div>
             <Button
               v-if="isGoalCreator"
-              @click="openInviteModal"
+              @click.stop="openInviteModal"
               size="sm"
               variant="outline"
               class="flex items-center space-x-2"
@@ -52,15 +61,17 @@
               <UserPlusIcon class="h-4 w-4" />
               <span>Invite User</span>
             </Button>
-          </div>
+          </button>
 
-          <ParticipantList
-            :goal="displayGoal"
-            :participants="allParticipants"
-            @update-participant="handleUpdateParticipant"
-            @participant-removed="handleParticipantRemoved"
-            @left-goal="handleLeftGoal"
-          />
+          <div v-if="showParticipantsList" class="pl-2">
+            <ParticipantList
+              :goal="displayGoal"
+              :participants="allParticipants"
+              @update-participant="handleUpdateParticipant"
+              @participant-removed="handleParticipantRemoved"
+              @left-goal="handleLeftGoal"
+            />
+          </div>
         </div>
 
 
@@ -125,7 +136,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { UserPlusIcon, TrashIcon } from 'lucide-vue-next'
+import { UserPlusIcon, TrashIcon, ChevronDownIcon, ChevronRightIcon } from 'lucide-vue-next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../shadcn-ui'
 import Button from '../shadcn-ui/button.vue'
 import ParticipantList from './ParticipantList.vue'
@@ -164,6 +175,7 @@ const sharedGoalsStore = useSharedGoalsStore()
 const isInviteModalOpen = ref(false)
 const isEditModalOpen = ref(false)
 const showParticipantSettings = ref(false)
+const showParticipantsList = ref(false)
 
 // Reactive goal data that updates from store
 const reactiveGoal = ref<SharedGoalResponse | null>(null)
