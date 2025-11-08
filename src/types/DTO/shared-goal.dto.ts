@@ -21,6 +21,7 @@ export interface CreateSharedGoalDto {
   description?: string;
   target_amount: number;
   target_date?: string;
+  budget_id: string;
 }
 
 export interface UpdateSharedGoalDto {

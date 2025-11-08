@@ -36,8 +36,8 @@ export function useGoalInvitations() {
 
       const invitation = await SharedGoalsService.inviteUser(goalId, invitationData)
 
-      // Add to store
-      sharedGoalsStore.addInvitation(invitation)
+      // Don't add to store - invitations are only for the invitee, not the inviter
+      // The invitee will see it when they load their invitations
 
       toast.success(`Invitation sent to ${invitationData.invitee_username}!`)
       return invitation

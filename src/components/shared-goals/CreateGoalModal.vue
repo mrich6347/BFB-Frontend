@@ -148,6 +148,7 @@ import type { CreateSharedGoalDto, SharedGoalResponse } from '../../types/DTO/sh
 
 interface Props {
   isOpen: boolean
+  budgetId: string
 }
 
 interface Emits {
@@ -167,7 +168,8 @@ const formData = ref<CreateSharedGoalDto>({
   name: '',
   description: '',
   target_amount: 0,
-  target_date: ''
+  target_date: '',
+  budget_id: props.budgetId
 })
 
 const errors = ref({
@@ -264,7 +266,8 @@ const resetForm = () => {
     name: '',
     description: '',
     target_amount: 0,
-    target_date: ''
+    target_date: '',
+    budget_id: props.budgetId
   }
   targetAmountInput.value = ''
   errors.value = {

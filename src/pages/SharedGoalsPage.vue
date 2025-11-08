@@ -361,6 +361,7 @@
   <!-- Create Goal Modal -->
   <CreateGoalModal
     :is-open="isCreateModalOpen"
+    :budget-id="currentBudgetId"
     @update:is-open="isCreateModalOpen = $event"
   />
 
