@@ -34,6 +34,19 @@ export interface ReorderAccountsDto {
     account_ids: string[];
 }
 
+export interface MakeCreditCardPaymentDto {
+    amount: number;
+    from_account_id: string;
+    memo?: string;
+}
+
+export interface MakeCreditCardPaymentResponse {
+    transaction: any; // TransactionResponse
+    account: AccountResponse; // The credit card account
+    sourceAccount: AccountResponse; // The cash account money came from
+    paymentCategoryBalance: any; // CategoryBalanceResponse
+    readyToAssign: number;
+}
 
 export interface AccountResponse {
     id: string;

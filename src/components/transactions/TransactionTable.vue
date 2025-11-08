@@ -33,6 +33,16 @@
           <ArrowRightLeftIcon class="w-4 h-4" />
           Transfer Money
         </Button>
+        <Button
+          v-if="isCreditAccount"
+          size="sm"
+          variant="outline"
+          @click="showPaymentModal = true"
+          class="flex items-center gap-2"
+        >
+          <CreditCardIcon class="w-4 h-4" />
+          Make a Payment
+        </Button>
         <Button size="sm" @click="showAddTransactionModal = true" class="flex items-center gap-2">
           <PlusIcon class="w-4 h-4" />
           Add Transaction
@@ -109,20 +119,34 @@
       @close="closeTransferModal"
       @save="handleSaveTransfer"
     />
+
+    <!-- Credit Card Payment Modal -->
+    <CreditCardPaymentModal
+      :is-open="showPaymentModal"
+      :account-name="currentAccount?.name || ''"
+      :default-amount="currentAccount?.cleared_balance"
+      :is-submitting="isSubmitting"
+      @close="closePaymentModal"
+      @save="handleSavePayment"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { PlusIcon, TrashIcon, ArrowRightLeftIcon } from 'lucide-vue-next'
+import { PlusIcon, TrashIcon, ArrowRightLeftIcon, CreditCard as CreditCardIcon } from 'lucide-vue-next'
 import Button from '@/components/shadcn-ui/button.vue'
 import TransactionRow from './TransactionRow.vue'
 import TransactionModal from './TransactionModal.vue'
 import TransferModal from './TransferModal.vue'
+import CreditCardPaymentModal from './CreditCardPaymentModal.vue'
 import { useTransactionStore } from '@/stores/transaction.store'
 import { useAccountStore } from '@/stores/account.store'
+import { useCategoryStore } from '@/stores/category.store'
+import { useBudgetStore } from '@/stores/budget.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
+import { AccountService } from '@/services/account.service'
 import { useToast } from 'vue-toast-notification'
 
 const props = defineProps<{
@@ -131,6 +155,8 @@ const props = defineProps<{
 
 const transactionStore = useTransactionStore()
 const accountStore = useAccountStore()
+const categoryStore = useCategoryStore()
+const budgetStore = useBudgetStore()
 const {
   createTransaction,
   updateTransaction,
@@ -144,18 +170,23 @@ const $toast = useToast()
 const showAddTransactionModal = ref(false)
 const showEditTransactionModal = ref(false)
 const showTransferModal = ref(false)
+const showPaymentModal = ref(false)
 const editingTransaction = ref<TransactionResponse | null>(null)
 const showReconciled = ref(false)
 const selectedTransactionIds = ref<string[]>([])
 const lastSelectedId = ref<string | null>(null)
 
-// Check if current account is a cash account
+// Check account type
 const currentAccount = computed(() => {
   return accountStore.accounts.find(acc => acc.id === props.accountId)
 })
 
 const isCashAccount = computed(() => {
   return currentAccount.value?.account_type === 'CASH'
+})
+
+const isCreditAccount = computed(() => {
+  return currentAccount.value?.account_type === 'CREDIT'
 })
 
 const transactions = computed(() => {
@@ -278,7 +309,7 @@ const handleGlobalKeydown = (event: KeyboardEvent) => {
     return
   }
 
-  if (showAddTransactionModal.value || showEditTransactionModal.value || showTransferModal.value) {
+  if (showAddTransactionModal.value || showEditTransactionModal.value || showTransferModal.value || showPaymentModal.value) {
     return
   }
 
@@ -313,6 +344,10 @@ const closeModal = () => {
 
 const closeTransferModal = () => {
   showTransferModal.value = false
+}
+
+const closePaymentModal = () => {
+  showPaymentModal.value = false
 }
 
 const isSubmitting = ref(false)
@@ -359,6 +394,92 @@ const handleSaveTransfer = async (transactionData: CreateTransactionDto) => {
     // No success toast - optimistic update provides instant feedback
   } catch (error) {
     $toast.error('Failed to create transfer')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const handleSavePayment = async (amount: number, fromAccountId: string, memo?: string) => {
+  if (isSubmitting.value) return // Prevent duplicate submissions
+
+  isSubmitting.value = true
+
+  // Close modal immediately for instant feedback (optimistic)
+  closePaymentModal()
+
+  // Create optimistic transaction
+  const optimisticTransaction: TransactionResponse = {
+    id: `temp-${Date.now()}`,
+    account_id: props.accountId,
+    date: new Date().toISOString().split('T')[0],
+    amount: Math.abs(amount), // Positive amount (inflow to credit card)
+    payee: 'Credit Card Payment',
+    memo: memo || 'Credit Card Payment',
+    is_cleared: true,
+    is_reconciled: false,
+    category_id: undefined, // Will be set by backend
+    created_at: new Date(),
+    updated_at: new Date()
+  }
+
+  // Optimistically add transaction to store
+  transactionStore.addTransaction(optimisticTransaction)
+
+  // Optimistically update account balance (positive amount reduces credit card debt)
+  const account = accountStore.accounts.find(acc => acc.id === props.accountId)
+  if (account) {
+    const newClearedBalance = account.cleared_balance + Math.abs(amount)
+    const newWorkingBalance = account.working_balance + Math.abs(amount)
+
+    accountStore.updateAccount(props.accountId, {
+      cleared_balance: newClearedBalance,
+      working_balance: newWorkingBalance
+    })
+  }
+
+  try {
+    // Call the credit card payment API endpoint
+    const response = await AccountService.makeCreditCardPayment(props.accountId, {
+      amount,
+      from_account_id: fromAccountId,
+      memo
+    })
+
+    // Remove optimistic transaction
+    transactionStore.removeTransaction(optimisticTransaction.id)
+
+    // Update stores with server response
+    budgetStore.setReadyToAssign(response.readyToAssign)
+    accountStore.updateAccount(props.accountId, response.account) // Credit card account
+    accountStore.updateAccount(fromAccountId, response.sourceAccount) // Cash account
+
+    // Update payment category balance if provided
+    if (response.paymentCategoryBalance) {
+      categoryStore.updateCategoryBalance(
+        response.paymentCategoryBalance.category_id,
+        response.paymentCategoryBalance
+      )
+    }
+
+    // Add the actual transaction from server
+    transactionStore.addTransaction(response.transaction)
+
+    // No success toast - instant UI feedback is enough
+  } catch (error) {
+    // Rollback optimistic updates on error
+    transactionStore.removeTransaction(optimisticTransaction.id)
+
+    if (account) {
+      const rollbackClearedBalance = account.cleared_balance - Math.abs(amount)
+      const rollbackWorkingBalance = account.working_balance - Math.abs(amount)
+
+      accountStore.updateAccount(props.accountId, {
+        cleared_balance: rollbackClearedBalance,
+        working_balance: rollbackWorkingBalance
+      })
+    }
+
+    $toast.error('Failed to process payment')
   } finally {
     isSubmitting.value = false
   }

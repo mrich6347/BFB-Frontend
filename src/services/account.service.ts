@@ -1,4 +1,4 @@
-import type { AccountResponse, CreateAccountDto, AccountWithReadyToAssignResponse, UpdateAccountDto, CloseAccountResponse, ReorderAccountsDto } from "../types/DTO/account.dto"
+import type { AccountResponse, CreateAccountDto, AccountWithReadyToAssignResponse, UpdateAccountDto, CloseAccountResponse, ReorderAccountsDto, MakeCreditCardPaymentDto, MakeCreditCardPaymentResponse } from "../types/DTO/account.dto"
 import api from "./common/api"
 
 export class AccountService {
@@ -34,5 +34,10 @@ export class AccountService {
 
     static async reorderAccounts(request: ReorderAccountsDto): Promise<void> {
         await api.post(`${this.BASE_PATH}/reorder`, request)
+    }
+
+    static async makeCreditCardPayment(accountId: string, request: MakeCreditCardPaymentDto): Promise<MakeCreditCardPaymentResponse> {
+        const response = await api.post(`${this.BASE_PATH}/${accountId}/make-payment`, request)
+        return response.data
     }
 }
