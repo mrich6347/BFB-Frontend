@@ -2,6 +2,11 @@
   <div v-if="isLoading" class="flex h-screen items-center justify-center">
     <LoadingSpinner />
   </div>
+  <!-- Mobile View -->
+  <div v-else-if="isMobile" class="h-screen overflow-auto">
+    <MobileCategoryView />
+  </div>
+  <!-- Desktop View -->
   <div v-else class="flex h-screen">
     <Sidebar :budgetId="budgetId" />
     <div class="flex-1 flex flex-col">
@@ -21,12 +26,13 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import BudgetHeader from '@/components/budget/BudgetHeader.vue'
 import BudgetCategoryList from '@/components/budget/BudgetCategoryList.vue'
 import AutoAssignPanel from '@/components/budget/AutoAssignPanel.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import MobileCategoryView from '@/components/budget/MobileCategoryView.vue'
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 
 const route = useRoute()
@@ -37,14 +43,25 @@ const budgetId = route.params.budgetId as string
 const categoryListRef = ref<InstanceType<typeof BudgetCategoryList> | null>(null)
 const activeFilter = ref('all')
 
+// Mobile detection
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768 // Tailwind's md breakpoint
+}
+
 const { ensureDataLoaded, isLoading } = useMainDataOperations()
 
 // Ensure data is loaded when the component mounts
 onMounted(async () => {
   try {
+    // Initialize mobile detection
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+
     // Save this budget as the last visited
     localStorage.setItem('lastVisitedBudgetId', budgetId)
-    
+
     const success = await ensureDataLoaded(budgetId)
     if (!success) {
       console.error('Failed to load budget data')
@@ -55,6 +72,11 @@ onMounted(async () => {
     console.error('Error loading budget data:', error)
     router.push('/dashboard')
   }
+})
+
+// Clean up event listener
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 
 const handleFilterChanged = (filter: string) => {
