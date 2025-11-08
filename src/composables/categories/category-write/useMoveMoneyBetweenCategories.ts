@@ -32,6 +32,13 @@ export const useMoveMoneyBetweenCategories = () => {
         categoryStore.updateCategoryBalance(sourceCategoryId, response.sourceCategoryBalance)
         categoryStore.updateCategoryBalance(destinationCategoryId, response.destinationCategoryBalance)
 
+        // Update affected payment category balances (credit card logic)
+        if (response.affectedCategoryBalances && response.affectedCategoryBalances.length > 0) {
+          response.affectedCategoryBalances.forEach(balance => {
+            categoryStore.updateCategoryBalance(balance.category_id, balance)
+          })
+        }
+
       } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to move money'
         console.error('Error moving money:', err)

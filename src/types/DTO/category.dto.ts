@@ -57,10 +57,12 @@ export interface CategoryUpdateWithAffectedCategoriesResponse {
   category: CategoryResponse; // The updated category data
   categoryBalance: CategoryBalanceResponse; // The updated balance
   affectedCategories?: CategoryResponse[];
+  affectedCategoryBalances?: CategoryBalanceResponse[]; // Payment category balances that were updated due to credit card debt coverage
 }
 
 export interface MoveMoneyResponse {
   readyToAssign: number;
   sourceCategoryBalance: CategoryBalanceResponse;
   destinationCategoryBalance: CategoryBalanceResponse;
+  affectedCategoryBalances?: CategoryBalanceResponse[]; // Payment categories that were updated due to credit card debt coverage
 }
