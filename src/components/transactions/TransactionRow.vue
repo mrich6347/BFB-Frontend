@@ -8,36 +8,6 @@
     @click="handleRowClick"
     @dblclick="handleRowDoubleClick"
   >
-    <!-- Cleared Status -->
-    <td class="p-3">
-      <div class="flex items-center gap-1">
-        <button
-          @click.stop="$emit('toggle-cleared', transaction)"
-          class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors font-semibold text-xs"
-          :class="transaction.is_cleared
-            ? 'bg-green-500 border-green-500 text-white'
-            : 'border-muted-foreground hover:border-green-500 text-muted-foreground hover:text-green-500'"
-          :disabled="transaction.is_reconciled"
-          :title="transaction.is_reconciled ? 'Cannot modify reconciled transaction' : 'Toggle cleared status'"
-        >
-          C
-        </button>
-        <!-- Reconciled indicator -->
-        <div
-          v-if="transaction.is_reconciled"
-          class="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center"
-          title="Reconciled transaction"
-        >
-          <span class="text-white text-xs font-bold">R</span>
-        </div>
-      </div>
-    </td>
-
-    <!-- Date -->
-    <td class="p-3 text-sm text-foreground w-24">
-      {{ formatDate(transaction.date, budgetStore.currentBudget?.date_format || DateFormat.ISO) }}
-    </td>
-
     <!-- Payee -->
     <td class="p-3 text-sm text-foreground w-40 max-w-40">
       <div class="truncate">
@@ -97,6 +67,31 @@
       </span>
       <span v-else class="text-muted-foreground">-</span>
     </td>
+
+    <!-- Cleared Status -->
+    <td class="p-3">
+      <div class="flex items-center gap-1">
+        <button
+          @click.stop="$emit('toggle-cleared', transaction)"
+          class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors font-semibold text-xs"
+          :class="transaction.is_cleared
+            ? 'bg-green-500 border-green-500 text-white'
+            : 'border-muted-foreground hover:border-green-500 text-muted-foreground hover:text-green-500'"
+          :disabled="transaction.is_reconciled"
+          :title="transaction.is_reconciled ? 'Cannot modify reconciled transaction' : 'Toggle cleared status'"
+        >
+          C
+        </button>
+        <!-- Reconciled indicator -->
+        <div
+          v-if="transaction.is_reconciled"
+          class="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center"
+          title="Reconciled transaction"
+        >
+          <span class="text-white text-xs font-bold">R</span>
+        </div>
+      </div>
+    </td>
   </tr>
 </template>
 
@@ -104,10 +99,7 @@
 import { computed, ref } from 'vue'
 import { ChevronDownIcon } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
-import { formatDate } from '@/utils/dateFormatUtil'
 import { useCategoryStore } from '@/stores/category.store'
-import { useBudgetStore } from '@/stores/budget.store'
-import { DateFormat } from '@/types/DTO/budget.dto'
 import type { TransactionResponse } from '@/types/DTO/transaction.dto'
 
 const props = defineProps<{
@@ -122,7 +114,6 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
-const budgetStore = useBudgetStore()
 
 // Memo expansion state
 const isMemoExpanded = ref(false)

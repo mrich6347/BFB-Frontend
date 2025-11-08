@@ -23,6 +23,16 @@
           <TrashIcon class="w-4 h-4" />
           Delete
         </Button>
+        <Button
+          v-if="isCashAccount"
+          size="sm"
+          variant="outline"
+          @click="showTransferModal = true"
+          class="flex items-center gap-2"
+        >
+          <ArrowRightLeftIcon class="w-4 h-4" />
+          Transfer Money
+        </Button>
         <Button size="sm" @click="showAddTransactionModal = true" class="flex items-center gap-2">
           <PlusIcon class="w-4 h-4" />
           Add Transaction
@@ -59,13 +69,12 @@
         <table class="min-w-full text-sm border-collapse">
           <thead class="bg-muted/40 text-muted-foreground uppercase tracking-wide text-[0.65rem]">
             <tr>
-              <th class="px-4 py-3 font-medium text-left w-12">C</th>
-              <th class="px-4 py-3 font-medium text-left w-24">Date</th>
               <th class="px-4 py-3 font-medium text-left">Payee</th>
               <th class="px-4 py-3 font-medium text-left w-40">Category</th>
               <th class="px-4 py-3 font-medium text-left w-48">Memo</th>
               <th class="px-4 py-3 font-medium text-right w-28">Outflow</th>
               <th class="px-4 py-3 font-medium text-right w-28">Inflow</th>
+              <th class="px-4 py-3 font-medium text-left w-12">C</th>
             </tr>
           </thead>
           <tbody>
@@ -92,16 +101,27 @@
       @close="closeModal"
       @save="handleSaveTransaction"
     />
+
+    <!-- Transfer Modal -->
+    <TransferModal
+      :is-open="showTransferModal"
+      :account-id="accountId"
+      :is-submitting="isSubmitting"
+      @close="closeTransferModal"
+      @save="handleSaveTransfer"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { PlusIcon, TrashIcon } from 'lucide-vue-next'
+import { PlusIcon, TrashIcon, ArrowRightLeftIcon } from 'lucide-vue-next'
 import Button from '@/components/shadcn-ui/button.vue'
 import TransactionRow from './TransactionRow.vue'
 import TransactionModal from './TransactionModal.vue'
+import TransferModal from './TransferModal.vue'
 import { useTransactionStore } from '@/stores/transaction.store'
+import { useAccountStore } from '@/stores/account.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
 import { useToast } from 'vue-toast-notification'
@@ -111,8 +131,8 @@ const props = defineProps<{
 }>()
 
 const transactionStore = useTransactionStore()
+const accountStore = useAccountStore()
 const {
-  loadTransactionsByAccount,
   createTransaction,
   updateTransaction,
   deleteTransaction,
@@ -124,10 +144,20 @@ const $toast = useToast()
 
 const showAddTransactionModal = ref(false)
 const showEditTransactionModal = ref(false)
+const showTransferModal = ref(false)
 const editingTransaction = ref<TransactionResponse | null>(null)
 const showReconciled = ref(false)
 const selectedTransactionIds = ref<string[]>([])
 const lastSelectedId = ref<string | null>(null)
+
+// Check if current account is a cash account
+const currentAccount = computed(() => {
+  return accountStore.accounts.find(acc => acc.id === props.accountId)
+})
+
+const isCashAccount = computed(() => {
+  return currentAccount.value?.account_type === 'CASH'
+})
 
 const transactions = computed(() => {
   const allTransactions = transactionStore.getTransactionsByAccount(props.accountId)
@@ -263,6 +293,10 @@ const closeModal = () => {
   editingTransaction.value = null
 }
 
+const closeTransferModal = () => {
+  showTransferModal.value = false
+}
+
 const isSubmitting = ref(false)
 
 const handleSaveTransaction = async (transactionData: CreateTransactionDto | UpdateTransactionDto) => {
@@ -285,6 +319,25 @@ const handleSaveTransaction = async (transactionData: CreateTransactionDto | Upd
     }
   } catch (error) {
     $toast.error('Failed to save transaction')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const handleSaveTransfer = async (transactionData: CreateTransactionDto) => {
+  if (isSubmitting.value) return // Prevent duplicate submissions
+
+  isSubmitting.value = true
+
+  // Close modal immediately for instant feedback (optimistic)
+  closeTransferModal()
+
+  try {
+    // Create transfer transaction
+    await createTransaction(transactionData)
+    // No success toast - optimistic update provides instant feedback
+  } catch (error) {
+    $toast.error('Failed to create transfer')
   } finally {
     isSubmitting.value = false
   }
