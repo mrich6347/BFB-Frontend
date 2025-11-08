@@ -44,9 +44,9 @@
         <div
           v-for="(group, groupIndex) in filteredCategories"
           :key="group.groupId"
-          class="border-b border-border last:border-b-0"
+          :class="showGroupHeaders ? 'border-b border-border last:border-b-0' : ''"
         >
-          <div class="px-3 py-2 text-xs font-medium text-muted-foreground bg-muted/50">
+          <div v-if="showGroupHeaders" class="px-3 py-2 text-xs font-medium text-muted-foreground bg-muted/50">
             {{ group.groupName }}
           </div>
           <button
@@ -96,6 +96,7 @@ interface Props {
   includeUncategorized?: boolean
   error?: string
   disabled?: boolean
+  showGroupHeaders?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -106,7 +107,8 @@ const props = withDefaults(defineProps<Props>(), {
   includeReadyToAssign: false,
   includeUncategorized: false,
   error: '',
-  disabled: false
+  disabled: false,
+  showGroupHeaders: true
 })
 
 const emit = defineEmits<{
@@ -123,6 +125,7 @@ const showDropdown = ref(false)
 const isSearching = ref(false)
 const highlightedIndex = ref({ group: 0, category: 0 })
 const categoryRefs = ref<(HTMLElement | null)[][]>([])
+const isProgrammaticFocus = ref(false)
 
 // Get categories to use
 const categoriesToUse = computed(() => {
@@ -211,6 +214,13 @@ const handleInputFocus = () => {
   showDropdown.value = true
   searchQuery.value = '' // Clear for typing
   resetHighlight()
+
+  // Keep dropdown open even if blur happens
+  setTimeout(() => {
+    if (isSearching.value) {
+      showDropdown.value = true
+    }
+  }, 50)
 }
 
 const handleInputBlur = (event: FocusEvent) => {
@@ -224,9 +234,10 @@ const handleInputBlur = (event: FocusEvent) => {
 
   // Delay to allow click events on dropdown items
   setTimeout(() => {
-    if (!showDropdown.value) {
-      isSearching.value = false
-      searchQuery.value = displayText.value // Restore display text
+    // Only close if we're not actively searching
+    if (!isSearching.value) {
+      showDropdown.value = false
+      searchQuery.value = displayText.value
     }
   }, 150)
 }
@@ -390,9 +401,16 @@ onUnmounted(() => {
 // Expose focus method for parent components
 defineExpose({
   focus: () => {
-    searchInput.value?.focus()
-    // Manually trigger the focus handler to open dropdown
-    handleInputFocus()
+    if (searchInput.value) {
+      // Directly set the state to open
+      isSearching.value = true
+      showDropdown.value = true
+      searchQuery.value = ''
+      resetHighlight()
+
+      // Then focus the input
+      searchInput.value.focus()
+    }
   }
 })
 </script>

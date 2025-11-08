@@ -116,13 +116,24 @@ export const useTransactionFormState = ({
     }))
   )
 
+  // Filter out credit card payment categories
+  const isCreditCardPaymentCategory = (categoryId: string) => {
+    const category = categoryStore.categories.find(c => c.id === categoryId)
+    if (!category) return false
+
+    const categoryGroup = categoryStore.getCategoryGroupById(category.category_group_id)
+    return categoryGroup?.name === 'Credit Card Payments' && categoryGroup?.is_system_group === true
+  }
+
   const categoryOptions = computed(() => [
     { label: 'Uncategorized', value: '' },
     { label: 'Ready to Assign', value: 'ready-to-assign' },
-    ...categoryStore.categories.map(category => ({
-      label: category.name,
-      value: category.id
-    }))
+    ...categoryStore.categories
+      .filter(category => !isCreditCardPaymentCategory(category.id))
+      .map(category => ({
+        label: category.name,
+        value: category.id
+      }))
   ])
 
   const isTransferTransaction = computed(() =>

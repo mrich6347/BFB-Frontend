@@ -14,20 +14,19 @@
         #default="{ state }"
       >
         <!-- Category -->
-        <FormKit
-          type="select"
-          name="category_id"
-          label="Category"
-          :options="categoryOptions"
-          placeholder="Select a category"
-          :validation="isTransferTransaction ? 'required' : ''"
-          :classes="{
-            input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
-            label: 'text-sm font-medium text-foreground',
-            outer: 'space-y-2 mb-4',
-            message: 'text-red-500 text-sm mt-1'
-          }"
-        />
+        <div class="mb-4">
+          <CategorySelector
+            ref="categorySelectorRef"
+            v-model="selectedCategoryId"
+            :available-categories="availableCategories"
+            label="Category"
+            placeholder="Select category..."
+            :include-ready-to-assign="true"
+            :include-uncategorized="true"
+            :show-group-headers="false"
+            @select="handleCategorySelect"
+          />
+        </div>
 
         <!-- Memo -->
         <FormKit
@@ -67,21 +66,23 @@
         </div>
 
         <!-- Amount -->
-        <FormKit
-          type="number"
-          name="amount"
-          label="Amount"
-          validation="required|min:0.01"
-          step="0.01"
-          min="0.01"
-          placeholder="0.00"
-          :classes="{
-            input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
-            label: 'text-sm font-medium text-foreground',
-            outer: 'space-y-2 mb-4',
-            message: 'text-red-500 text-sm mt-1'
-          }"
-        />
+        <div ref="amountFieldRef">
+          <FormKit
+            type="number"
+            name="amount"
+            label="Amount"
+            validation="required|min:0.01"
+            step="0.01"
+            min="0.01"
+            placeholder="0.00"
+            :classes="{
+              input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
+              label: 'text-sm font-medium text-foreground',
+              outer: 'space-y-2 mb-4',
+              message: 'text-red-500 text-sm mt-1'
+            }"
+          />
+        </div>
 
         <!-- Cleared Status -->
         <FormKit
@@ -112,10 +113,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
 import Button from '@/components/shadcn-ui/button.vue'
 import { useCategoryStore } from '@/stores/category.store'
+import CategorySelector from '@/components/categories/CategorySelector.vue'
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
 
 const props = defineProps<{
@@ -132,22 +134,26 @@ const emit = defineEmits<{
 
 const categoryStore = useCategoryStore()
 const amountType = ref<'inflow' | 'outflow'>('outflow')
+const selectedCategoryId = ref<string | null>('')
+const categorySelectorRef = ref<InstanceType<typeof CategorySelector> | null>(null)
+const amountFieldRef = ref<HTMLDivElement | null>(null)
 
-const categoryOptions = computed(() => {
-  return [
-    { label: 'Uncategorized', value: '' },
-    { label: 'Ready to Assign', value: 'ready-to-assign' },
-    ...categoryStore.categories.map(category => ({
-      label: category.name,
-      value: category.id
-    }))
-  ]
+// Filter out credit card payment categories
+const isCreditCardPaymentCategory = (categoryId: string) => {
+  const category = categoryStore.categories.find(c => c.id === categoryId)
+  if (!category) return false
+
+  const categoryGroup = categoryStore.getCategoryGroupById(category.category_group_id)
+  return categoryGroup?.name === 'Credit Card Payments' && categoryGroup?.is_system_group === true
+}
+
+const availableCategories = computed(() => {
+  return categoryStore.categories.filter(category => !isCreditCardPaymentCategory(category.id))
 })
 
 const formData = computed(() => {
   if (props.transaction) {
     return {
-      category_id: props.transaction.category_id === null ? 'ready-to-assign' : (props.transaction.category_id || ''),
       memo: props.transaction.memo || '',
       amount: Math.abs(props.transaction.amount),
       is_cleared: props.transaction.is_cleared
@@ -155,19 +161,43 @@ const formData = computed(() => {
   }
 
   return {
-    category_id: '',
     memo: '',
     amount: 0,
     is_cleared: false
   }
 })
 
-// Set amount type based on transaction amount
+// Set amount type and category based on transaction
 watch(() => props.transaction, (transaction) => {
   if (transaction) {
     amountType.value = transaction.amount < 0 ? 'outflow' : 'inflow'
+    selectedCategoryId.value = transaction.category_id === null ? 'ready-to-assign' : (transaction.category_id || '')
+  } else {
+    selectedCategoryId.value = ''
   }
 }, { immediate: true })
+
+// Auto-focus category selector when modal opens
+watch(() => props.isOpen, (isOpen) => {
+  if (isOpen) {
+    // Use a small delay to ensure the modal is fully rendered
+    setTimeout(() => {
+      categorySelectorRef.value?.focus()
+    }, 100)
+  }
+})
+
+// Handle category selection - jump to amount field
+const handleCategorySelect = () => {
+  nextTick(() => {
+    // Find the input element within the amount field
+    const amountInput = amountFieldRef.value?.querySelector('input[type="number"]') as HTMLInputElement
+    if (amountInput) {
+      amountInput.focus()
+      amountInput.select()
+    }
+  })
+}
 
 const handleSubmit = (data: any) => {
   // Regular transactions use the selected amount type
@@ -185,7 +215,7 @@ const handleSubmit = (data: any) => {
     date,
     amount,
     account_id: props.accountId,
-    category_id: data.category_id || undefined,
+    category_id: selectedCategoryId.value || undefined,
     payee: undefined // No payee for regular transactions
   }
 
