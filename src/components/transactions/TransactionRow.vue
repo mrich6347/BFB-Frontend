@@ -1,13 +1,18 @@
 <template>
   <tr
-    class="border-b border-border hover:bg-muted/30 transition-colors"
-    :class="{ 'opacity-60 bg-muted/20': transaction.is_reconciled }"
+    class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer select-none"
+    :class="[
+      transaction.is_reconciled ? 'opacity-60 bg-muted/10' : '',
+      props.isSelected ? 'bg-primary/10 ring-1 ring-primary/40 hover:bg-primary/10' : ''
+    ]"
+    @click="handleRowClick"
+    @dblclick="handleRowDoubleClick"
   >
     <!-- Cleared Status -->
     <td class="p-3">
       <div class="flex items-center gap-1">
         <button
-          @click="$emit('toggle-cleared', transaction)"
+          @click.stop="$emit('toggle-cleared', transaction)"
           class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors font-semibold text-xs"
           :class="transaction.is_cleared
             ? 'bg-green-500 border-green-500 text-white'
@@ -48,7 +53,7 @@
     </td>
 
     <!-- Memo -->
-    <td class="p-3 text-sm text-muted-foreground w-40 max-w-40">
+    <td class="p-3 text-sm text-muted-foreground w-48 max-w-48">
       <div v-if="transaction.memo" class="space-y-1">
         <div class="flex items-start gap-2">
           <div
@@ -78,7 +83,7 @@
     </td>
 
     <!-- Outflow -->
-    <td class="p-3 text-sm text-right tabular-nums w-32">
+    <td class="p-3 text-sm text-right tabular-nums w-28">
       <span v-if="transaction.amount < 0" class="text-destructive">
         {{ formatCurrency(Math.abs(transaction.amount)) }}
       </span>
@@ -86,42 +91,18 @@
     </td>
 
     <!-- Inflow -->
-    <td class="p-3 text-sm text-right tabular-nums w-32">
+    <td class="p-3 text-sm text-right tabular-nums w-28">
       <span v-if="transaction.amount > 0" class="text-green-600">
         {{ formatCurrency(transaction.amount) }}
       </span>
       <span v-else class="text-muted-foreground">-</span>
-    </td>
-
-    <!-- Actions -->
-    <td class="p-3">
-      <div class="flex items-center gap-1">
-        <button
-          @click="$emit('edit', transaction)"
-          class="p-1 rounded hover:bg-muted transition-colors"
-          :disabled="transaction.is_reconciled"
-          :title="transaction.is_reconciled ? 'Cannot edit reconciled transaction' : 'Edit transaction'"
-          :class="{ 'opacity-50 cursor-not-allowed': transaction.is_reconciled }"
-        >
-          <EditIcon class="w-4 h-4 text-muted-foreground" />
-        </button>
-        <button
-          @click="$emit('delete', transaction)"
-          class="p-1 rounded hover:bg-muted transition-colors"
-          :disabled="transaction.is_reconciled"
-          :title="transaction.is_reconciled ? 'Cannot delete reconciled transaction' : 'Delete transaction'"
-          :class="{ 'opacity-50 cursor-not-allowed': transaction.is_reconciled }"
-        >
-          <TrashIcon class="w-4 h-4 text-muted-foreground hover:text-destructive" />
-        </button>
-      </div>
     </td>
   </tr>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { EditIcon, TrashIcon, ChevronDownIcon } from 'lucide-vue-next'
+import { ChevronDownIcon } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import { formatDate } from '@/utils/dateFormatUtil'
 import { useCategoryStore } from '@/stores/category.store'
@@ -131,11 +112,12 @@ import type { TransactionResponse } from '@/types/DTO/transaction.dto'
 
 const props = defineProps<{
   transaction: TransactionResponse
+  isSelected?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   edit: [transaction: TransactionResponse]
-  delete: [transaction: TransactionResponse]
+  select: [{ transaction: TransactionResponse; shiftKey: boolean; metaKey: boolean }]
   'toggle-cleared': [transaction: TransactionResponse]
 }>()
 
@@ -159,5 +141,17 @@ const getCategoryName = (categoryId?: string | null) => {
   if (!categoryId) return 'Uncategorized'
   const category = categoryStore.categories.find(cat => cat.id === categoryId)
   return category?.name || 'Unknown Category'
+}
+
+const handleRowClick = (event: MouseEvent) => {
+  emit('select', {
+    transaction: props.transaction,
+    shiftKey: event.shiftKey,
+    metaKey: event.metaKey || event.ctrlKey
+  })
+}
+
+const handleRowDoubleClick = () => {
+  emit('edit', props.transaction)
 }
 </script>
