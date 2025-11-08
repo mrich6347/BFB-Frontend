@@ -47,8 +47,13 @@ const showCalculation = ref(false)
 const calculationResult = ref<number | null>(null)
 
 const inputClasses = computed(() => {
-  const baseClasses = 'w-full text-right text-xs bg-transparent border-none outline-none focus:bg-background focus:border focus:border-input focus:rounded px-1 py-0.5'
-  return `${baseClasses} ${props.class}`
+  const baseClasses = 'w-full text-right bg-transparent border-none outline-none transition-all duration-200'
+  const unfocusedClasses = 'text-xs px-1 py-0.5'
+  const focusedClasses = 'text-sm px-2 py-1.5 bg-primary/10 border border-primary rounded-md shadow-sm ring-2 ring-primary/30 font-medium'
+
+  const stateClasses = isFocused.value ? focusedClasses : unfocusedClasses
+
+  return `${baseClasses} ${stateClasses} ${props.class}`
 })
 
 // Initialize display value
