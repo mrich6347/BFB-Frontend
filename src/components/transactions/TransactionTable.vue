@@ -303,13 +303,16 @@ const handleSaveTransaction = async (transactionData: CreateTransactionDto | Upd
 
   isSubmitting.value = true
 
+  // Capture the editing transaction ID before closing modal
+  const transactionIdToUpdate = editingTransaction.value?.id
+
   // Close modal immediately for instant feedback (optimistic)
   closeModal()
 
   try {
-    if (editingTransaction.value) {
+    if (transactionIdToUpdate) {
       // Update existing transaction
-      await updateTransaction(editingTransaction.value.id, transactionData as UpdateTransactionDto)
+      await updateTransaction(transactionIdToUpdate, transactionData as UpdateTransactionDto)
       // No success toast - optimistic update provides instant feedback
     } else {
       // Create new transaction

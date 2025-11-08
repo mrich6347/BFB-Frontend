@@ -162,10 +162,10 @@ watch(() => props.transaction, (transaction) => {
   }
 }, { immediate: true })
 
-// Auto-focus category selector when modal opens
-watch(() => props.isOpen, (isOpen) => {
-  if (isOpen) {
-    // Use a small delay to ensure the modal is fully rendered
+// Auto-focus category selector when modal opens (only for new transactions, not edits)
+watch([() => props.isOpen, () => props.transaction], ([isOpen, transaction]) => {
+  if (isOpen && !transaction) {
+    // Only auto-focus when adding a new transaction, not when editing
     setTimeout(() => {
       categorySelectorRef.value?.focus()
     }, 100)
