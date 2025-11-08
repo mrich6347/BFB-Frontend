@@ -1,13 +1,6 @@
 [build]
 builder = "nixpacks"
 
-[build.nixpacksPlan]
-providers = ["node"]
-
-[build.nixpacksConfig]
-# Clear npm cache before install to avoid stale dependencies
-npmInstallCommand = "npm cache clean --force && npm ci"
-
 [deploy]
 startCommand = "npm run preview"
 healthcheckPath = "/"
