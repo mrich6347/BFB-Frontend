@@ -44,6 +44,7 @@
         <input
           v-model="amount"
           type="number"
+          inputmode="decimal"
           step="0.01"
           min="0.01"
           placeholder="0.00"
