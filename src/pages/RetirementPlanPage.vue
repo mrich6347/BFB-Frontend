@@ -272,13 +272,15 @@ const totalContributions = computed(() => {
 })
 
 const totalInterest = computed(() => {
+  if (!isValidInput.value) return 0
   return finalBalance.value - totalContributions.value
 })
 
 const interestPercentage = computed(() => {
-  if (finalBalance.value === 0) return '0.0'
+  if (!isValidInput.value || finalBalance.value === 0) return '0.0'
   const percentage = (totalInterest.value / finalBalance.value) * 100
-  return (percentage || 0).toFixed(1)
+  if (isNaN(percentage) || !isFinite(percentage)) return '0.0'
+  return percentage.toFixed(1)
 })
 
 // Handler to ensure starting balance defaults to 0 when empty
