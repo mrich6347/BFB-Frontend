@@ -11,20 +11,7 @@
     <Sidebar :budgetId="currentBudgetId" />
     <div class="flex-1 bg-background overflow-auto">
       <div class="max-w-6xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-        <div v-if="isLoadingPage" class="flex justify-center items-center min-h-[320px]">
-          <LoadingSpinner />
-        </div>
-
-        <div v-else-if="initializationError" class="flex flex-col items-center justify-center min-h-[320px] text-center space-y-4">
-          <p class="text-muted-foreground max-w-md">
-            {{ initializationError }}
-          </p>
-          <Button variant="default" @click="goToDashboard">
-            Return to dashboard
-          </Button>
-        </div>
-
-        <div v-else class="space-y-10">
+        <div class="space-y-10">
           <section class="space-y-3">
             <div class="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-primary/80">
               <TrendingUpIcon class="h-4 w-4" />
@@ -140,7 +127,6 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
-import Button from '@/components/shadcn-ui/button.vue'
 import MobileNetWorthView from '@/components/mobile/MobileNetWorthView.vue'
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 import { useBudgetStore } from '@/stores/budget.store'
@@ -158,17 +144,12 @@ const accountStore = useAccountStore()
 const { currentBudget } = storeToRefs(budgetStore)
 const { activeAccounts } = storeToRefs(accountStore)
 
-const isInitializing = ref(true)
-const initializationError = ref<string | null>(null)
-
 // Mobile detection
 const isMobile = ref(false)
 
 const checkMobile = () => {
   isMobile.value = window.innerWidth < 768 // Tailwind's md breakpoint
 }
-
-const ynabReferenceNetWorth = 36786.22
 
 const currentBudgetId = computed(() => currentBudget.value?.id || '')
 
@@ -287,44 +268,36 @@ const totalLiabilitiesDisplay = computed(() => Math.abs(totalLiabilities.value))
 
 const hasActiveAccounts = computed(() => activeAccounts.value.length > 0)
 
-const isLoadingPage = computed(() => isInitializing.value || isLoading.value)
-
-const goToDashboard = async () => {
-  await router.push('/dashboard')
-}
-
+// Ensure data is loaded when the component mounts
 onMounted(async () => {
   try {
     // Initialize mobile detection
     checkMobile()
     window.addEventListener('resize', checkMobile)
 
+    // Get the budget ID from current budget or localStorage
     let targetBudgetId = currentBudgetId.value
-
     if (!targetBudgetId) {
       targetBudgetId = localStorage.getItem('lastVisitedBudgetId') || ''
     }
 
     if (!targetBudgetId) {
-      initializationError.value = 'Select a budget to view net worth details.'
-      await goToDashboard()
+      console.error('No budget ID available for Net Worth page')
+      router.push('/dashboard')
       return
     }
+
+    // Save this as the last visited budget
+    localStorage.setItem('lastVisitedBudgetId', targetBudgetId)
 
     const success = await ensureDataLoaded(targetBudgetId)
-
     if (!success) {
-      initializationError.value = 'Unable to load this budget. Redirecting you back to the dashboard.'
-      await goToDashboard()
-      return
+      console.error('Failed to load budget data')
+      router.push('/dashboard')
     }
-
-    localStorage.setItem('lastVisitedBudgetId', targetBudgetId)
   } catch (error) {
-    console.error('Failed to initialize Net Worth page', error)
-    initializationError.value = 'Something went wrong loading your net worth. Please try again.'
-  } finally {
-    isInitializing.value = false
+    console.error('Error loading budget data:', error)
+    router.push('/dashboard')
   }
 })
 
