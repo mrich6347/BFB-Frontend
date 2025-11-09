@@ -230,9 +230,12 @@ onMounted(() => {
 const annualReturnRate = computed(() => annualReturnPercent.value / 100)
 
 const isValidInput = computed(() => {
-  return currentAge.value > 0 && 
-         retirementAge.value > currentAge.value && 
-         monthlyContribution.value >= 0
+  return currentAge.value > 0 &&
+         retirementAge.value > currentAge.value &&
+         monthlyContribution.value >= 0 &&
+         startingBalance.value != null &&
+         !isNaN(startingBalance.value) &&
+         startingBalance.value >= 0
 })
 
 const yearsToRetirement = computed(() => {
@@ -246,10 +249,10 @@ const finalBalance = computed(() => {
 
   const years = yearsToRetirement.value
   const annualRate = annualReturnRate.value
-  const monthlyContrib = monthlyContribution.value
+  const monthlyContrib = monthlyContribution.value || 0
   const annualContrib = monthlyContrib * 12
 
-  let balance = startingBalance.value
+  let balance = startingBalance.value || 0
 
   // Calculate year by year with annual compounding
   for (let year = 0; year < years; year++) {
@@ -264,7 +267,7 @@ const finalBalance = computed(() => {
 
 const totalContributions = computed(() => {
   if (!isValidInput.value) return 0
-  return startingBalance.value + (monthlyContribution.value * yearsToRetirement.value * 12)
+  return (startingBalance.value || 0) + ((monthlyContribution.value || 0) * yearsToRetirement.value * 12)
 })
 
 const totalInterest = computed(() => {
