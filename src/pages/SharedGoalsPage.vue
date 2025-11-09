@@ -189,14 +189,14 @@
               <div class="relative bg-secondary rounded-full h-3 overflow-hidden">
                 <div
                   :class="[
-                    'h-3 rounded-full transition-all duration-1000 ease-out',
+                    'h-3 rounded-full transition-all duration-1000 ease-out overflow-hidden relative',
                     goal.status === 'COMPLETED' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
                     (goal.progress_percentage || 0) >= 80 ? 'bg-gradient-to-r from-primary to-blue-500 animate-pulse' :
                     'bg-gradient-to-r from-primary to-blue-400'
                   ]"
                   :style="{ width: `${Math.min((goal.progress_percentage || 0), 100)}%` }"
                 >
-                  <div class="h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                  <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
                 </div>
               </div>
 
@@ -322,10 +322,10 @@
                   </div>
                   <div class="relative bg-green-100 dark:bg-green-900/20 rounded-full h-3 overflow-hidden">
                     <div
-                      class="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-1000 ease-out"
+                      class="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-1000 ease-out overflow-hidden relative"
                       style="width: 100%"
                     >
-                      <div class="h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                      <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
                     </div>
                   </div>
 
