@@ -301,9 +301,6 @@ const handleSubmit = async () => {
       if (Object.keys(updateData).length > 0) {
         await updateProfileOp(updateData)
         originalUsername.value = formData.value.username
-        $toast.success('Profile updated successfully!')
-      } else {
-        $toast.info('No changes to save')
       }
     } else {
       // Create new profile
@@ -316,7 +313,6 @@ const handleSubmit = async () => {
           display_name: createdProfile.display_name
         }
         originalUsername.value = createdProfile.username
-        $toast.success('Profile created successfully!')
       }
     }
 

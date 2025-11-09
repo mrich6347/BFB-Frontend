@@ -37,7 +37,6 @@ export function useSharedGoalOperations() {
       // Add to store
       sharedGoalsStore.addGoal(newGoal)
 
-      toast.success('Goal created successfully!')
       return newGoal
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to create goal'
@@ -83,7 +82,6 @@ export function useSharedGoalOperations() {
       // Update store
       sharedGoalsStore.updateGoal(goalId, updatedGoal)
 
-      toast.success('Goal updated successfully!')
       return updatedGoal
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to update goal'
@@ -106,7 +104,6 @@ export function useSharedGoalOperations() {
       // Remove from store
       sharedGoalsStore.removeGoal(goalId)
 
-      toast.success('Goal deleted successfully!')
       return true
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to delete goal'

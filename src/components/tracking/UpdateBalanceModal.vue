@@ -150,7 +150,6 @@ const handleSubmit = async (data: any) => {
     // Update account in store using the response data
     setAccountBalance(props.account.id, response.account)
 
-    toast.success('Balance updated successfully')
     emit('updated')
   } catch (error) {
     console.error('Failed to update balance:', error)

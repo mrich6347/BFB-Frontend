@@ -344,7 +344,6 @@ const handleReopenAccount = async (accountId: string) => {
   try {
     isReopeningAccount.value = true
     await reopenAccount(accountId)
-    toast.success('Account reopened successfully')
   } catch (error) {
     console.error('Failed to reopen account:', error)
     toast.error('Failed to reopen account')

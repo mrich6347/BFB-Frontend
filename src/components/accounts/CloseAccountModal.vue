@@ -85,7 +85,6 @@ const handleCloseAccount = async () => {
       await fetchAllCategoryData(props.account.budget_id)
     }
 
-    $toast.success('Account closed successfully')
     emit('closed')
     close()
   } catch (error) {

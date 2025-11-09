@@ -39,7 +39,6 @@ export function useGoalInvitations() {
       // Don't add to store - invitations are only for the invitee, not the inviter
       // The invitee will see it when they load their invitations
 
-      toast.success(`Invitation sent to ${invitationData.invitee_username}!`)
       return invitation
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to send invitation'
@@ -94,7 +93,6 @@ export function useGoalInvitations() {
         }
       }
 
-      toast.success('Invitation accepted! You are now part of the goal.')
       return true
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to accept invitation'
@@ -117,7 +115,6 @@ export function useGoalInvitations() {
       // Remove from store (it's no longer pending)
       sharedGoalsStore.removeInvitation(invitationId)
 
-      toast.success('Invitation declined.')
       return true
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to decline invitation'
@@ -162,7 +159,6 @@ export function useGoalInvitations() {
       // Remove goal from store since user is no longer a participant
       sharedGoalsStore.removeGoal(goalId)
 
-      toast.success('You have left the goal.')
       return true
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to leave goal'
@@ -182,7 +178,6 @@ export function useGoalInvitations() {
 
       await SharedGoalsService.removeParticipant(goalId, participantId)
 
-      toast.success('Participant removed from goal.')
       return true
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to remove participant'
@@ -202,7 +197,6 @@ export function useGoalInvitations() {
 
       await SharedGoalsService.updateParticipant(goalId, participantData)
 
-      toast.success('Participant settings updated!')
       return true
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to update participant settings'

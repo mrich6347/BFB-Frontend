@@ -160,7 +160,6 @@ const confirmBalance = async () => {
     await reconcileAccount(props.account.id, clearedBalance.value)
     step.value = 3
     emit('reconciled')
-    $toast.success('Account reconciled successfully')
   } catch (error) {
     $toast.error('Failed to reconcile account')
     console.error('Reconciliation error:', error)
@@ -186,7 +185,6 @@ const reconcileWithAdjustment = async () => {
     await reconcileAccount(props.account.id, balanceAsNumber)
     step.value = 3
     emit('reconciled')
-    $toast.success('Account reconciled successfully with adjustment')
   } catch (error) {
     $toast.error('Failed to reconcile account')
     console.error('Reconciliation error:', error)

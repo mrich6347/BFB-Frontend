@@ -33,7 +33,6 @@ export function useGoalProgress() {
       await SharedGoalsService.updateParticipant(goalId, updateData)
 
       // Update will be reflected in the next main data refresh
-      toast.success('Participant settings updated successfully!')
       return true
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to update participant settings'

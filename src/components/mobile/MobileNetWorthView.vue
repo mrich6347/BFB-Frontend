@@ -279,7 +279,6 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'networth') => {
 const handleSaveTransaction = async (data: CreateTransactionDto) => {
   try {
     await createTransaction(data)
-    $toast.success('Transaction created successfully')
   } catch (error) {
     console.error('Failed to create transaction:', error)
     $toast.error('Failed to create transaction')
@@ -289,7 +288,6 @@ const handleSaveTransaction = async (data: CreateTransactionDto) => {
 const handleSaveTransfer = async (data: CreateTransactionDto) => {
   try {
     await createTransaction(data)
-    $toast.success('Transfer created successfully')
   } catch (error) {
     console.error('Failed to create transfer:', error)
     $toast.error('Failed to create transfer')
@@ -324,7 +322,6 @@ const handleSavePayment = async (creditCardAccountId: string, amount: number, fr
     }
     await createTransaction(outflowData)
 
-    $toast.success('Payment created successfully')
   } catch (error) {
     console.error('Failed to create payment:', error)
     $toast.error('Failed to create payment')
@@ -350,7 +347,6 @@ const handleUpdateBalance = async (accountId: string, newBalance: number) => {
 
     // Refresh account data
     await accountStore.loadAccounts(currentBudget.value!.id)
-    $toast.success('Balance updated successfully')
   } catch (error) {
     console.error('Failed to update balance:', error)
     $toast.error('Failed to update balance')

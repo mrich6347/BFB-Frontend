@@ -61,7 +61,6 @@ const handleFormSubmit = async (formData: { name: string }) => {
 
     await updateAccount(props.account.id, updateData)
 
-    $toast.success('Account updated successfully')
     emit('updated')
     close()
   } catch (error: any) {
