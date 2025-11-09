@@ -5,23 +5,42 @@
     </div>
     <div v-else class="flex h-screen">
       <Sidebar :budgetId="budgetId" />
-      <div class="flex-1 overflow-auto">
+      <div class="flex-1 overflow-auto bg-gradient-to-br from-background via-background to-accent/5">
         <TrackingAccountHeader :account="account" @balance-updated="handleBalanceUpdated" />
-        <div class="p-4 space-y-6">
+        <div class="p-6 space-y-6">
+          <!-- Statistics Cards -->
+          <TrackingStatsCards
+            v-if="account && balanceHistory"
+            :balanceHistory="balanceHistory"
+            :currentBalance="account.working_balance"
+          />
+
           <!-- Balance History Chart -->
-          <div class="bg-card rounded-lg border p-6">
-            <h2 class="text-lg font-semibold mb-4">Balance History</h2>
-            <BalanceHistoryChart
-              v-if="account"
-              :accountId="account.id"
-              :currentBalance="account.working_balance"
-              :key="chartKey"
-            />
+          <div class="bg-card rounded-xl border shadow-sm p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-bold text-foreground">Balance History</h2>
+              <div class="text-sm text-muted-foreground">
+                Track your balance over time
+              </div>
+            </div>
+            <div class="h-[400px]">
+              <BalanceHistoryChart
+                v-if="account"
+                :accountId="account.id"
+                :currentBalance="account.working_balance"
+                :key="chartKey"
+              />
+            </div>
           </div>
 
           <!-- Balance History List -->
-          <div class="bg-card rounded-lg border p-6">
-            <h2 class="text-lg font-semibold mb-4">Balance Updates</h2>
+          <div class="bg-card rounded-xl border shadow-sm p-6 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-bold text-foreground">Balance Updates</h2>
+              <div class="text-sm text-muted-foreground">
+                {{ balanceHistory?.length || 0 }} updates
+              </div>
+            </div>
             <BalanceHistoryList
               v-if="account"
               :accountId="account.id"
@@ -39,6 +58,7 @@ import { useRoute } from 'vue-router'
 import { onMounted, ref, computed } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
 import TrackingAccountHeader from '@/components/tracking/TrackingAccountHeader.vue'
+import TrackingStatsCards from '@/components/tracking/TrackingStatsCards.vue'
 import BalanceHistoryChart from '@/components/tracking/BalanceHistoryChart.vue'
 import BalanceHistoryList from '@/components/tracking/BalanceHistoryList.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
@@ -55,7 +75,7 @@ const isLoading = ref(true)
 const chartKey = ref(0) // Used to force chart re-render
 
 // Use balance history composable for refreshing data
-const { refreshBalanceHistory } = useBalanceHistory(accountId.value)
+const { balanceHistory, refreshBalanceHistory } = useBalanceHistory(accountId.value)
 
 const account = computed(() => {
   return accountStore.accounts.find(acc => acc.id === accountId.value)

@@ -64,13 +64,14 @@ const chartData = computed(() => {
         {
           label: 'Balance',
           data: [currentBalance],
-          borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderWidth: 2,
+          borderColor: 'rgb(16, 185, 129)',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          borderWidth: 3,
           fill: true,
-          tension: 0.1,
-          pointBackgroundColor: 'rgb(59, 130, 246)',
-          pointBorderColor: 'rgb(59, 130, 246)',
+          tension: 0.4,
+          pointBackgroundColor: 'rgb(16, 185, 129)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
           pointRadius: 6,
           pointHoverRadius: 8
         }
@@ -94,15 +95,24 @@ const chartData = computed(() => {
       {
         label: 'Balance',
         data,
-        borderColor: 'rgb(59, 130, 246)', // Blue color
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderWidth: 2,
+        borderColor: 'rgb(16, 185, 129)',
+        backgroundColor: (context: any) => {
+          const ctx = context.chart.ctx
+          const gradient = ctx.createLinearGradient(0, 0, 0, 400)
+          gradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)')
+          gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.15)')
+          gradient.addColorStop(1, 'rgba(16, 185, 129, 0.05)')
+          return gradient
+        },
+        borderWidth: 3,
         fill: true,
-        tension: 0.1,
-        pointBackgroundColor: 'rgb(59, 130, 246)',
-        pointBorderColor: 'rgb(59, 130, 246)',
-        pointRadius: 4,
-        pointHoverRadius: 6
+        tension: 0.4,
+        pointBackgroundColor: 'rgb(16, 185, 129)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointHoverBorderWidth: 3
       }
     ]
   }
@@ -119,6 +129,16 @@ const chartOptions = computed(() => ({
       display: false
     },
     tooltip: {
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      padding: 12,
+      cornerRadius: 8,
+      titleFont: {
+        size: 14,
+        weight: 'bold'
+      },
+      bodyFont: {
+        size: 13
+      },
       callbacks: {
         label: (context: any) => {
           // Use reversed data for tooltip since chart uses reversed data
@@ -136,19 +156,39 @@ const chartOptions = computed(() => ({
     x: {
       title: {
         display: true,
-        text: 'Date'
+        text: 'Date',
+        font: {
+          size: 12,
+          weight: '600'
+        }
       },
       grid: {
         display: false
+      },
+      ticks: {
+        font: {
+          size: 11
+        }
       }
     },
     y: {
       title: {
         display: true,
-        text: 'Balance'
+        text: 'Balance',
+        font: {
+          size: 12,
+          weight: '600'
+        }
+      },
+      grid: {
+        color: 'rgba(0, 0, 0, 0.05)',
+        drawBorder: false
       },
       ticks: {
-        callback: (value: any) => formatCurrency(value)
+        callback: (value: any) => formatCurrency(value),
+        font: {
+          size: 11
+        }
       }
     }
   },

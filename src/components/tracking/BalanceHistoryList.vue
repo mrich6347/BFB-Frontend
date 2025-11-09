@@ -11,11 +11,11 @@
     </div>
     <div v-else class="space-y-2">
       <!-- Show recent items first, with pagination for long lists -->
-      <div class="max-h-96 overflow-y-auto">
+      <div class="max-h-96 overflow-y-auto space-y-2">
         <div
           v-for="(point, index) in displayedHistory"
           :key="`${point.date}-${index}`"
-          class="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-accent/50 transition-colors"
+          class="flex items-center justify-between p-4 rounded-lg border bg-background hover:bg-accent/50 transition-all duration-200 hover:shadow-sm"
         >
           <div class="flex-1">
             <div class="flex items-center gap-3">
@@ -27,13 +27,27 @@
               </div>
             </div>
           </div>
-          <div class="text-right">
-            <div class="font-semibold" :class="[
+          <div class="text-right flex items-center gap-3">
+            <!-- Change indicator -->
+            <div v-if="getChangeFromPrevious(index)" class="flex items-center gap-1">
+              <div class="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium" :class="[
+                getChangeFromPrevious(index)!.amount >= 0
+                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+              ]">
+                <ArrowUp v-if="getChangeFromPrevious(index)!.amount >= 0" class="w-3 h-3" />
+                <ArrowDown v-else class="w-3 h-3" />
+                <span>{{ formatCurrency(Math.abs(getChangeFromPrevious(index)!.amount)) }}</span>
+                <span class="opacity-75">({{ getChangeFromPrevious(index)!.percentage }})</span>
+              </div>
+            </div>
+
+            <!-- Balance -->
+            <div class="font-semibold text-lg" :class="[
               point.balance < 0 ? 'text-destructive' : 'text-foreground'
             ]">
               {{ formatCurrency(point.balance) }}
             </div>
-
           </div>
         </div>
       </div>
@@ -61,6 +75,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { ArrowUp, ArrowDown } from 'lucide-vue-next'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { formatCurrency } from '@/utils/currencyUtil'
 import { useBalanceHistory } from '@/composables/tracking/useBalanceHistory'
@@ -90,7 +105,29 @@ const formatDate = (dateString: string): string => {
   })
 }
 
+const getChangeFromPrevious = (index: number): { amount: number; percentage: string } | null => {
+  // Balance history is sorted newest first
+  // So we compare with the next item (which is older)
+  if (index >= displayedHistory.value.length - 1) {
+    return null // No previous balance to compare
+  }
 
+  const currentBalance = displayedHistory.value[index].balance
+  const previousBalance = displayedHistory.value[index + 1].balance
+  const change = currentBalance - previousBalance
+
+  if (previousBalance === 0) {
+    return { amount: change, percentage: '0%' }
+  }
+
+  const percentageChange = (change / Math.abs(previousBalance)) * 100
+  const sign = percentageChange >= 0 ? '+' : ''
+
+  return {
+    amount: change,
+    percentage: `${sign}${percentageChange.toFixed(1)}%`
+  }
+}
 
 onMounted(loadBalanceHistory)
 
