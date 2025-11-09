@@ -178,11 +178,11 @@
                   {{ Math.round(goal.progress_percentage || 0) }}%
                 </span>
               </div>
-              <div class="flex items-center justify-between text-xs mb-3">
+              <div class="flex items-center justify-between mb-3">
                 <span class="text-2xl font-bold text-green-600">
                   {{ formatCurrency(goal.current_amount || 0) }}
                 </span>
-                <span class="text-muted-foreground">
+                <span class="text-sm text-muted-foreground">
                   of {{ formatCurrency(goal.target_amount) }}
                 </span>
               </div>
