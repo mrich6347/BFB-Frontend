@@ -50,19 +50,8 @@
       @media (max-width: 767px) {
         /* Prevent pull-to-refresh and overscroll bounce on mobile */
         html, body {
-          overscroll-behavior: none;
-          -webkit-overflow-scrolling: touch;
-          position: fixed;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-        }
-
-        /* Allow scrolling within the app container */
-        #app {
-          width: 100%;
-          height: 100%;
-          overflow: auto;
+          overscroll-behavior-y: none;
+          overscroll-behavior-x: none;
           -webkit-overflow-scrolling: touch;
         }
 
