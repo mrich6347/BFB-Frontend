@@ -19,7 +19,8 @@
     </div>
 
     <!-- Content -->
-    <div class="flex-1 overflow-auto pb-20 px-4 pt-4 space-y-4">
+    <div class="flex-1 overflow-auto px-4 pt-4 space-y-4" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));">
+
       <!-- Assets & Liabilities Summary Cards -->
       <div class="grid grid-cols-2 gap-3">
         <!-- Total Assets Card -->
