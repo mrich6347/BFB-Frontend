@@ -74,6 +74,7 @@
       @close="closeAssignMoney"
       @save="handleAssignMoney"
       @cover-overspending="handleCoverOverspending"
+      @move-money="handleMoveMoney"
     />
   </div>
 </template>
@@ -88,6 +89,7 @@ import { useAccountStore } from '@/stores/account.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import { useMoveMoneyBetweenCategories } from '@/composables/categories/category-write/useMoveMoneyBetweenCategories'
 import { usePullFromReadyToAssign } from '@/composables/categories/category-write/usePullFromReadyToAssign'
+import { useMoveMoneyToReadyToAssign } from '@/composables/categories/category-write/useMoveMoneyToReadyToAssign'
 import { useUpdateCategoryBalance } from '@/composables/categories/category-write/useUpdateCategoryBalance'
 import { AccountService } from '@/services/account.service'
 import { TrackingAccountService } from '@/services/tracking-account.service'
@@ -105,6 +107,7 @@ const accountStore = useAccountStore()
 const { createTransaction } = useTransactionOperations()
 const { moveMoney } = useMoveMoneyBetweenCategories()
 const { pullFromReadyToAssign } = usePullFromReadyToAssign()
+const { moveMoneyToReadyToAssign } = useMoveMoneyToReadyToAssign()
 const { updateCategoryBalance } = useUpdateCategoryBalance()
 const $toast = useToast()
 
@@ -248,6 +251,35 @@ const handleCoverOverspending = async (sourceCategoryId: string, amount: number)
     // Optimistic update provides instant feedback, no toast needed
   } catch (error) {
     console.error('Failed to cover overspending:', error)
+    // Error handling is done in the composables with optimistic rollback
+  }
+}
+
+const handleMoveMoney = async (destinationCategoryId: string, amount: number) => {
+  if (!selectedCategory.value) return
+
+  // Capture the source category ID before any async operations
+  const sourceCategoryId = selectedCategory.value.id
+
+  console.log('handleMoveMoney called:', {
+    sourceCategoryId,
+    destinationCategoryId,
+    amount,
+    selectedCategoryAvailable: selectedCategory.value.available
+  })
+
+  try {
+    // If destination is ready-to-assign, move to there
+    if (destinationCategoryId === 'ready-to-assign') {
+      await moveMoneyToReadyToAssign(sourceCategoryId, amount)
+    } else {
+      // Move money from source category to destination category
+      await moveMoney(sourceCategoryId, destinationCategoryId, amount)
+    }
+
+    // Optimistic update provides instant feedback, no toast needed
+  } catch (error) {
+    console.error('Failed to move money:', error)
     // Error handling is done in the composables with optimistic rollback
   }
 }
