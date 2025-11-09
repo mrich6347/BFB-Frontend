@@ -17,7 +17,7 @@
     </div>
 
     <!-- Form -->
-    <div class="flex-1 overflow-auto p-4 space-y-4">
+    <div class="flex-1 overflow-auto p-4 space-y-4" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));">
       <!-- Amount Type Toggle -->
       <div class="flex gap-2">
         <button
@@ -95,21 +95,21 @@
           Mark as cleared
         </label>
       </div>
-    </div>
 
-    <!-- Delete Button at Bottom -->
-    <div class="sticky bottom-0 bg-background border-t border-border p-4">
-      <button
-        @click="handleDelete"
-        :disabled="isDeleting"
-        class="w-full py-3 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <span v-if="isDeleting" class="inline-block animate-spin">⏳</span>
-        <template v-else>
-          <TrashIcon class="h-5 w-5" />
-          Delete Transaction
-        </template>
-      </button>
+      <!-- Delete Button -->
+      <div class="pt-4">
+        <button
+          @click="handleDelete"
+          :disabled="isDeleting"
+          class="w-full py-3 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span v-if="isDeleting" class="inline-block animate-spin">⏳</span>
+          <template v-else>
+            <TrashIcon class="h-5 w-5" />
+            Delete Transaction
+          </template>
+        </button>
+      </div>
     </div>
 
     <!-- Category Picker Modal -->
