@@ -32,6 +32,7 @@
                   <input
                     type="number"
                     v-model.number="startingBalance"
+                    @blur="handleStartingBalanceBlur"
                     class="w-full pl-8 pr-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="0.00"
                     step="0.01"
@@ -275,9 +276,17 @@ const totalInterest = computed(() => {
 })
 
 const interestPercentage = computed(() => {
-  if (finalBalance.value === 0) return 0
-  return ((totalInterest.value / finalBalance.value) * 100).toFixed(1)
+  if (finalBalance.value === 0) return '0.0'
+  const percentage = (totalInterest.value / finalBalance.value) * 100
+  return (percentage || 0).toFixed(1)
 })
+
+// Handler to ensure starting balance defaults to 0 when empty
+const handleStartingBalanceBlur = () => {
+  if (startingBalance.value === null || startingBalance.value === undefined || isNaN(startingBalance.value)) {
+    startingBalance.value = 0
+  }
+}
 
 onMounted(() => {
   // Load accounts if not already loaded
