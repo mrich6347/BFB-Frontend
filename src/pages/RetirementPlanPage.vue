@@ -35,11 +35,11 @@
                     class="w-full pl-8 pr-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="0.00"
                     step="0.01"
-                    readonly
+                    min="0"
                   />
                 </div>
                 <p class="mt-1 text-xs text-muted-foreground">
-                  Sum of all tracking accounts: {{ formatCurrency(trackingAccountsTotal) }}
+                  Defaults to sum of tracking accounts: {{ formatCurrency(trackingAccountsTotal) }}
                 </p>
               </div>
 
@@ -212,6 +212,7 @@ const currentAge = ref(27)
 const retirementAge = ref(60)
 const monthlyContribution = ref(2000)
 const annualReturnPercent = ref(8)
+const startingBalance = ref(0)
 
 // Computed values
 const currentBudgetId = computed(() => budgetStore.currentBudget?.id || '')
@@ -221,7 +222,10 @@ const trackingAccountsTotal = computed(() => {
   return trackingAccounts.reduce((sum, account) => sum + (account.working_balance || 0), 0)
 })
 
-const startingBalance = computed(() => trackingAccountsTotal.value)
+// Initialize starting balance with tracking accounts total
+onMounted(() => {
+  startingBalance.value = trackingAccountsTotal.value
+})
 
 const annualReturnRate = computed(() => annualReturnPercent.value / 100)
 
