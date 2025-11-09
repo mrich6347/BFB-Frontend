@@ -64,13 +64,13 @@
           </p>
         </div>
 
-        <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-8 max-w-7xl mx-auto">
           <!-- Feature 1 -->
           <div class="text-center group">
             <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
               <div class="w-8 h-8 bg-primary rounded-lg"></div>
             </div>
-            <h3 class="text-xl font-semibold mb-3 text-foreground">Smart Categories</h3>
+            <h3 class="text-xl font-semibold mb-3 text-foreground">Smart Budgeting</h3>
             <p class="text-muted-foreground">Organize your budget with intelligent category management and real-time balance tracking.</p>
           </div>
 
@@ -79,8 +79,8 @@
             <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
               <div class="w-8 h-8 bg-primary rounded-lg"></div>
             </div>
-            <h3 class="text-xl font-semibold mb-3 text-foreground">Team Goals</h3>
-            <p class="text-muted-foreground">Collaborate with family and friends on shared financial goals and savings targets.</p>
+            <h3 class="text-xl font-semibold mb-3 text-foreground">Investment Tracking</h3>
+            <p class="text-muted-foreground">Track your investments and watch your portfolio grow with detailed analytics.</p>
           </div>
 
           <!-- Feature 3 -->
@@ -88,8 +88,26 @@
             <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
               <div class="w-8 h-8 bg-primary rounded-lg"></div>
             </div>
-            <h3 class="text-xl font-semibold mb-3 text-foreground">Easy Tracking</h3>
-            <p class="text-muted-foreground">Effortlessly track transactions and monitor your spending patterns with detailed insights.</p>
+            <h3 class="text-xl font-semibold mb-3 text-foreground">Retirement Planning</h3>
+            <p class="text-muted-foreground">Plan your future with powerful retirement calculators and projection tools.</p>
+          </div>
+
+          <!-- Feature 4 -->
+          <div class="text-center group">
+            <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+              <div class="w-8 h-8 bg-primary rounded-lg"></div>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-foreground">Shared Goals</h3>
+            <p class="text-muted-foreground">Collaborate with family and friends on shared financial goals and savings targets.</p>
+          </div>
+
+          <!-- Feature 5 -->
+          <div class="text-center group">
+            <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+              <div class="w-8 h-8 bg-primary rounded-lg"></div>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-foreground">Net Worth Tracking</h3>
+            <p class="text-muted-foreground">Monitor your complete financial picture with comprehensive net worth tracking and insights.</p>
           </div>
         </div>
       </div>
@@ -118,7 +136,7 @@
               </div>
               <div class="flex items-center gap-2 text-muted-foreground">
                 <div class="w-2 h-2 bg-primary rounded-full"></div>
-                <span>Dark & Light Mode</span>
+                <span>Ready to Assign</span>
               </div>
             </div>
           </div>
@@ -128,18 +146,94 @@
             <div class="relative max-w-2xl mx-auto">
               <!-- Main Image -->
               <img
-                src="/category-budgeting.png"
-                alt="Category Budgeting Interface"
+                src="/v2/main-budget-page.png"
+                alt="Main Budget Interface"
                 class="w-full rounded-2xl shadow-2xl border border-border/50"
               />
-              <!-- Light Mode Comparison (Floating) -->
-              <div class="absolute -bottom-4 -right-4 w-1/2 opacity-90">
-                <img
-                  src="/category-budgeting-light.png"
-                  alt="Light Mode Category Budgeting"
-                  class="w-full rounded-xl shadow-xl border border-border/50"
-                />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= INVESTMENT TRACKING FEATURE ================= -->
+    <section class="py-16 md:py-24">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row-reverse items-center gap-16">
+          <!-- Content -->
+          <div class="flex-1 text-center lg:text-left">
+            <h2 class="text-3xl md:text-5xl font-bold mb-6 text-foreground">
+              Track Your <span class="text-primary">Investments</span>
+            </h2>
+            <p class="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
+              Monitor your investment portfolio with ease. Track stocks, bonds, and other assets, visualize performance over time, and make data-driven decisions to grow your wealth.
+            </p>
+            <div class="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Portfolio Tracking</span>
               </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Performance Analytics</span>
+              </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Asset Allocation</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Image Showcase -->
+          <div class="flex-1 relative">
+            <div class="relative max-w-2xl mx-auto">
+              <img
+                src="/v2/track-investments-page.png"
+                alt="Investment Tracking Interface"
+                class="w-full rounded-2xl shadow-2xl border border-border/50"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RETIREMENT PLANNING FEATURE ================= -->
+    <section class="py-16 md:py-24">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row items-center gap-16">
+          <!-- Content -->
+          <div class="flex-1 text-center lg:text-left">
+            <h2 class="text-3xl md:text-5xl font-bold mb-6 text-foreground">
+              Plan Your <span class="text-primary">Retirement</span>
+            </h2>
+            <p class="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
+              Visualize your retirement future with powerful planning tools. Set your retirement age, track contributions, and see how compound interest works in your favor with interactive charts and projections.
+            </p>
+            <div class="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Retirement Calculator</span>
+              </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Growth Projections</span>
+              </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Visual Charts</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Image Showcase -->
+          <div class="flex-1 relative">
+            <div class="relative max-w-2xl mx-auto">
+              <img
+                src="/v2/retirement-planner-page.png"
+                alt="Retirement Planning Interface"
+                class="w-full rounded-2xl shadow-2xl border border-border/50"
+              />
             </div>
           </div>
         </div>
@@ -222,6 +316,48 @@
               <img
                 src="/transactions.png"
                 alt="Transaction Management Interface"
+                class="w-full rounded-2xl shadow-2xl border border-border/50"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= NET WORTH TRACKING FEATURE ================= -->
+    <section class="py-16 md:py-24">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col lg:flex-row-reverse items-center gap-16">
+          <!-- Content -->
+          <div class="flex-1 text-center lg:text-left">
+            <h2 class="text-3xl md:text-5xl font-bold mb-6 text-foreground">
+              Complete <span class="text-primary">Net Worth</span> Tracking
+            </h2>
+            <p class="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
+              Get a complete picture of your financial health. Track all your assets and liabilities in one place, visualize your net worth over time, and make informed decisions about your financial future.
+            </p>
+            <div class="flex flex-wrap justify-center lg:justify-start gap-4 mb-8">
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Asset Tracking</span>
+              </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Liability Management</span>
+              </div>
+              <div class="flex items-center gap-2 text-muted-foreground">
+                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                <span>Visual Analytics</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Image Showcase -->
+          <div class="flex-1 relative">
+            <div class="relative max-w-2xl mx-auto">
+              <img
+                src="/v2/net-worth-page.png"
+                alt="Net Worth Tracking Interface"
                 class="w-full rounded-2xl shadow-2xl border border-border/50"
               />
             </div>
