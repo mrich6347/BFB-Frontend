@@ -2,18 +2,24 @@
   <div class="h-screen flex flex-col bg-background">
     <!-- Simple Header -->
     <div class="sticky top-0 z-10 bg-background border-b border-border" style="padding-top: max(3rem, env(safe-area-inset-top));">
-      <div class="px-4 pb-3 space-y-2">
+      <div class="px-4 pb-3">
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-lg font-semibold text-foreground">{{ budgetStore.currentBudget?.name }}</h1>
             <p class="text-sm text-muted-foreground">{{ budgetStore.currentMonthName }}</p>
           </div>
-          <div class="text-right">
-            <p class="text-xs text-muted-foreground">Ready to Assign</p>
-            <p class="text-lg font-semibold" :class="getReadyToAssignColorClass()">
-              {{ formatCurrency(budgetStore.readyToAssign) }}
-            </p>
-          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sticky Ready to Assign Banner -->
+    <div class="sticky top-[calc(3rem+3.5rem)] z-10 px-4 py-3" :class="getReadyToAssignBgClass()">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium opacity-90">Ready to Assign</p>
+          <p class="text-2xl font-bold" :class="getReadyToAssignTextClass()">
+            {{ formatCurrency(budgetStore.readyToAssign) }}
+          </p>
         </div>
       </div>
     </div>
@@ -150,13 +156,24 @@ const getAvailableColorClass = (amount: number) => {
   return 'text-muted-foreground'
 }
 
-// Get color class for Ready to Assign
-const getReadyToAssignColorClass = () => {
+// Get background class for Ready to Assign banner
+const getReadyToAssignBgClass = () => {
   const amount = budgetStore.readyToAssign
   if (amount > 0) {
-    return 'text-emerald-600 dark:text-emerald-400'
+    return 'bg-emerald-500/20 dark:bg-emerald-500/10'
   } else if (amount < 0) {
-    return 'text-red-600 dark:text-red-400'
+    return 'bg-red-500/20 dark:bg-red-500/10'
+  }
+  return 'bg-muted/50'
+}
+
+// Get text color class for Ready to Assign
+const getReadyToAssignTextClass = () => {
+  const amount = budgetStore.readyToAssign
+  if (amount > 0) {
+    return 'text-emerald-700 dark:text-emerald-300'
+  } else if (amount < 0) {
+    return 'text-red-700 dark:text-red-300'
   }
   return 'text-foreground'
 }
