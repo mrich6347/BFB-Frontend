@@ -226,6 +226,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { PlusIcon, XIcon, ChevronLeftIcon, DollarSignIcon, ArrowRightLeftIcon, CreditCardIcon } from 'lucide-vue-next'
 import { useAccountStore } from '@/stores/account.store'
+import { useBudgetStore } from '@/stores/budget.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { AccountResponse } from '@/types/DTO/account.dto'
@@ -249,6 +250,7 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const accountStore = useAccountStore()
+const budgetStore = useBudgetStore()
 const { deleteTransaction, updateTransaction } = useTransactionOperations()
 
 const showFlow = ref(false)
@@ -352,12 +354,18 @@ const handleUpdateBalance = (accountId: string, newBalance: number) => {
   currentStep.value = 'account'
 }
 
-const handleNavigate = (tab: 'budget' | 'accounts' | 'networth') => {
+const handleNavigate = async (tab: 'budget' | 'accounts' | 'networth') => {
   if (tab === 'budget') {
-    closeFlow()
+    const budgetId = budgetStore.currentBudget?.id
+    if (budgetId) {
+      // Navigate first, then close modal after navigation completes
+      await router.push(`/budget/${budgetId}`)
+      closeFlow()
+    }
   } else if (tab === 'networth') {
+    // Navigate first, then close modal after navigation completes
+    await router.push('/net-worth')
     closeFlow()
-    router.push('/net-worth')
   }
   // Accounts tab is already the current view, no action needed
 }
