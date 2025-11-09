@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <!-- Category List - scrollable area -->
+    <!-- Category List - scrollable area with bottom nav padding -->
     <div class="flex-1 overflow-y-auto p-4 space-y-6" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));">
       <div
         v-for="group in visibleGroupsWithCategories"
@@ -52,8 +52,15 @@
       </div>
     </div>
 
+    <!-- Mobile Bottom Navigation -->
+    <MobileBottomNav
+      active-tab="budget"
+      @navigate="handleNavigate"
+    />
+
     <!-- Mobile Transaction Flow -->
     <MobileTransactionFlow
+      ref="transactionFlowRef"
       @save-transaction="handleSaveTransaction"
       @save-transfer="handleSaveTransfer"
       @save-payment="handleSavePayment"
@@ -81,6 +88,7 @@ import CategoryService from '@/services/category.service'
 import { formatCurrency } from '@/utils/currencyUtil'
 import MobileTransactionFlow from '@/components/mobile/MobileTransactionFlow.vue'
 import MobileAssignMoney from '@/components/mobile/MobileAssignMoney.vue'
+import MobileBottomNav from '@/components/mobile/MobileBottomNav.vue'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 
@@ -92,6 +100,7 @@ const $toast = useToast()
 
 const showAssignMoney = ref(false)
 const selectedCategory = ref<CategoryResponse | null>(null)
+const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
 
 // Get categories for a specific group with balances
 const getCategoriesForGroup = (groupId: string) => {
@@ -222,6 +231,14 @@ const handleAssignMoney = async (categoryId: string, newAssigned: number) => {
   } catch (error) {
     $toast.error('Failed to assign money')
   }
+}
+
+const handleNavigate = (tab: 'budget' | 'accounts') => {
+  if (tab === 'accounts') {
+    // Open the transaction flow to account selection
+    transactionFlowRef.value?.openFlow()
+  }
+  // Budget tab is already the current view, no action needed
 }
 </script>
 

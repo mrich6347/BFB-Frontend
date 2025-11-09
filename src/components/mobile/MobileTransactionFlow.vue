@@ -1,18 +1,9 @@
 <template>
-  <!-- Floating Action Button -->
-  <button
-    v-if="!showFlow"
-    @click="startFlow"
-    class="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-all active:scale-95"
-  >
-    <PlusIcon class="h-6 w-6" />
-  </button>
-
   <!-- Full Screen Modal Flow -->
   <Teleport to="body">
     <div
       v-if="showFlow"
-      class="fixed inset-0 z-50 bg-background"
+      class="fixed inset-0 z-50 bg-background flex flex-col"
     >
       <!-- Step 1: Select Account -->
       <div v-if="currentStep === 'account'" class="h-full flex flex-col">
@@ -228,6 +219,15 @@ const startFlow = () => {
   selectedAccount.value = null
   selectedAction.value = null
 }
+
+// Expose openFlow for parent components
+const openFlow = () => {
+  startFlow()
+}
+
+defineExpose({
+  openFlow
+})
 
 const closeFlow = () => {
   showFlow.value = false
