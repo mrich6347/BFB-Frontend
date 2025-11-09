@@ -9,7 +9,10 @@
           v-model="searchQuery"
           type="text"
           :placeholder="placeholder"
-          class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+          :class="[
+            'w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent',
+            !isSearching && selectedCategoryBalance !== null ? 'pr-20' : ''
+          ]"
           @focus="handleInputFocus"
           @blur="handleInputBlur"
           @keydown="handleInputKeydown"
@@ -48,16 +51,16 @@
             @click="selectReadyToAssign"
             @keydown.enter="selectReadyToAssign"
             :class="[
-              'w-full px-4 py-2 text-left text-sm focus:outline-none flex items-center justify-between transition-colors',
+              'w-full px-4 py-2 text-left text-sm focus:outline-none flex items-center justify-between gap-2 transition-colors',
               isHighlighted(-1, 0)
                 ? 'bg-accent/50'
                 : 'hover:bg-accent/30'
             ]"
           >
-            <span :class="isHighlighted(-1, 0) ? 'text-white' : ''">Ready to Assign</span>
+            <span :class="['truncate', isHighlighted(-1, 0) ? 'text-white' : '']">Ready to Assign</span>
             <span
               :class="[
-                'text-sm font-semibold ml-2',
+                'text-sm font-semibold shrink-0',
                 isHighlighted(-1, 0) ? 'text-white' : (
                   budgetStore.readyToAssign > 0 ? 'text-emerald-400' :
                   budgetStore.readyToAssign < 0 ? 'text-red-400' :
@@ -86,16 +89,16 @@
             @click="selectCategory(category)"
             @keydown.enter="selectCategory(category)"
             :class="[
-              'w-full px-4 py-2 text-left text-sm focus:outline-none flex items-center justify-between transition-colors',
+              'w-full px-4 py-2 text-left text-sm focus:outline-none flex items-center justify-between gap-2 transition-colors',
               isHighlighted(groupIndex, categoryIndex)
                 ? 'bg-accent/50'
                 : 'hover:bg-accent/30'
             ]"
           >
-            <span :class="isHighlighted(groupIndex, categoryIndex) ? 'text-white' : ''">{{ category.name }}</span>
+            <span :class="['truncate', isHighlighted(groupIndex, categoryIndex) ? 'text-white' : '']">{{ category.name }}</span>
             <span
               :class="[
-                'text-sm font-semibold ml-2',
+                'text-sm font-semibold shrink-0',
                 isHighlighted(groupIndex, categoryIndex) ? 'text-white' : (
                   getCategoryAvailable(category) > 0 ? 'text-emerald-400' :
                   getCategoryAvailable(category) < 0 ? 'text-red-400' :
