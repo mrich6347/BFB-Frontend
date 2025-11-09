@@ -144,12 +144,20 @@
           <!-- Image Showcase -->
           <div class="flex-1 relative">
             <div class="relative max-w-2xl mx-auto">
-              <!-- Main Image -->
+              <!-- Main Image (Dark Mode) -->
               <img
                 src="/v2/main-budget-page.png"
-                alt="Main Budget Interface"
+                alt="Main Budget Interface - Dark Mode"
                 class="w-full rounded-2xl shadow-2xl border border-border/50"
               />
+              <!-- Light Mode Comparison (Floating) -->
+              <div class="absolute -bottom-4 -right-4 w-1/2 opacity-90">
+                <img
+                  src="/v2/main-budget-page-light.png"
+                  alt="Main Budget Interface - Light Mode"
+                  class="w-full rounded-xl shadow-xl border border-border/50"
+                />
+              </div>
             </div>
           </div>
         </div>
