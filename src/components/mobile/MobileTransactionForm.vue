@@ -8,18 +8,12 @@
       <h2 class="text-lg font-semibold">
         {{ defaultTransactionType === 'inflow' ? 'Got Paid' : 'Add Transaction' }}
       </h2>
-      <button
-        @click="handleSubmit"
-        :disabled="!isValid || isLoading"
-        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm min-w-[60px]"
-      >
-        <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
-        <span v-else>Save</span>
-      </button>
+      <div class="w-[60px]"></div>
     </div>
 
     <!-- Form -->
-    <div class="flex-1 overflow-auto p-4 space-y-4">
+    <div class="flex-1 overflow-auto p-4 space-y-4" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));">
+
       <!-- Amount Type Toggle (only for regular transactions, not "Got Paid") -->
       <div v-if="defaultTransactionType === 'outflow'" class="flex gap-2">
         <button
@@ -97,6 +91,18 @@
           placeholder="Enter memo..."
           class="w-full px-4 py-3 border border-input rounded-md bg-background"
         />
+      </div>
+
+      <!-- Save Button -->
+      <div class="pt-4">
+        <button
+          @click="handleSubmit"
+          :disabled="!isValid || isLoading"
+          class="w-full py-3 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
+          <span v-else>Save</span>
+        </button>
       </div>
     </div>
 

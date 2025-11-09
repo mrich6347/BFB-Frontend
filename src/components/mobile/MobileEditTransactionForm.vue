@@ -6,14 +6,7 @@
         <ChevronLeftIcon class="h-5 w-5" />
       </button>
       <h2 class="text-lg font-semibold">Edit Transaction</h2>
-      <button
-        @click="handleSubmit"
-        :disabled="!isValid || isLoading"
-        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm min-w-[60px]"
-      >
-        <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
-        <span v-else>Save</span>
-      </button>
+      <div class="w-[60px]"></div>
     </div>
 
     <!-- Form -->
@@ -110,8 +103,20 @@
         </label>
       </div>
 
-      <!-- Delete Button -->
+      <!-- Save Button -->
       <div class="pt-4">
+        <button
+          @click="handleSubmit"
+          :disabled="!isValid || isLoading"
+          class="w-full py-3 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
+          <span v-else>Save</span>
+        </button>
+      </div>
+
+      <!-- Delete Button -->
+      <div>
         <button
           @click="handleDelete"
           :disabled="isDeleting"

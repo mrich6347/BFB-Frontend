@@ -6,18 +6,12 @@
         <ChevronLeftIcon class="h-5 w-5" />
       </button>
       <h2 class="text-lg font-semibold">Update Balance</h2>
-      <button
-        @click="handleSubmit"
-        :disabled="!isValid || isLoading"
-        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm min-w-[60px]"
-      >
-        <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
-        <span v-else>Save</span>
-      </button>
+      <div class="w-[60px]"></div>
     </div>
 
     <!-- Form -->
-    <div class="flex-1 overflow-auto p-4 space-y-4">
+    <div class="flex-1 overflow-auto p-4 space-y-4" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));">
+
       <!-- Account Name -->
       <div class="text-center py-4">
         <div class="text-sm text-muted-foreground mb-1">{{ accountName }}</div>
@@ -41,6 +35,18 @@
       <!-- Info -->
       <div class="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
         Enter the current balance of this account as shown in your bank or institution.
+      </div>
+
+      <!-- Save Button -->
+      <div class="pt-4">
+        <button
+          @click="handleSubmit"
+          :disabled="!isValid || isLoading"
+          class="w-full py-3 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
+          <span v-else>Save</span>
+        </button>
       </div>
     </div>
   </div>
