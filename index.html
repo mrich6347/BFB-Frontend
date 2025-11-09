@@ -3,14 +3,19 @@
   <head>
     <meta charset="UTF-8">
     <link rel="icon" href="/favicon.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>Budget Friendly Budget</title>
 
     <!-- iOS PWA Support -->
     <meta name="apple-mobile-web-app-title" content="BFB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/favicon.ico">
 
     <!-- Android PWA Support -->
     <meta name="theme-color" content="#000000">
+    <meta name="mobile-web-app-capable" content="yes">
     <script>
       // Prevent flash of incorrect theme by applying theme before page loads
       (function() {
@@ -38,6 +43,38 @@
           padding-left: max(0px, env(safe-area-inset-left));
           padding-right: max(0px, env(safe-area-inset-right));
           padding-bottom: max(0px, env(safe-area-inset-bottom));
+        }
+      }
+
+      /* Mobile-only: Native app feel optimizations */
+      @media (max-width: 767px) {
+        /* Prevent pull-to-refresh and overscroll bounce on mobile */
+        html, body {
+          overscroll-behavior-y: none;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* Prevent text selection on UI elements (buttons, nav, etc) */
+        button, nav, header, [role="button"] {
+          -webkit-user-select: none;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Prevent callout menu on long press for images and links in mobile UI */
+        img, a {
+          -webkit-touch-callout: none;
+        }
+
+        /* Allow text selection in input fields and content areas */
+        input, textarea, [contenteditable="true"], p, span {
+          -webkit-user-select: text;
+          user-select: text;
+        }
+
+        /* Smooth momentum scrolling for iOS */
+        .overflow-auto, .overflow-y-auto, .overflow-x-auto {
+          -webkit-overflow-scrolling: touch;
         }
       }
     </style>
