@@ -19,7 +19,7 @@
     </div>
 
     <!-- Category List - scrollable area with bottom nav padding -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-6" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));">
+    <div class="flex-1 overflow-y-auto p-4 space-y-6 pb-24">
       <div
         v-for="group in visibleGroupsWithCategories"
         :key="group.id"

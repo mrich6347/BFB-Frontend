@@ -19,7 +19,7 @@
     </div>
 
     <!-- Content -->
-    <div class="flex-1 overflow-y-auto px-4 pt-4 space-y-4" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));">
+    <div class="flex-1 overflow-y-auto px-4 pt-4 space-y-4 pb-24">
 
       <!-- Assets & Liabilities Summary Cards -->
       <div class="grid grid-cols-2 gap-3">
