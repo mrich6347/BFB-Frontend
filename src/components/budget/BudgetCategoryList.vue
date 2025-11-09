@@ -226,6 +226,20 @@
         </div>
       </div>
 
+      <!-- Total Row -->
+      <div class="border-t-2 border-border mt-4 pt-2">
+        <div class="grid grid-cols-[minmax(0,3fr)_minmax(0,130px)_minmax(0,130px)_minmax(0,130px)] gap-6 px-2 py-1.5">
+          <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Total Available
+          </div>
+          <div></div>
+          <div></div>
+          <div class="text-right text-sm font-semibold">
+            {{ formatCurrency(totalAvailable) }}
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -380,6 +394,14 @@ const {
 } = useMoneyMovement()
 
 const { flashCategoriesWithMoney, getBadgeVariant } = useCategoryAnimations()
+
+// Compute total available across all categories plus ready to assign
+const totalAvailable = computed(() => {
+  const categoriesTotal = sortedCategoryGroups.value.reduce((total, group) => {
+    return total + getGroupTotals(group.id).available
+  }, 0)
+  return categoriesTotal + (budgetStore.readyToAssign || 0)
+})
 
 // Expose the flash method to parent components
 defineExpose({
