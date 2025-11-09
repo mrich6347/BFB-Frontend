@@ -176,7 +176,7 @@
       <MobileEditTransactionForm
         v-else-if="currentStep === 'edit' && editingTransaction"
         :transaction="editingTransaction"
-        @close="closeFlow"
+        @close="currentStep = 'action'"
         @save="handleUpdateTransaction"
         @delete="handleDeleteTransaction"
       />

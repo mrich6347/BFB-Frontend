@@ -78,12 +78,14 @@
         class="fixed inset-0 z-[60] bg-background"
       >
         <div class="h-full flex flex-col">
-          <div class="sticky top-0 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
+          <div class="sticky top-0 bg-background border-b border-border px-4 flex items-center justify-between" style="padding-top: max(3rem, env(safe-area-inset-top)); padding-bottom: 0.75rem;">
             <button @click="showAccountPicker = false" class="p-2">
               <ChevronLeftIcon class="h-5 w-5" />
             </button>
             <h3 class="text-lg font-semibold">Select Account</h3>
-            <div class="w-10"></div>
+            <button @click="$emit('close')" class="p-2">
+              <XIcon class="h-5 w-5" />
+            </button>
           </div>
 
           <div class="flex-1 overflow-auto p-4 space-y-4">
@@ -108,13 +110,15 @@
         class="fixed inset-0 z-[60] bg-background"
       >
         <div class="h-full flex flex-col">
-          <div class="sticky top-0 bg-background border-b border-border px-4 py-3 space-y-3">
+          <div class="sticky top-0 bg-background border-b border-border px-4 space-y-3" style="padding-top: max(3rem, env(safe-area-inset-top)); padding-bottom: 0.75rem;">
             <div class="flex items-center justify-between">
               <button @click="showCategoryPicker = false" class="p-2">
                 <ChevronLeftIcon class="h-5 w-5" />
               </button>
               <h3 class="text-lg font-semibold">Select Category</h3>
-              <div class="w-10"></div>
+              <button @click="$emit('close')" class="p-2">
+                <XIcon class="h-5 w-5" />
+              </button>
             </div>
 
             <!-- Search Input -->
