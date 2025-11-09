@@ -129,6 +129,16 @@
     font-feature-settings: 'rlig' 1, 'calt' 1; /* Enable optional ligatures for cleaner text */
   }
 
+  /* Disable text selection on buttons and interactive elements */
+  button,
+  a,
+  [role="button"],
+  .cursor-pointer {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+
   /* Hide number input spinner arrows */
   input[type='number']::-webkit-inner-spin-button,
   input[type='number']::-webkit-outer-spin-button {
