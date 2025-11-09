@@ -12,7 +12,8 @@
         </span>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-3">
+        <!-- Delete button (only when transactions selected) -->
         <Button
           v-if="selectedCount"
           variant="ghost"
@@ -21,36 +22,35 @@
           @click="deleteSelectedTransactions"
         >
           <TrashIcon class="w-4 h-4" />
-          Delete
+          Delete ({{ selectedCount }})
         </Button>
+
+        <!-- Divider when delete is shown -->
+        <div v-if="selectedCount" class="h-6 w-px bg-border"></div>
+
+        <!-- Primary action button -->
         <Button
           size="sm"
           @click="openAddTransactionModal"
-          class="flex items-center gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          class="flex items-center gap-2"
         >
           <PlusIcon class="w-4 h-4" />
-          I Spent Money
+          Add Transaction
         </Button>
-        <Button
-          v-if="isCashAccount"
-          size="sm"
-          variant="outline"
-          @click="openGotPaidModal"
-          class="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 hover:text-white border-green-600"
-        >
-          <PlusIcon class="w-4 h-4" />
-          I Got Paid
-        </Button>
+
+        <!-- Transfer button for cash accounts -->
         <Button
           v-if="isCashAccount"
           size="sm"
           variant="outline"
           @click="showTransferModal = true"
-          class="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 hover:text-white border-blue-600"
+          class="flex items-center gap-2 border-primary/50 text-primary hover:bg-primary/10 hover:border-primary"
         >
           <ArrowRightLeftIcon class="w-4 h-4" />
-          Transfer Money
+          Transfer
         </Button>
+
+        <!-- Make Payment button for credit accounts -->
         <Button
           v-if="isCreditAccount"
           size="sm"
@@ -59,7 +59,7 @@
           class="flex items-center gap-2"
         >
           <CreditCardIcon class="w-4 h-4" />
-          Make a Payment
+          Make Payment
         </Button>
       </div>
     </div>
@@ -121,7 +121,6 @@
       :transaction="editingTransaction"
       :account-id="accountId"
       :is-submitting="isSubmitting"
-      :default-transaction-type="defaultTransactionType"
       @close="closeModal"
       @save="handleSaveTransaction"
     />
@@ -191,8 +190,6 @@ const editingTransaction = ref<TransactionResponse | null>(null)
 const showReconciled = ref(false)
 const selectedTransactionIds = ref<string[]>([])
 const lastSelectedId = ref<string | null>(null)
-const defaultTransactionType = ref<'inflow' | 'outflow'>('outflow')
-const isGotPaidTransaction = ref(false)
 
 // Check account type
 const currentAccount = computed(() => {
@@ -355,16 +352,7 @@ const toggleClearedHandler = async (transaction: TransactionResponse) => {
 }
 
 const openAddTransactionModal = () => {
-  defaultTransactionType.value = 'outflow'
   editingTransaction.value = null
-  isGotPaidTransaction.value = false
-  showAddTransactionModal.value = true
-}
-
-const openGotPaidModal = () => {
-  defaultTransactionType.value = 'inflow'
-  editingTransaction.value = null
-  isGotPaidTransaction.value = true
   showAddTransactionModal.value = true
 }
 
@@ -432,7 +420,6 @@ const closeModal = () => {
   showAddTransactionModal.value = false
   showEditTransactionModal.value = false
   editingTransaction.value = null
-  isGotPaidTransaction.value = false
 }
 
 const closeTransferModal = () => {
@@ -450,14 +437,15 @@ const handleSaveTransaction = async (transactionData: CreateTransactionDto | Upd
 
   isSubmitting.value = true
 
-  // Capture the editing transaction ID and "Got Paid" status before closing modal
+  // Capture the editing transaction ID and check if it's an inflow before closing modal
   const transactionIdToUpdate = editingTransaction.value?.id
-  const shouldTriggerConfetti = isGotPaidTransaction.value && !transactionIdToUpdate
+  const isInflow = transactionData.amount > 0
+  const shouldTriggerConfetti = isInflow && !transactionIdToUpdate
 
   // Close modal immediately for instant feedback (optimistic)
   closeModal()
 
-  // Trigger confetti IMMEDIATELY for "Got Paid" transactions (optimistic)!
+  // Trigger confetti IMMEDIATELY for inflow transactions (optimistic)!
   if (shouldTriggerConfetti) {
     // Small delay to let modal close animation start
     setTimeout(() => {

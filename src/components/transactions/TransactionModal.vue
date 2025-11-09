@@ -13,6 +13,37 @@
         validation-visibility="live"
         #default="{ state }"
       >
+        <!-- Inflow/Outflow Toggle -->
+        <div class="mb-4">
+          <label class="text-sm font-medium text-foreground mb-2 block">Type</label>
+          <div class="inline-flex rounded-md border border-input bg-background p-1">
+            <button
+              type="button"
+              @click="amountType = 'outflow'"
+              :class="[
+                'px-4 py-2 text-sm font-medium rounded transition-colors',
+                amountType === 'outflow'
+                  ? 'bg-destructive text-destructive-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              ]"
+            >
+              Outflow
+            </button>
+            <button
+              type="button"
+              @click="amountType = 'inflow'"
+              :class="[
+                'px-4 py-2 text-sm font-medium rounded transition-colors',
+                amountType === 'inflow'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              ]"
+            >
+              Inflow
+            </button>
+          </div>
+        </div>
+
         <!-- Category -->
         <div class="mb-4">
           <CategorySelector
@@ -41,8 +72,6 @@
             message: 'text-red-500 text-sm mt-1'
           }"
         />
-
-
 
         <!-- Amount -->
         <div ref="amountFieldRef">
