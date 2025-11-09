@@ -202,9 +202,9 @@
                 <UsersIcon class="h-4 w-4 mr-1" />
                 {{ goal.participants?.length || 0 }} participant{{ (goal.participants?.length || 0) !== 1 ? 's' : '' }}
               </div>
-              <div v-if="goal.target_date" class="flex items-center">
-                <CalendarIcon class="h-4 w-4 mr-1" />
-                {{ formatDate(goal.target_date) }}
+              <div v-if="getProjectedDate(goal)" class="flex items-center">
+                <span class="mr-1">🔮</span>
+                {{ formatDate(getProjectedDate(goal)) }}
               </div>
             </div>
 
@@ -316,9 +316,9 @@
                     <UsersIcon class="h-4 w-4 mr-1" />
                     {{ goal.participants?.length || 0 }} participant{{ (goal.participants?.length || 0) !== 1 ? 's' : '' }}
                   </div>
-                  <div v-if="goal.target_date" class="flex items-center">
-                    <CalendarIcon class="h-4 w-4 mr-1" />
-                    {{ formatDate(goal.target_date) }}
+                  <div v-if="getProjectedDate(goal)" class="flex items-center">
+                    <span class="mr-1">🔮</span>
+                    {{ formatDate(getProjectedDate(goal)) }}
                   </div>
                 </div>
 
@@ -399,7 +399,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { PlusIcon, TargetIcon, UsersIcon, CalendarIcon, AlertCircleIcon, MailIcon, UserPlusIcon, RefreshCwIcon, TrophyIcon } from 'lucide-vue-next'
+import { PlusIcon, TargetIcon, UsersIcon, AlertCircleIcon, MailIcon, UserPlusIcon, RefreshCwIcon, TrophyIcon } from 'lucide-vue-next'
 import { useSharedGoalOperations } from '../composables/shared-goals/useSharedGoalOperations'
 import { useGoalInvitations } from '../composables/shared-goals/useGoalInvitations'
 import { useSharedGoalsPageData } from '../composables/shared-goals/useSharedGoalsPageData'
@@ -489,6 +489,39 @@ const formatDate = (date: Date | string): string => {
     day: 'numeric',
     year: 'numeric'
   })
+}
+
+const getProjectedDate = (goal: SharedGoalResponse): Date | null => {
+  // If goal is already completed, don't show projection
+  if (goal.status === 'COMPLETED') {
+    return null
+  }
+
+  const currentAmount = goal.current_amount || 0
+  const targetAmount = goal.target_amount
+
+  // If already at or above target, no projection needed
+  if (currentAmount >= targetAmount) {
+    return null
+  }
+
+  // Calculate total monthly contributions from all participants
+  const totalMonthlyContribution = (goal.participants || []).reduce((sum, participant) => {
+    return sum + (participant.monthly_contribution || 0)
+  }, 0)
+
+  // If no monthly contributions set, can't project
+  if (totalMonthlyContribution <= 0) {
+    return null
+  }
+
+  const remainingAmount = targetAmount - currentAmount
+  const monthsToCompletion = Math.ceil(remainingAmount / totalMonthlyContribution)
+
+  const projectedDate = new Date()
+  projectedDate.setMonth(projectedDate.getMonth() + monthsToCompletion)
+
+  return projectedDate
 }
 
 const getStatusClasses = (status: GoalStatus): string => {

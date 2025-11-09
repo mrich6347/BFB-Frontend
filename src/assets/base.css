@@ -129,6 +129,18 @@
     font-feature-settings: 'rlig' 1, 'calt' 1; /* Enable optional ligatures for cleaner text */
   }
 
+  /* Hide number input spinner arrows */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield; /* Firefox */
+    appearance: textfield;
+  }
+
   /* Webkit scrollbar styling */
   ::-webkit-scrollbar {
     @apply w-1;  /* Thin scrollbar width */

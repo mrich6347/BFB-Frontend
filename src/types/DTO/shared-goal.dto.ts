@@ -102,7 +102,9 @@ export interface UpdateParticipantDto {
   category_id?: string;
 }
 
-
+export interface UpdateParticipantByCreatorDto {
+  monthly_contribution?: number;
+}
 
 export interface ParticipantWithProgressResponse extends GoalParticipantResponse {
   current_contribution: number;

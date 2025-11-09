@@ -66,33 +66,88 @@
       <!-- Participant Contributions -->
       <div v-if="goal.participants && goal.participants.length > 0" class="bg-card rounded-lg p-4 border">
         <h4 class="text-sm font-semibold text-foreground mb-3">Contributors</h4>
-        <div class="space-y-2">
+        <div class="space-y-3">
           <div
             v-for="participant in participantsWithContributions"
             :key="participant.id"
-            class="flex items-center justify-between py-2"
+            class="py-2"
           >
-            <div class="flex items-center space-x-2 flex-1 min-w-0">
-              <div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <span class="text-xs font-medium text-primary">
-                  {{ participant.user_profile.display_name?.charAt(0) || participant.user_profile.username.charAt(0) }}
-                </span>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="text-sm font-medium text-foreground truncate">
-                  {{ participant.user_profile.display_name || participant.user_profile.username }}
-                </div>
-                <div class="text-xs text-muted-foreground">
-                  {{ formatCurrency(participant.contribution_amount) }}
-                  <span v-if="participant.monthly_contribution" class="ml-1">
-                    ({{ formatCurrency(participant.monthly_contribution) }}/mo)
+            <div class="flex items-start justify-between">
+              <div class="flex items-start space-x-3 flex-1 min-w-0">
+                <div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span class="text-xs font-medium text-primary">
+                    {{ participant.user_profile.display_name?.charAt(0) || participant.user_profile.username.charAt(0) }}
                   </span>
                 </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-foreground truncate">
+                      {{ participant.user_profile.display_name || participant.user_profile.username }}
+                    </span>
+                    <span class="text-lg font-semibold text-green-600">
+                      {{ formatCurrency(participant.contribution_amount) }}
+                    </span>
+                    <button
+                      v-if="isCreator"
+                      @click="toggleEditParticipant(participant.id)"
+                      class="ml-1 p-1 hover:bg-muted rounded transition-colors"
+                      title="Edit monthly contribution"
+                    >
+                      <SettingsIcon class="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    </button>
+                  </div>
+
+                  <!-- Inline Edit Form -->
+                  <div v-if="editingParticipantId === participant.id" class="mt-2 space-y-2">
+                    <div class="flex items-center gap-2">
+                      <div class="relative flex-1 max-w-xs">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                        <input
+                          v-model="editMonthlyContribution"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          class="w-full pl-8 pr-4 py-1.5 text-sm bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          :class="{ 'border-destructive': editError }"
+                          @keyup.enter="saveEdit(participant)"
+                          @keyup.escape="cancelEdit"
+                        />
+                      </div>
+                      <button
+                        @click="saveEdit(participant)"
+                        :disabled="isSaving"
+                        class="px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+                      >
+                        {{ isSaving ? 'Saving...' : 'Save' }}
+                      </button>
+                      <button
+                        @click="cancelEdit"
+                        :disabled="isSaving"
+                        class="px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted rounded-md transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <p v-if="editError" class="text-xs text-destructive">{{ editError }}</p>
+                    <p class="text-xs text-muted-foreground">Monthly contribution estimate for projections</p>
+                  </div>
+
+                  <!-- Display monthly contribution when not editing -->
+                  <div v-else>
+                    <div v-if="participant.monthly_contribution" class="text-xs text-muted-foreground mt-0.5">
+                      (Contributing {{ formatCurrency(participant.monthly_contribution) }} a month)
+                    </div>
+                    <div v-else class="text-xs text-muted-foreground/60 mt-0.5">
+                      (No monthly contribution set)
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="text-right flex-shrink-0 ml-2">
-              <div class="text-sm font-bold text-foreground">
-                {{ participant.contribution_percentage.toFixed(1) }}%
+              <div class="text-right flex-shrink-0 ml-2">
+                <div class="text-sm font-bold text-foreground">
+                  {{ participant.contribution_percentage.toFixed(1) }}%
+                </div>
               </div>
             </div>
           </div>
@@ -103,10 +158,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { AlertCircleIcon } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { AlertCircleIcon, SettingsIcon } from 'lucide-vue-next'
 import { useGoalProgress } from '../../composables/shared-goals/useGoalProgress'
-import type { SharedGoalResponse } from '../../types/DTO/shared-goal.dto'
+import { useUserProfileStore } from '../../stores/user-profile.store'
+import { useSharedGoalsStore } from '../../stores/shared-goals.store'
+import { SharedGoalsService } from '../../services/shared-goals.service'
+import type { SharedGoalResponse, GoalParticipantResponse } from '../../types/DTO/shared-goal.dto'
 
 interface Props {
   goal: SharedGoalResponse
@@ -116,13 +174,29 @@ interface Props {
 
 const props = defineProps<Props>()
 
+const userProfileStore = useUserProfileStore()
+const sharedGoalsStore = useSharedGoalsStore()
+
+// Inline editing state
+const editingParticipantId = ref<string | null>(null)
+const editMonthlyContribution = ref('')
+const editError = ref('')
+const isSaving = ref(false)
+
 const {
   formatProgressPercentage,
   formatCurrency,
   getProgressColor,
   getProgressBarColor,
-  calculateProjections
+  calculateProjections,
+  loadGoalProgress
 } = useGoalProgress()
+
+// Check if current user is the creator
+const isCreator = computed(() => {
+  if (!userProfileStore.currentProfile || !props.goal.creator_profile) return false
+  return userProfileStore.currentProfile.username === props.goal.creator_profile.username
+})
 
 // Calculate projection data
 const projectionData = computed(() => {
@@ -158,5 +232,85 @@ const formatDate = (date: Date): string => {
     month: 'short',
     day: 'numeric'
   })
+}
+
+const toggleEditParticipant = (participantId: string) => {
+  if (editingParticipantId.value === participantId) {
+    cancelEdit()
+  } else {
+    const participant = props.goal.participants?.find(p => p.id === participantId)
+    if (participant) {
+      editingParticipantId.value = participantId
+      editMonthlyContribution.value = participant.monthly_contribution?.toString() || ''
+      editError.value = ''
+    }
+  }
+}
+
+const validateEdit = (): boolean => {
+  editError.value = ''
+
+  if (editMonthlyContribution.value === '') {
+    return true // Allow clearing the value
+  }
+
+  const value = parseFloat(editMonthlyContribution.value)
+
+  if (isNaN(value)) {
+    editError.value = 'Please enter a valid number'
+    return false
+  }
+
+  if (value < 0) {
+    editError.value = 'Amount must be 0 or greater'
+    return false
+  }
+
+  if (value > 999999.99) {
+    editError.value = 'Amount is too large'
+    return false
+  }
+
+  return true
+}
+
+const saveEdit = async (participant: GoalParticipantResponse) => {
+  if (!validateEdit()) {
+    return
+  }
+
+  try {
+    isSaving.value = true
+    editError.value = ''
+
+    const updateData = {
+      monthly_contribution: editMonthlyContribution.value ? parseFloat(editMonthlyContribution.value) : undefined
+    }
+
+    await SharedGoalsService.updateParticipantByCreator(props.goal.id, participant.id, updateData)
+
+    // Refresh goal progress
+    try {
+      const progressData = await loadGoalProgress(props.goal.id)
+      if (progressData) {
+        sharedGoalsStore.updateGoalProgress(props.goal.id, progressData.goal)
+      }
+    } catch (err) {
+      console.error('Failed to refresh goal progress:', err)
+    }
+
+    cancelEdit()
+  } catch (err: any) {
+    editError.value = err.response?.data?.message || 'Failed to update monthly contribution'
+    console.error('Error updating participant contribution:', err)
+  } finally {
+    isSaving.value = false
+  }
+}
+
+const cancelEdit = () => {
+  editingParticipantId.value = null
+  editMonthlyContribution.value = ''
+  editError.value = ''
 }
 </script>
