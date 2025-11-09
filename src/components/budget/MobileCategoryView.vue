@@ -32,16 +32,17 @@
 
         <!-- Categories in Group -->
         <div class="space-y-1">
-          <div
+          <button
             v-for="category in getCategoriesForGroup(group.id)"
             :key="category.id"
-            class="flex items-center justify-between px-4 py-3 bg-card rounded-md border border-border"
+            @click="openAssignMoney(category)"
+            class="w-full flex items-center justify-between px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors text-left"
           >
             <span class="text-sm text-foreground">{{ category.name }}</span>
             <span class="text-sm font-semibold" :class="getAvailableColorClass(category.available)">
               {{ formatCurrency(category.available) }}
             </span>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -57,26 +58,40 @@
       @save-transfer="handleSaveTransfer"
       @save-payment="handleSavePayment"
     />
+
+    <!-- Mobile Assign Money Modal -->
+    <MobileAssignMoney
+      :show="showAssignMoney"
+      :category="selectedCategory"
+      @close="closeAssignMoney"
+      @save="handleAssignMoney"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useToast } from 'vue-toast-notification'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { useAccountStore } from '@/stores/account.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import { AccountService } from '@/services/account.service'
+import CategoryService from '@/services/category.service'
 import { formatCurrency } from '@/utils/currencyUtil'
 import MobileTransactionFlow from '@/components/mobile/MobileTransactionFlow.vue'
+import MobileAssignMoney from '@/components/mobile/MobileAssignMoney.vue'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
+import type { CategoryResponse } from '@/types/DTO/category.dto'
 
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
 const accountStore = useAccountStore()
 const { createTransaction } = useTransactionOperations()
 const $toast = useToast()
+
+const showAssignMoney = ref(false)
+const selectedCategory = ref<CategoryResponse | null>(null)
 
 // Get categories for a specific group with balances
 const getCategoriesForGroup = (groupId: string) => {
@@ -167,6 +182,45 @@ const handleSavePayment = async (creditCardAccountId: string, amount: number, fr
     // Optimistic update provides instant feedback, no toast needed
   } catch (error) {
     $toast.error('Failed to make payment')
+  }
+}
+
+const openAssignMoney = (category: CategoryResponse) => {
+  selectedCategory.value = category
+  showAssignMoney.value = true
+}
+
+const closeAssignMoney = () => {
+  showAssignMoney.value = false
+  selectedCategory.value = null
+}
+
+const handleAssignMoney = async (categoryId: string, newAssigned: number) => {
+  try {
+    const currentMonth = budgetStore.currentMonth
+    const currentYear = budgetStore.currentYear
+
+    const response = await CategoryService.updateCategoryBalance(
+      categoryId,
+      { assigned: newAssigned },
+      currentYear,
+      currentMonth
+    )
+
+    // Update stores with response
+    categoryStore.updateCategoryBalance(categoryId, response.categoryBalance)
+    budgetStore.setReadyToAssign(response.readyToAssign)
+
+    // Update affected categories if any
+    if (response.affectedCategories) {
+      response.affectedCategories.forEach(affectedCategory => {
+        categoryStore.updateCategoryBalance(affectedCategory.category_id, affectedCategory)
+      })
+    }
+
+    // Optimistic update provides instant feedback
+  } catch (error) {
+    $toast.error('Failed to assign money')
   }
 }
 </script>
