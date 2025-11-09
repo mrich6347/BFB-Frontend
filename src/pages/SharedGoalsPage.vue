@@ -129,7 +129,8 @@
             <div
               v-for="goal in activeGoals"
               :key="goal.id"
-              class="bg-card rounded-lg border border-border shadow-sm hover:shadow-md transition-all duration-300"
+              class="bg-card rounded-lg border border-border shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group"
+              :class="{ 'ring-2 ring-primary/50 shadow-primary/20': (goal.progress_percentage || 0) >= 80 }"
             >
           <div class="p-6">
             <!-- Goal Header -->
@@ -171,27 +172,41 @@
 
             <!-- Progress -->
             <div class="mt-4 cursor-pointer" @click="handleGoalClick(goal)">
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-muted-foreground">Progress</span>
-                <span class="font-medium text-card-foreground">
-                  {{ formatCurrency(goal.current_amount || 0) }} / {{ formatCurrency(goal.target_amount) }}
+              <div class="flex items-center justify-between text-sm mb-2">
+                <span class="text-muted-foreground font-medium">Progress</span>
+                <span class="text-lg font-bold text-card-foreground">
+                  {{ Math.round(goal.progress_percentage || 0) }}%
                 </span>
               </div>
-              <div class="mt-2 bg-secondary rounded-full h-2">
+              <div class="flex items-center justify-between text-xs mb-3">
+                <span class="text-2xl font-bold text-green-600">
+                  {{ formatCurrency(goal.current_amount || 0) }}
+                </span>
+                <span class="text-muted-foreground">
+                  of {{ formatCurrency(goal.target_amount) }}
+                </span>
+              </div>
+              <div class="relative bg-secondary rounded-full h-3 overflow-hidden">
                 <div
                   :class="[
-                    'h-2 rounded-full transition-all duration-300',
-                    goal.status === 'COMPLETED' ? 'bg-green-500' : 'bg-primary'
+                    'h-3 rounded-full transition-all duration-1000 ease-out',
+                    goal.status === 'COMPLETED' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                    (goal.progress_percentage || 0) >= 80 ? 'bg-gradient-to-r from-primary to-blue-500 animate-pulse' :
+                    'bg-gradient-to-r from-primary to-blue-400'
                   ]"
                   :style="{ width: `${Math.min((goal.progress_percentage || 0), 100)}%` }"
-                ></div>
+                >
+                  <div class="h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                </div>
               </div>
-              <div class="mt-1 text-xs">
-                <span v-if="goal.status === 'COMPLETED'" class="text-green-600 font-medium">
-                  🎉 Goal Completed!
+
+              <!-- Status Message -->
+              <div class="mt-3">
+                <span v-if="goal.status === 'COMPLETED'" class="text-green-600 font-bold text-sm animate-bounce">
+                  🎉 Complete!
                 </span>
-                <span v-else class="text-muted-foreground">
-                  {{ Math.round(goal.progress_percentage || 0) }}% complete
+                <span v-else-if="(goal.progress_percentage || 0) >= 80" class="text-primary font-bold text-sm">
+                  Almost there! 🚀
                 </span>
               </div>
             </div>
@@ -250,7 +265,7 @@
             <div
               v-for="goal in completedGoals"
               :key="goal.id"
-              class="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-green-100/50 hover:shadow-green-200/50 dark:from-green-950/20 dark:to-emerald-950/20 dark:border-green-800/30 rounded-lg border shadow-sm hover:shadow-md transition-all duration-300"
+              class="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-green-100/50 hover:shadow-green-200/50 dark:from-green-950/20 dark:to-emerald-950/20 dark:border-green-800/30 rounded-lg border shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group"
             >
               <div class="p-6">
                 <!-- Goal Header -->
@@ -291,21 +306,33 @@
 
                 <!-- Progress -->
                 <div class="mt-4 cursor-pointer" @click="handleGoalClick(goal)">
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-muted-foreground">Progress</span>
-                    <span class="font-medium text-card-foreground">
-                      {{ formatCurrency(goal.current_amount || 0) }} / {{ formatCurrency(goal.target_amount) }}
+                  <div class="flex items-center justify-between text-sm mb-2">
+                    <span class="text-muted-foreground font-medium">Progress</span>
+                    <span class="text-lg font-bold text-green-600">
+                      100%
                     </span>
                   </div>
-                  <div class="mt-2 bg-secondary rounded-full h-2">
-                    <div
-                      class="bg-green-500 h-2 rounded-full transition-all duration-300"
-                      :style="{ width: `${Math.min((goal.progress_percentage || 0), 100)}%` }"
-                    ></div>
+                  <div class="flex items-center justify-between text-xs mb-3">
+                    <span class="text-2xl font-bold text-green-600">
+                      {{ formatCurrency(goal.current_amount || 0) }}
+                    </span>
+                    <span class="text-muted-foreground">
+                      of {{ formatCurrency(goal.target_amount) }}
+                    </span>
                   </div>
-                  <div class="mt-1 text-xs">
-                    <span class="text-green-600 font-medium">
-                      🎉 Goal Completed!
+                  <div class="relative bg-green-100 dark:bg-green-900/20 rounded-full h-3 overflow-hidden">
+                    <div
+                      class="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-1000 ease-out"
+                      style="width: 100%"
+                    >
+                      <div class="h-full w-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                    </div>
+                  </div>
+
+                  <!-- Status Message -->
+                  <div class="mt-3">
+                    <span class="text-green-600 font-bold text-sm">
+                      🎉 Complete!
                     </span>
                   </div>
                 </div>
