@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toast-notification'
 import { useBudgetStore } from '@/stores/budget.store'
@@ -145,11 +145,6 @@ const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null
 
 const { currentBudget } = storeToRefs(budgetStore)
 const { activeAccounts } = storeToRefs(accountStore)
-
-// Ensure scroll position is at top when component mounts
-onMounted(() => {
-  window.scrollTo(0, 0)
-})
 
 const getNetWorthBalance = (account: AccountResponse) => {
   if (account.working_balance !== undefined && account.working_balance !== null) {

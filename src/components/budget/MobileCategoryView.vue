@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toast-notification'
 import { useBudgetStore } from '@/stores/budget.store'
@@ -105,11 +105,6 @@ const $toast = useToast()
 const showAssignMoney = ref(false)
 const selectedCategory = ref<CategoryResponse | null>(null)
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
-
-// Ensure scroll position is at top when component mounts
-onMounted(() => {
-  window.scrollTo(0, 0)
-})
 
 // Get categories for a specific group with balances
 const getCategoriesForGroup = (groupId: string) => {
