@@ -1,9 +1,13 @@
 <template>
   <tr
-    class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer select-none"
     :class="[
-      transaction.is_reconciled ? 'opacity-60 bg-muted/10' : '',
-      props.isSelected ? 'bg-primary/10 ring-1 ring-primary/40 hover:bg-primary/10' : ''
+      'border-b border-border transition-colors select-none',
+      transaction.is_reconciled
+        ? 'opacity-60 bg-muted/10 cursor-default'
+        : 'hover:bg-muted/20 cursor-pointer',
+      !transaction.is_reconciled && props.isSelected
+        ? 'bg-primary/10 ring-1 ring-primary/40 hover:bg-primary/10'
+        : ''
     ]"
     @click="handleRowClick"
     @dblclick="handleRowDoubleClick"
@@ -128,6 +132,11 @@ const getCategoryName = (categoryId?: string | null) => {
 }
 
 const handleRowClick = (event: MouseEvent) => {
+  // Prevent selecting reconciled transactions
+  if (props.transaction.is_reconciled) {
+    return
+  }
+
   emit('select', {
     transaction: props.transaction,
     shiftKey: event.shiftKey,
@@ -136,6 +145,11 @@ const handleRowClick = (event: MouseEvent) => {
 }
 
 const handleRowDoubleClick = () => {
+  // Prevent editing reconciled transactions
+  if (props.transaction.is_reconciled) {
+    return
+  }
+
   emit('edit', props.transaction)
 }
 </script>

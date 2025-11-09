@@ -218,10 +218,13 @@ const transactions = computed(() => {
 const selectedTransactions = computed(() => {
   if (!selectedTransactionIds.value.length) return []
   const idSet = new Set(selectedTransactionIds.value)
-  return transactions.value.filter(transaction => idSet.has(transaction.id))
+  // Filter out reconciled transactions - they should never be selected, but extra safety
+  return transactions.value.filter(transaction =>
+    idSet.has(transaction.id) && !transaction.is_reconciled
+  )
 })
 
-const selectedCount = computed(() => selectedTransactionIds.value.length)
+const selectedCount = computed(() => selectedTransactions.value.length)
 
 const clearSelection = () => {
   selectedTransactionIds.value = []
@@ -230,7 +233,11 @@ const clearSelection = () => {
 
 watch(transactions, newTransactions => {
   if (!selectedTransactionIds.value.length) return
-  const nextIds = selectedTransactionIds.value.filter(id => newTransactions.some(transaction => transaction.id === id))
+  // Filter out transactions that no longer exist OR are reconciled
+  const nextIds = selectedTransactionIds.value.filter(id => {
+    const transaction = newTransactions.find(t => t.id === id)
+    return transaction && !transaction.is_reconciled
+  })
   if (nextIds.length !== selectedTransactionIds.value.length) {
     selectedTransactionIds.value = nextIds
   }
@@ -242,6 +249,12 @@ watch(transactions, newTransactions => {
 type RowSelectEvent = { transaction: TransactionResponse; shiftKey: boolean; metaKey: boolean }
 
 const handleRowSelect = ({ transaction, shiftKey, metaKey }: RowSelectEvent) => {
+  // This should never be called for reconciled transactions due to TransactionRow guards,
+  // but add extra safety check
+  if (transaction.is_reconciled) {
+    return
+  }
+
   const id = transaction.id
   const currentIds = new Set(selectedTransactionIds.value)
   const orderedTransactions = transactions.value
@@ -252,7 +265,11 @@ const handleRowSelect = ({ transaction, shiftKey, metaKey }: RowSelectEvent) => 
 
     if (startIndex !== -1 && endIndex !== -1) {
       const [from, to] = startIndex < endIndex ? [startIndex, endIndex] : [endIndex, startIndex]
-      const rangeIds = orderedTransactions.slice(from, to + 1).map(item => item.id)
+      // Filter out reconciled transactions from the range
+      const rangeIds = orderedTransactions
+        .slice(from, to + 1)
+        .filter(item => !item.is_reconciled)
+        .map(item => item.id)
       rangeIds.forEach(rangeId => currentIds.add(rangeId))
     } else {
       currentIds.clear()
@@ -283,6 +300,12 @@ const editTransaction = (transaction: TransactionResponse) => {
 }
 
 const handleRowEdit = (transaction: TransactionResponse) => {
+  // This should never be called for reconciled transactions due to TransactionRow guards,
+  // but add extra safety check
+  if (transaction.is_reconciled) {
+    return
+  }
+
   selectedTransactionIds.value = [transaction.id]
   lastSelectedId.value = transaction.id
   editTransaction(transaction)
@@ -344,6 +367,11 @@ onBeforeUnmount(() => {
 })
 
 const toggleClearedHandler = async (transaction: TransactionResponse) => {
+  // Prevent toggling cleared status on reconciled transactions
+  if (transaction.is_reconciled) {
+    return
+  }
+
   try {
     await toggleCleared(transaction.id)
   } catch (error) {
