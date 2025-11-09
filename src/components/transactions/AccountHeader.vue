@@ -58,7 +58,10 @@
               @click="showReconcileModal = true"
               variant="outline"
               size="sm"
-              class="flex items-center gap-2"
+              :class="[
+                'flex items-center gap-2 transition-all',
+                hasClearedUnreconciledTransactions && 'animate-pulse border-amber-500/70 text-amber-600 hover:border-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-400/70 dark:hover:border-amber-400 dark:hover:bg-amber-950/20'
+              ]"
             >
               <CheckCircle class="w-4 h-4" />
               Reconcile
@@ -106,12 +109,14 @@ import EditAccountModal from '@/components/accounts/EditAccountModal.vue'
 import CloseAccountModal from '@/components/accounts/CloseAccountModal.vue'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import { useRouter } from 'vue-router'
+import { useTransactionStore } from '@/stores/transaction.store'
 
 const props = defineProps<{
   account?: AccountResponse
 }>()
 
 const { loadTransactionsByAccount } = useTransactionOperations()
+const transactionStore = useTransactionStore()
 const router = useRouter()
 const showReconcileModal = ref(false)
 const showEditModal = ref(false)
@@ -126,6 +131,16 @@ const getBalanceColor = (balance?: number) => {
   if (!balance) return 'text-foreground'
   return balance < 0 ? 'text-destructive' : 'text-foreground'
 }
+
+// Check if there are cleared but unreconciled transactions
+const hasClearedUnreconciledTransactions = computed(() => {
+  if (!props.account) return false
+
+  const accountTransactions = transactionStore.getTransactionsByAccount(props.account.id)
+  return accountTransactions.some(transaction =>
+    transaction.is_cleared && !transaction.is_reconciled
+  )
+})
 
 const handleReconciled = () => {
   // The reconcile modal will handle updating the account balance
