@@ -21,9 +21,6 @@
               <h1 class="text-5xl font-bold text-foreground">
                 {{ formatCurrency(netWorth) }}
               </h1>
-              <span v-if="currentBudget?.name" class="text-muted-foreground text-lg">
-                {{ currentBudget.name }}
-              </span>
             </div>
             <p class="text-muted-foreground max-w-2xl">
               Assets minus liabilities across all active accounts in this budget.

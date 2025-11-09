@@ -2,18 +2,36 @@
   <div class="space-y-2">
     <label v-if="label" class="text-sm font-medium">{{ label }}</label>
     <div class="relative">
-      <!-- Search input -->
-      <input
-        ref="searchInput"
-        v-model="searchQuery"
-        type="text"
-        :placeholder="placeholder"
-        class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-        @focus="handleInputFocus"
-        @blur="handleInputBlur"
-        @keydown="handleInputKeydown"
-        @input="handleInput"
-      />
+      <!-- Search input with balance display -->
+      <div class="relative">
+        <input
+          ref="searchInput"
+          v-model="searchQuery"
+          type="text"
+          :placeholder="placeholder"
+          class="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+          @focus="handleInputFocus"
+          @blur="handleInputBlur"
+          @keydown="handleInputKeydown"
+          @input="handleInput"
+        />
+        <!-- Balance display when not searching -->
+        <div
+          v-if="!isSearching && selectedCategoryBalance !== null"
+          class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+        >
+          <span
+            :class="[
+              'text-sm font-semibold',
+              selectedCategoryBalance > 0 ? 'text-emerald-400' :
+              selectedCategoryBalance < 0 ? 'text-red-400' :
+              'text-gray-400'
+            ]"
+          >
+            {{ formatCurrency(selectedCategoryBalance) }}
+          </span>
+        </div>
+      </div>
 
       <!-- Dropdown -->
       <div
@@ -30,13 +48,25 @@
             @click="selectReadyToAssign"
             @keydown.enter="selectReadyToAssign"
             :class="[
-              'w-full px-4 py-2 text-left text-sm focus:outline-none',
+              'w-full px-4 py-2 text-left text-sm focus:outline-none flex items-center justify-between transition-colors',
               isHighlighted(-1, 0)
-                ? 'bg-accent text-accent-foreground'
-                : 'hover:bg-accent hover:text-accent-foreground'
+                ? 'bg-accent/50'
+                : 'hover:bg-accent/30'
             ]"
           >
-            Ready to Assign
+            <span :class="isHighlighted(-1, 0) ? 'text-white' : ''">Ready to Assign</span>
+            <span
+              :class="[
+                'text-sm font-semibold ml-2',
+                isHighlighted(-1, 0) ? 'text-white' : (
+                  budgetStore.readyToAssign > 0 ? 'text-emerald-400' :
+                  budgetStore.readyToAssign < 0 ? 'text-red-400' :
+                  'text-gray-400'
+                )
+              ]"
+            >
+              {{ formatCurrency(budgetStore.readyToAssign) }}
+            </span>
           </button>
         </div>
 
@@ -56,13 +86,25 @@
             @click="selectCategory(category)"
             @keydown.enter="selectCategory(category)"
             :class="[
-              'w-full px-4 py-2 text-left text-sm focus:outline-none',
+              'w-full px-4 py-2 text-left text-sm focus:outline-none flex items-center justify-between transition-colors',
               isHighlighted(groupIndex, categoryIndex)
-                ? 'bg-accent text-accent-foreground'
-                : 'hover:bg-accent hover:text-accent-foreground'
+                ? 'bg-accent/50'
+                : 'hover:bg-accent/30'
             ]"
           >
-            {{ category.name }}
+            <span :class="isHighlighted(groupIndex, categoryIndex) ? 'text-white' : ''">{{ category.name }}</span>
+            <span
+              :class="[
+                'text-sm font-semibold ml-2',
+                isHighlighted(groupIndex, categoryIndex) ? 'text-white' : (
+                  getCategoryAvailable(category) > 0 ? 'text-emerald-400' :
+                  getCategoryAvailable(category) < 0 ? 'text-red-400' :
+                  'text-gray-400'
+                )
+              ]"
+            >
+              {{ formatCurrency(getCategoryAvailable(category)) }}
+            </span>
           </button>
         </div>
 
@@ -80,6 +122,8 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 import { useCategoryStore } from '@/stores/category.store'
+import { useBudgetStore } from '@/stores/budget.store'
+import { formatCurrency } from '@/utils/currencyUtil'
 
 interface CategoryGroup {
   groupId: string
@@ -117,6 +161,7 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
+const budgetStore = useBudgetStore()
 
 // Reactive state
 const searchInput = ref<HTMLInputElement>()
@@ -129,8 +174,20 @@ const isProgrammaticFocus = ref(false)
 
 // Get categories to use
 const categoriesToUse = computed(() => {
-  return props.availableCategories || categoryStore.categories
+  return props.availableCategories || categoryStore.getCategoriesWithBalances
 })
+
+// Helper function to get category available balance
+const getCategoryAvailable = (category: CategoryResponse): number => {
+  // If the category already has the available field (from getCategoriesWithBalances)
+  if ('available' in category && typeof category.available === 'number') {
+    return category.available
+  }
+
+  // Otherwise, look it up from the category balances
+  const balance = categoryStore.categoryBalances.find(b => b.category_id === category.id)
+  return balance?.available || 0
+}
 
 // Group categories by category group
 const groupedCategories = computed(() => {
@@ -199,6 +256,22 @@ const displayText = computed(() => {
 
   const category = categoriesToUse.value.find(c => c.id === props.modelValue)
   return category?.name || ''
+})
+
+// Get selected category balance
+const selectedCategoryBalance = computed(() => {
+  if (!props.modelValue) return null
+
+  if (props.modelValue === 'ready-to-assign') {
+    return budgetStore.readyToAssign
+  }
+
+  if (props.modelValue === '') {
+    return null
+  }
+
+  const category = categoriesToUse.value.find(c => c.id === props.modelValue)
+  return category ? getCategoryAvailable(category) : null
 })
 
 // Watch for external model value changes
@@ -279,11 +352,23 @@ const navigateDown = () => {
   const categories = filteredCategories.value
   const { group, category } = highlightedIndex.value
 
+  // If no highlight yet, start at the beginning
+  if (group === -999) {
+    if (showReadyToAssign.value) {
+      highlightedIndex.value = { group: -1, category: 0 }
+    } else if (categories.length > 0) {
+      highlightedIndex.value = { group: 0, category: 0 }
+    }
+    scrollToHighlighted()
+    return
+  }
+
   // Handle Ready to Assign navigation
   if (showReadyToAssign.value && group === -1) {
     if (categories.length > 0) {
       highlightedIndex.value = { group: 0, category: 0 }
     }
+    scrollToHighlighted()
     return
   }
 
@@ -302,6 +387,19 @@ const navigateDown = () => {
 const navigateUp = () => {
   const categories = filteredCategories.value
   const { group, category } = highlightedIndex.value
+
+  // If no highlight yet, start at the end
+  if (group === -999) {
+    if (categories.length > 0) {
+      const lastGroup = categories.length - 1
+      const lastCategory = categories[lastGroup].categories.length - 1
+      highlightedIndex.value = { group: lastGroup, category: lastCategory }
+    } else if (showReadyToAssign.value) {
+      highlightedIndex.value = { group: -1, category: 0 }
+    }
+    scrollToHighlighted()
+    return
+  }
 
   // Navigate within current group
   if (category > 0) {
@@ -323,11 +421,8 @@ const navigateUp = () => {
 }
 
 const resetHighlight = () => {
-  if (showReadyToAssign.value) {
-    highlightedIndex.value = { group: -1, category: 0 }
-  } else if (filteredCategories.value.length > 0) {
-    highlightedIndex.value = { group: 0, category: 0 }
-  }
+  // Start with no highlight - only highlight when user navigates with keyboard
+  highlightedIndex.value = { group: -999, category: -999 }
 }
 
 const selectCategory = (category: CategoryResponse) => {
@@ -344,6 +439,16 @@ const selectReadyToAssign = () => {
 
 const selectHighlightedCategory = () => {
   const { group, category } = highlightedIndex.value
+
+  // If nothing is highlighted, select the first item
+  if (group === -999) {
+    if (showReadyToAssign.value) {
+      selectReadyToAssign()
+    } else if (filteredCategories.value.length > 0 && filteredCategories.value[0].categories.length > 0) {
+      selectCategory(filteredCategories.value[0].categories[0])
+    }
+    return
+  }
 
   // Handle Ready to Assign selection
   if (group === -1 && category === 0) {

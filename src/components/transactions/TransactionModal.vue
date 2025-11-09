@@ -87,7 +87,7 @@
               input: 'w-full px-3 py-2 border rounded-md bg-background border-input',
               label: 'text-sm font-medium text-foreground',
               outer: 'space-y-2 mb-4',
-              message: 'text-red-500 text-sm mt-1'
+              message: 'hidden'
             }"
           />
         </div>
@@ -146,7 +146,7 @@ const isCreditCardPaymentCategory = (categoryId: string) => {
 }
 
 const availableCategories = computed(() => {
-  return categoryStore.categories.filter(category => !isCreditCardPaymentCategory(category.id))
+  return categoryStore.getCategoriesWithBalances.filter(category => !isCreditCardPaymentCategory(category.id))
 })
 
 const formData = computed(() => {
