@@ -119,14 +119,14 @@
                         {{ category.name }}
                       </span>
                     </div>
-                    <div class="text-right text-xs">
+                    <div class="text-right text-sm">
                       <CalculationInput
                         :model-value="category.assigned"
                         @update:model-value="(value) => updateCategoryAssigned(category.id, value)"
                         class="text-muted-foreground hover:text-primary"
                       />
                     </div>
-                    <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
+                    <div class="text-right text-sm text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
                     <div class="text-right">
                       <Badge
                         :variant="getBadgeVariant(category.available)"
@@ -209,8 +209,8 @@
                       ↑
                     </button>
                   </div>
-                  <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.assigned) }}</div>
-                  <div class="text-right text-xs text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
+                  <div class="text-right text-sm text-muted-foreground">{{ formatCurrency(category.assigned) }}</div>
+                  <div class="text-right text-sm text-muted-foreground">{{ formatCurrency(category.activity) }}</div>
                   <div class="text-right">
                     <Badge
                       variant="neutral"
