@@ -22,7 +22,7 @@
               class="w-full flex items-center justify-between px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors"
             >
               <span class="font-medium">{{ account.name }}</span>
-              <span class="text-sm text-muted-foreground">{{ formatCurrency(account.account_balance) }}</span>
+              <span class="text-sm text-muted-foreground">{{ formatCurrency(account.working_balance) }}</span>
             </button>
           </div>
 
@@ -38,9 +38,9 @@
               <span class="font-medium">{{ account.name }}</span>
               <span
                 class="text-sm font-semibold"
-                :class="account.account_balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'"
+                :class="account.working_balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'"
               >
-                {{ formatCurrency(account.account_balance) }}
+                {{ formatCurrency(account.working_balance) }}
               </span>
             </button>
           </div>
@@ -55,7 +55,7 @@
               class="w-full flex items-center justify-between px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors"
             >
               <span class="font-medium">{{ account.name }}</span>
-              <span class="text-sm text-muted-foreground">{{ formatCurrency(account.account_balance) }}</span>
+              <span class="text-sm text-muted-foreground">{{ formatCurrency(account.working_balance) }}</span>
             </button>
           </div>
         </div>

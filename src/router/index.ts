@@ -10,6 +10,7 @@ import NetWorthPage from '../pages/NetWorthPage.vue'
 import AccountPage from '../pages/AccountPage.vue'
 import ProfileSettingsPage from '../pages/ProfileSettingsPage.vue'
 import SharedGoalsPage from '../pages/SharedGoalsPage.vue'
+import RetirementPlanPage from '../pages/RetirementPlanPage.vue'
 import { supabase } from '../lib/supabaseClient'
 
 
@@ -74,6 +75,14 @@ const routes = [
     path: '/shared-goals',
     name: 'SharedGoals',
     component: SharedGoalsPage,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/retirement-plan',
+    name: 'RetirementPlan',
+    component: RetirementPlanPage,
     meta: {
       requiresAuth: true
     }
