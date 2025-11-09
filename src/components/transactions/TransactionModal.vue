@@ -14,7 +14,7 @@
         #default="{ state }"
       >
         <!-- Inflow/Outflow Toggle -->
-        <div class="mb-4">
+        <div v-if="!isCreditCardPayment" class="mb-4">
           <label class="text-sm font-medium text-foreground mb-2 block">Type</label>
           <div class="inline-flex rounded-md border border-input bg-background p-1">
             <button
@@ -45,7 +45,7 @@
         </div>
 
         <!-- Payee -->
-        <div class="mb-4">
+        <div v-if="!isCreditCardPayment" class="mb-4">
           <PayeeSelector
             ref="payeeSelectorRef"
             v-model="selectedPayeeId"
@@ -57,7 +57,7 @@
         </div>
 
         <!-- Category -->
-        <div class="mb-4">
+        <div v-if="!isCreditCardPayment" class="mb-4">
           <CategorySelector
             ref="categorySelectorRef"
             v-model="selectedCategoryId"
@@ -73,6 +73,7 @@
 
         <!-- Memo -->
         <FormKit
+          v-if="!isCreditCardPayment"
           type="text"
           name="memo"
           label="Memo"
@@ -165,6 +166,12 @@ const isCreditCardPaymentCategory = (categoryId: string) => {
   const categoryGroup = categoryStore.getCategoryGroupById(category.category_group_id)
   return categoryGroup?.name === 'Credit Card Payments' && categoryGroup?.is_system_group === true
 }
+
+// Check if the current transaction is a credit card payment
+const isCreditCardPayment = computed(() => {
+  if (!props.transaction?.category_id) return false
+  return isCreditCardPaymentCategory(props.transaction.category_id)
+})
 
 const availableCategories = computed(() => {
   return categoryStore.getCategoriesWithBalances.filter(category => !isCreditCardPaymentCategory(category.id))
