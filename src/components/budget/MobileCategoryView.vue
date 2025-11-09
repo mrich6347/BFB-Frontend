@@ -73,6 +73,7 @@
       :category="selectedCategory"
       @close="closeAssignMoney"
       @save="handleAssignMoney"
+      @cover-overspending="handleCoverOverspending"
     />
   </div>
 </template>
@@ -85,9 +86,11 @@ import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { useAccountStore } from '@/stores/account.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
+import { useMoveMoneyBetweenCategories } from '@/composables/categories/category-write/useMoveMoneyBetweenCategories'
+import { usePullFromReadyToAssign } from '@/composables/categories/category-write/usePullFromReadyToAssign'
+import { useUpdateCategoryBalance } from '@/composables/categories/category-write/useUpdateCategoryBalance'
 import { AccountService } from '@/services/account.service'
 import { TrackingAccountService } from '@/services/tracking-account.service'
-import CategoryService from '@/services/category.service'
 import { formatCurrency } from '@/utils/currencyUtil'
 import MobileTransactionFlow from '@/components/mobile/MobileTransactionFlow.vue'
 import MobileAssignMoney from '@/components/mobile/MobileAssignMoney.vue'
@@ -100,6 +103,9 @@ const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
 const accountStore = useAccountStore()
 const { createTransaction } = useTransactionOperations()
+const { moveMoney } = useMoveMoneyBetweenCategories()
+const { pullFromReadyToAssign } = usePullFromReadyToAssign()
+const { updateCategoryBalance } = useUpdateCategoryBalance()
 const $toast = useToast()
 
 const showAssignMoney = ref(false)
@@ -210,30 +216,39 @@ const closeAssignMoney = () => {
 
 const handleAssignMoney = async (categoryId: string, newAssigned: number) => {
   try {
-    const currentMonth = budgetStore.currentMonth
-    const currentYear = budgetStore.currentYear
-
-    const response = await CategoryService.updateCategoryBalance(
-      categoryId,
-      { assigned: newAssigned },
-      currentYear,
-      currentMonth
-    )
-
-    // Update stores with response
-    categoryStore.updateCategoryBalance(categoryId, response.categoryBalance)
-    budgetStore.setReadyToAssign(response.readyToAssign)
-
-    // Update affected categories if any
-    if (response.affectedCategories) {
-      response.affectedCategories.forEach(affectedCategory => {
-        categoryStore.updateCategoryBalance(affectedCategory.category_id, affectedCategory)
-      })
-    }
-
+    await updateCategoryBalance(categoryId, newAssigned)
     // Optimistic update provides instant feedback
   } catch (error) {
     $toast.error('Failed to assign money')
+  }
+}
+
+const handleCoverOverspending = async (sourceCategoryId: string, amount: number) => {
+  if (!selectedCategory.value) return
+
+  // Capture the destination category ID before any async operations
+  const destinationCategoryId = selectedCategory.value.id
+
+  console.log('handleCoverOverspending called:', {
+    sourceCategoryId,
+    destinationCategoryId,
+    amount,
+    selectedCategoryAvailable: selectedCategory.value.available
+  })
+
+  try {
+    // If source is ready-to-assign, pull from there
+    if (sourceCategoryId === 'ready-to-assign') {
+      await pullFromReadyToAssign(destinationCategoryId, amount)
+    } else {
+      // Move money from source category to destination category
+      await moveMoney(sourceCategoryId, destinationCategoryId, amount)
+    }
+
+    // Optimistic update provides instant feedback, no toast needed
+  } catch (error) {
+    console.error('Failed to cover overspending:', error)
+    // Error handling is done in the composables with optimistic rollback
   }
 }
 
