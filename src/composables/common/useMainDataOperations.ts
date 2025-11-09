@@ -102,6 +102,15 @@ export function useMainDataOperations() {
         sharedGoalsStore.setInvitations(mainData.invitations)
       }
 
+      // Payees data
+      if (mainData?.payees) {
+        const { usePayeeStore } = await import('../../stores/payee.store')
+        const payeeStore = usePayeeStore()
+        if (mainData.budget?.id) {
+          payeeStore.setPayees(mainData.budget.id, mainData.payees)
+        }
+      }
+
       // All data distributed to stores successfully
 
     } catch (error: any) {

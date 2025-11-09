@@ -44,6 +44,18 @@
           </div>
         </div>
 
+        <!-- Payee -->
+        <div class="mb-4">
+          <PayeeSelector
+            ref="payeeSelectorRef"
+            v-model="selectedPayeeId"
+            :payee-name="selectedPayeeName"
+            label="Payee"
+            placeholder="Select or add payee..."
+            @select="handlePayeeSelect"
+          />
+        </div>
+
         <!-- Category -->
         <div class="mb-4">
           <CategorySelector
@@ -112,8 +124,12 @@ import { ref, computed, watch, nextTick } from 'vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
 import Button from '@/components/shadcn-ui/button.vue'
 import { useCategoryStore } from '@/stores/category.store'
+import { usePayeeStore } from '@/stores/payee.store'
+import { useBudgetStore } from '@/stores/budget.store'
 import CategorySelector from '@/components/categories/CategorySelector.vue'
+import PayeeSelector from '@/components/payees/PayeeSelector.vue'
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
+import type { PayeeResponse } from '@/types/DTO/payee.dto'
 
 const props = withDefaults(defineProps<{
   isOpen: boolean
@@ -131,9 +147,14 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
+const payeeStore = usePayeeStore()
+const budgetStore = useBudgetStore()
 const amountType = ref<'inflow' | 'outflow'>(props.defaultTransactionType)
 const selectedCategoryId = ref<string | null>('')
+const selectedPayeeId = ref<string | null>(null)
+const selectedPayeeName = ref<string>('')
 const categorySelectorRef = ref<InstanceType<typeof CategorySelector> | null>(null)
+const payeeSelectorRef = ref<InstanceType<typeof PayeeSelector> | null>(null)
 const amountFieldRef = ref<HTMLDivElement | null>(null)
 
 // Filter out credit card payment categories
@@ -163,6 +184,30 @@ const formData = computed(() => {
   }
 })
 
+// Handle payee selection - auto-populate category if payee has a last category
+const handlePayeeSelect = (payee: PayeeResponse | null, payeeName: string) => {
+  selectedPayeeName.value = payeeName
+
+  // If payee has a last category, auto-populate it and jump to amount
+  if (payee?.last_category_id) {
+    selectedCategoryId.value = payee.last_category_id
+
+    // Jump directly to amount field since category is auto-populated
+    nextTick(() => {
+      const amountInput = amountFieldRef.value?.querySelector('input[type="number"]') as HTMLInputElement
+      if (amountInput) {
+        amountInput.focus()
+        amountInput.select()
+      }
+    })
+  } else {
+    // No category set, move focus to category selector
+    nextTick(() => {
+      categorySelectorRef.value?.focus()
+    })
+  }
+}
+
 // Watch for changes to defaultTransactionType prop
 watch(() => props.defaultTransactionType, (newType) => {
   if (!props.transaction) {
@@ -170,24 +215,35 @@ watch(() => props.defaultTransactionType, (newType) => {
   }
 }, { immediate: true })
 
-// Set amount type and category based on transaction
+// Set amount type, category, and payee based on transaction
 watch(() => props.transaction, (transaction) => {
   if (transaction) {
     amountType.value = transaction.amount < 0 ? 'outflow' : 'inflow'
     selectedCategoryId.value = transaction.category_id === null ? 'ready-to-assign' : (transaction.category_id || '')
+    selectedPayeeName.value = transaction.payee || ''
+    // Try to find the payee ID if it exists
+    if (transaction.payee && budgetStore.currentBudget?.id) {
+      const payee = payeeStore.getPayeesForBudget(budgetStore.currentBudget.id)
+        .find(p => p.name === transaction.payee)
+      selectedPayeeId.value = payee?.id || null
+    } else {
+      selectedPayeeId.value = null
+    }
   } else {
     // Reset to default transaction type when creating a new transaction
     amountType.value = props.defaultTransactionType
     selectedCategoryId.value = ''
+    selectedPayeeId.value = null
+    selectedPayeeName.value = ''
   }
 }, { immediate: true })
 
-// Auto-focus category selector when modal opens (only for new transactions, not edits)
+// Auto-focus payee selector when modal opens (only for new transactions, not edits)
 watch([() => props.isOpen, () => props.transaction], ([isOpen, transaction]) => {
   if (isOpen && !transaction) {
     // Only auto-focus when adding a new transaction, not when editing
     setTimeout(() => {
-      categorySelectorRef.value?.focus()
+      payeeSelectorRef.value?.focus()
     }, 100)
   }
 })
@@ -221,7 +277,7 @@ const handleSubmit = (data: any) => {
     amount,
     account_id: props.accountId,
     category_id: selectedCategoryId.value || undefined,
-    payee: undefined // No payee for regular transactions
+    payee: selectedPayeeName.value || undefined
   }
 
   emit('save', transactionData)

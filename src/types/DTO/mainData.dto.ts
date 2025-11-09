@@ -7,6 +7,7 @@ import type { TransactionResponse } from "./transaction.dto";
 import type { AutoAssignConfigurationSummary } from "@/services/auto-assign.service";
 import type { UserProfileResponse } from "./user-profile.dto";
 import type { SharedGoalResponse, InvitationResponse } from "./shared-goal.dto";
+import type { PayeeResponse } from "./payee.dto";
 
 export interface MainDataResponse {
     budget?: BudgetResponse;
@@ -20,4 +21,5 @@ export interface MainDataResponse {
     userProfile?: UserProfileResponse;
     sharedGoals?: SharedGoalResponse[];
     invitations?: InvitationResponse[];
+    payees?: PayeeResponse[];
 }

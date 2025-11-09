@@ -3,12 +3,14 @@ import { useTransactionStore } from '@/stores/transaction.store'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { useAccountStore } from '@/stores/account.store'
+import { usePayeeStore } from '@/stores/payee.store'
 import { useUpdateAccountBalance } from '@/composables/accounts/account-write/useUpdateAccountBalance'
 import { useSetAccountBalance } from '@/composables/accounts/account-write/useSetAccountBalance'
 import { useUpdateAccountBalanceOnClearedToggle } from '@/composables/accounts/account-write/useUpdateAccountBalanceOnClearedToggle'
 import { useRemoveAccountBalance } from '@/composables/accounts/account-write/useRemoveAccountBalance'
 import { useFetchCategoryBalances } from '@/composables/categories/category-read/useFetchCategoryBalances'
 import { TransactionService } from '@/services/transaction.service'
+import { PayeeService } from '@/services/payee.service'
 import type {
   CreateTransactionDto,
   UpdateTransactionDto,
@@ -20,6 +22,7 @@ export const useTransactionOperations = () => {
   const budgetStore = useBudgetStore()
   const categoryStore = useCategoryStore()
   const accountStore = useAccountStore()
+  const payeeStore = usePayeeStore()
   const { updateAccountBalance } = useUpdateAccountBalance()
   const { setAccountBalance } = useSetAccountBalance()
   const { updateAccountBalanceOnClearedToggle } = useUpdateAccountBalanceOnClearedToggle()
@@ -138,6 +141,18 @@ export const useTransactionOperations = () => {
 
       // Add actual transaction from server
       transactionStore.addTransaction(newTransaction)
+
+      // Reload payees if a payee was provided (to get the updated payee list)
+      if (transactionData.payee && budgetStore.currentBudget?.id) {
+        try {
+          const payees = await PayeeService.getPayeesByBudget(budgetStore.currentBudget.id)
+          payeeStore.setPayees(budgetStore.currentBudget.id, payees)
+        } catch (payeeError) {
+          console.error('Failed to reload payees:', payeeError)
+          // Don't fail the transaction if payee reload fails
+        }
+      }
+
       return newTransaction
     } catch (err) {
       // Roll back optimistic updates on failure

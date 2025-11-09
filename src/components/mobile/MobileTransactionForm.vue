@@ -46,6 +46,20 @@
         </button>
       </div>
 
+      <!-- Payee -->
+      <div class="space-y-2">
+        <label class="text-sm font-medium">Payee</label>
+        <button
+          @click="showPayeePicker = true"
+          class="w-full px-4 py-3 border border-input rounded-md bg-background text-left flex items-center justify-between"
+        >
+          <span :class="selectedPayeeName ? 'text-foreground' : 'text-muted-foreground'">
+            {{ selectedPayeeName || 'Select or add payee...' }}
+          </span>
+          <ChevronRightIcon class="h-5 w-5 text-muted-foreground" />
+        </button>
+      </div>
+
       <!-- Category -->
       <div class="space-y-2">
         <label class="text-sm font-medium">Category</label>
@@ -85,6 +99,74 @@
         />
       </div>
     </div>
+
+    <!-- Payee Picker Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showPayeePicker"
+        class="fixed inset-0 z-[60] bg-background"
+      >
+        <div class="h-full flex flex-col">
+          <div class="sticky top-0 bg-background border-b border-border px-4 space-y-3" style="padding-top: max(3rem, env(safe-area-inset-top)); padding-bottom: 0.75rem;">
+            <div class="flex items-center justify-between">
+              <button @click="showPayeePicker = false" class="p-2">
+                <ChevronLeftIcon class="h-5 w-5" />
+              </button>
+              <h3 class="text-lg font-semibold">Select Payee</h3>
+              <button @click="$emit('close')" class="p-2">
+                <XIcon class="h-5 w-5" />
+              </button>
+            </div>
+
+            <!-- Search Input -->
+            <div class="relative">
+              <input
+                v-model="payeeSearchQuery"
+                type="text"
+                placeholder="Search or add payee..."
+                class="w-full px-4 py-2 border border-input rounded-md bg-background"
+              />
+              <button
+                v-if="payeeSearchQuery"
+                @click="payeeSearchQuery = ''"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              >
+                <XIcon class="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-auto p-4 space-y-2">
+            <!-- Filtered Payees -->
+            <button
+              v-for="payee in filteredPayees"
+              :key="payee.id"
+              @click="selectPayee(payee.name, payee.last_category_id)"
+              class="w-full px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors text-left"
+            >
+              <div class="font-medium">{{ payee.name }}</div>
+            </button>
+
+            <!-- New Payee Option -->
+            <button
+              v-if="payeeSearchQuery.trim() && !exactPayeeMatch"
+              @click="selectPayee(payeeSearchQuery.trim(), null)"
+              class="w-full px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors text-left border-dashed"
+            >
+              <div class="font-medium">
+                <span class="text-muted-foreground">Create: </span>
+                <span>{{ payeeSearchQuery.trim() }}</span>
+              </div>
+            </button>
+
+            <!-- No Results / Empty State -->
+            <div v-if="!payeeSearchQuery && availablePayees.length === 0" class="text-center py-8 text-muted-foreground">
+              Start typing to add a payee
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- Category Picker Modal -->
     <Teleport to="body">
@@ -174,6 +256,8 @@
 import { ref, computed } from 'vue'
 import { XIcon, ChevronRightIcon, ChevronLeftIcon } from 'lucide-vue-next'
 import { useCategoryStore } from '@/stores/category.store'
+import { usePayeeStore } from '@/stores/payee.store'
+import { useBudgetStore } from '@/stores/budget.store'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 
@@ -188,14 +272,47 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
+const payeeStore = usePayeeStore()
+const budgetStore = useBudgetStore()
 
 const amountType = ref<'inflow' | 'outflow'>(props.defaultTransactionType || 'outflow')
 const selectedCategory = ref<{ id: string; name: string } | null>(null)
+const selectedPayeeName = ref('')
 const amount = ref<number | null>(null)
 const memo = ref('')
 const showCategoryPicker = ref(false)
+const showPayeePicker = ref(false)
 const categorySearchQuery = ref('')
+const payeeSearchQuery = ref('')
 const isLoading = ref(false)
+
+// Get available payees (excluding transfer payees)
+const availablePayees = computed(() => {
+  const budgetId = budgetStore.currentBudget?.id
+  if (!budgetId) return []
+
+  return payeeStore.getPayeesForBudget(budgetId)
+    .filter(payee => !payee.is_transfer)
+})
+
+// Filter payees based on search query
+const filteredPayees = computed(() => {
+  if (!payeeSearchQuery.value.trim()) {
+    return availablePayees.value
+  }
+
+  const query = payeeSearchQuery.value.toLowerCase()
+  return availablePayees.value.filter(payee =>
+    payee.name.toLowerCase().includes(query)
+  )
+})
+
+// Check if there's an exact match for the payee search
+const exactPayeeMatch = computed(() => {
+  if (!payeeSearchQuery.value.trim()) return false
+  const query = payeeSearchQuery.value.trim().toLowerCase()
+  return filteredPayees.value.some(payee => payee.name.toLowerCase() === query)
+})
 
 const visibleCategoryGroups = computed(() => {
   return categoryStore.visibleCategoryGroups.filter(group => {
@@ -244,6 +361,20 @@ const isValid = computed(() => {
   return selectedCategory.value && amount.value && amount.value > 0
 })
 
+const selectPayee = (payeeName: string, lastCategoryId: string | null | undefined) => {
+  selectedPayeeName.value = payeeName
+  showPayeePicker.value = false
+  payeeSearchQuery.value = '' // Reset search when closing
+
+  // Auto-populate category if payee has a last category
+  if (lastCategoryId) {
+    const category = categoryStore.categories.find(c => c.id === lastCategoryId)
+    if (category) {
+      selectedCategory.value = { id: category.id, name: category.name }
+    }
+  }
+}
+
 const selectCategory = (category: { id: string; name: string }) => {
   selectedCategory.value = category
   showCategoryPicker.value = false
@@ -268,6 +399,7 @@ const handleSubmit = async () => {
       account_id: props.accountId,
       category_id: selectedCategory.value!.id === 'uncategorized' ? undefined : selectedCategory.value!.id,
       memo: memo.value || undefined,
+      payee: selectedPayeeName.value || undefined,
       is_cleared: false
     }
 

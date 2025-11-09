@@ -12,6 +12,13 @@
     @click="handleRowClick"
     @dblclick="handleRowDoubleClick"
   >
+    <!-- Payee -->
+    <td class="p-3 text-sm text-muted-foreground w-40 max-w-40">
+      <div class="truncate">
+        {{ transaction.payee || '-' }}
+      </div>
+    </td>
+
     <!-- Category -->
     <td class="p-3 text-sm text-foreground w-40 max-w-40">
       <div class="truncate">
