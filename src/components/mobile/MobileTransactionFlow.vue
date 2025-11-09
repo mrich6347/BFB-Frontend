@@ -7,11 +7,8 @@
     >
       <!-- Step 1: Select Account -->
       <div v-if="currentStep === 'account'" class="h-full flex flex-col">
-        <div class="sticky top-0 bg-background border-b border-border px-4 flex items-center justify-between" style="padding-top: max(3rem, env(safe-area-inset-top)); padding-bottom: 0.75rem;">
+        <div class="sticky top-0 bg-background border-b border-border px-4 py-3" style="padding-top: max(3rem, env(safe-area-inset-top));">
           <h2 class="text-lg font-semibold">Select Account</h2>
-          <button @click="closeFlow" class="p-2">
-            <XIcon class="h-5 w-5" />
-          </button>
         </div>
         
         <div class="flex-1 overflow-auto p-4 space-y-2" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));">
