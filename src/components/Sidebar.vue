@@ -1,7 +1,7 @@
 <template>
   <aside :class="[
     'h-screen bg-background dark:bg-background border-r border-border dark:border-border flex flex-col transition-all duration-300 ease-in-out overflow-hidden',
-    isCollapsed ? 'w-16' : 'w-72'
+    isCollapsed ? 'w-16' : 'w-80'
   ]">
     <!-- Header with Theme Toggle -->
     <div class="p-4 flex items-center justify-between border-b border-border dark:border-border">
