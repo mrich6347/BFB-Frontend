@@ -24,11 +24,29 @@
           Delete
         </Button>
         <Button
+          size="sm"
+          @click="openAddTransactionModal"
+          class="flex items-center gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        >
+          <PlusIcon class="w-4 h-4" />
+          I Spent Money
+        </Button>
+        <Button
+          v-if="isCashAccount"
+          size="sm"
+          variant="outline"
+          @click="openGotPaidModal"
+          class="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 hover:text-white border-green-600"
+        >
+          <PlusIcon class="w-4 h-4" />
+          I Got Paid
+        </Button>
+        <Button
           v-if="isCashAccount"
           size="sm"
           variant="outline"
           @click="showTransferModal = true"
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 hover:text-white border-blue-600"
         >
           <ArrowRightLeftIcon class="w-4 h-4" />
           Transfer Money
@@ -42,24 +60,6 @@
         >
           <CreditCardIcon class="w-4 h-4" />
           Make a Payment
-        </Button>
-        <Button
-          v-if="isCashAccount"
-          size="sm"
-          variant="outline"
-          @click="openGotPaidModal"
-          class="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 hover:text-white border-green-600"
-        >
-          <PlusIcon class="w-4 h-4" />
-          I Got Paid
-        </Button>
-        <Button
-          size="sm"
-          @click="openAddTransactionModal"
-          class="flex items-center gap-2 bg-destructive text-destructive-foreground hover:bg-destructive/90"
-        >
-          <PlusIcon class="w-4 h-4" />
-          I Spent Money
         </Button>
       </div>
     </div>
