@@ -8,10 +8,11 @@
       <h2 class="text-lg font-semibold">Make Payment</h2>
       <button
         @click="handleSubmit"
-        :disabled="!isValid"
-        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+        :disabled="!isValid || isLoading"
+        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm min-w-[60px]"
       >
-        Save
+        <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
+        <span v-else>Save</span>
       </button>
     </div>
 
@@ -121,6 +122,7 @@ const selectedFromAccount = ref<AccountResponse | null>(null)
 const amount = ref<number | null>(null)
 const memo = ref('')
 const showAccountPicker = ref(false)
+const isLoading = ref(false)
 
 const cashAccounts = computed(() => accountStore.getAccountsByType('CASH'))
 
@@ -137,10 +139,19 @@ const selectAccount = (account: AccountResponse) => {
   showAccountPicker.value = false
 }
 
-const handleSubmit = () => {
-  if (!isValid.value || !selectedFromAccount.value) return
+const handleSubmit = async () => {
+  if (!isValid.value || !selectedFromAccount.value || isLoading.value) return
 
-  emit('save', amount.value!, selectedFromAccount.value.id, memo.value || undefined)
+  isLoading.value = true
+
+  try {
+    emit('save', amount.value!, selectedFromAccount.value.id, memo.value || undefined)
+
+    // Keep loading state until parent closes the form
+    await new Promise(resolve => setTimeout(resolve, 500))
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 

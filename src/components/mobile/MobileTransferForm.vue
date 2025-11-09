@@ -8,10 +8,11 @@
       <h2 class="text-lg font-semibold">Transfer Money</h2>
       <button
         @click="handleSubmit"
-        :disabled="!isValid"
-        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+        :disabled="!isValid || isLoading"
+        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm min-w-[60px]"
       >
-        Save
+        <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
+        <span v-else>Save</span>
       </button>
     </div>
 
@@ -199,6 +200,7 @@ const memo = ref('')
 const showAccountPicker = ref(false)
 const showCategoryPicker = ref(false)
 const categorySearchQuery = ref('')
+const isLoading = ref(false)
 
 const isTargetTracking = computed(() => selectedToAccount.value?.account_type === 'TRACKING')
 
@@ -266,24 +268,33 @@ const selectCategory = (category: { id: string; name: string }) => {
   categorySearchQuery.value = '' // Reset search when closing
 }
 
-const handleSubmit = () => {
-  if (!isValid.value || !selectedToAccount.value) return
+const handleSubmit = async () => {
+  if (!isValid.value || !selectedToAccount.value || isLoading.value) return
 
-  const transferPayee = TransferService.formatTransferPayee(selectedToAccount.value.name)
-  const date = new Date().toISOString().split('T')[0]
-  const transferAmount = -Math.abs(amount.value!)
+  isLoading.value = true
 
-  const transactionData: CreateTransactionDto = {
-    date,
-    amount: transferAmount,
-    account_id: props.accountId,
-    payee: transferPayee,
-    memo: memo.value || undefined,
-    is_cleared: false,
-    category_id: isTargetTracking.value ? selectedCategory.value?.id : undefined
+  try {
+    const transferPayee = TransferService.formatTransferPayee(selectedToAccount.value.name)
+    const date = new Date().toISOString().split('T')[0]
+    const transferAmount = -Math.abs(amount.value!)
+
+    const transactionData: CreateTransactionDto = {
+      date,
+      amount: transferAmount,
+      account_id: props.accountId,
+      payee: transferPayee,
+      memo: memo.value || undefined,
+      is_cleared: false,
+      category_id: isTargetTracking.value ? selectedCategory.value?.id : undefined
+    }
+
+    emit('save', transactionData)
+
+    // Keep loading state until parent closes the form
+    await new Promise(resolve => setTimeout(resolve, 500))
+  } finally {
+    isLoading.value = false
   }
-
-  emit('save', transactionData)
 }
 
 onMounted(async () => {

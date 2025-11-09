@@ -8,10 +8,11 @@
       <h2 class="text-lg font-semibold">Edit Transaction</h2>
       <button
         @click="handleSubmit"
-        :disabled="!isValid"
-        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+        :disabled="!isValid || isLoading"
+        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm min-w-[60px]"
       >
-        Save
+        <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
+        <span v-else>Save</span>
       </button>
     </div>
 
@@ -100,10 +101,14 @@
     <div class="sticky bottom-0 bg-background border-t border-border p-4">
       <button
         @click="handleDelete"
-        class="w-full py-3 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+        :disabled="isDeleting"
+        class="w-full py-3 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <TrashIcon class="h-5 w-5" />
-        Delete Transaction
+        <span v-if="isDeleting" class="inline-block animate-spin">⏳</span>
+        <template v-else>
+          <TrashIcon class="h-5 w-5" />
+          Delete Transaction
+        </template>
       </button>
     </div>
 
@@ -217,6 +222,8 @@ const memo = ref('')
 const isCleared = ref(false)
 const showCategoryPicker = ref(false)
 const categorySearchQuery = ref('')
+const isLoading = ref(false)
+const isDeleting = ref(false)
 
 const visibleCategoryGroups = computed(() => {
   return categoryStore.visibleCategoryGroups.filter(group => {
@@ -266,25 +273,45 @@ const selectCategory = (category: { id: string; name: string }) => {
   categorySearchQuery.value = ''
 }
 
-const handleSubmit = () => {
-  if (!isValid.value) return
+const handleSubmit = async () => {
+  if (!isValid.value || isLoading.value) return
 
-  const finalAmount = amountType.value === 'outflow'
-    ? -Math.abs(amount.value!)
-    : Math.abs(amount.value!)
+  isLoading.value = true
 
-  const transactionData: UpdateTransactionDto = {
-    amount: finalAmount,
-    category_id: selectedCategory.value!.id === 'uncategorized' ? undefined : selectedCategory.value!.id,
-    memo: memo.value || undefined,
-    is_cleared: isCleared.value
+  try {
+    const finalAmount = amountType.value === 'outflow'
+      ? -Math.abs(amount.value!)
+      : Math.abs(amount.value!)
+
+    const transactionData: UpdateTransactionDto = {
+      amount: finalAmount,
+      category_id: selectedCategory.value!.id === 'uncategorized' ? undefined : selectedCategory.value!.id,
+      memo: memo.value || undefined,
+      is_cleared: isCleared.value
+    }
+
+    emit('save', props.transaction.id, transactionData)
+
+    // Keep loading state until parent closes the form
+    await new Promise(resolve => setTimeout(resolve, 500))
+  } finally {
+    isLoading.value = false
   }
-
-  emit('save', props.transaction.id, transactionData)
 }
 
-const handleDelete = () => {
-  emit('delete', props.transaction.id)
+const handleDelete = async () => {
+  if (isDeleting.value) return
+
+  isDeleting.value = true
+
+  try {
+    emit('delete', props.transaction.id)
+
+    // Keep loading state until parent closes the form
+    await new Promise(resolve => setTimeout(resolve, 500))
+  } finally {
+    isDeleting.value = false
+  }
 }
 
 // Initialize form with transaction data

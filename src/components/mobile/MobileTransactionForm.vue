@@ -10,10 +10,11 @@
       </h2>
       <button
         @click="handleSubmit"
-        :disabled="!isValid"
-        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+        :disabled="!isValid || isLoading"
+        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm min-w-[60px]"
       >
-        Save
+        <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
+        <span v-else>Save</span>
       </button>
     </div>
 
@@ -194,6 +195,7 @@ const amount = ref<number | null>(null)
 const memo = ref('')
 const showCategoryPicker = ref(false)
 const categorySearchQuery = ref('')
+const isLoading = ref(false)
 
 const visibleCategoryGroups = computed(() => {
   return categoryStore.visibleCategoryGroups.filter(group => {
@@ -248,25 +250,34 @@ const selectCategory = (category: { id: string; name: string }) => {
   categorySearchQuery.value = '' // Reset search when closing
 }
 
-const handleSubmit = () => {
-  if (!isValid.value) return
+const handleSubmit = async () => {
+  if (!isValid.value || isLoading.value) return
 
-  const finalAmount = amountType.value === 'outflow'
-    ? -Math.abs(amount.value!)
-    : Math.abs(amount.value!)
+  isLoading.value = true
 
-  const date = new Date().toISOString().split('T')[0]
+  try {
+    const finalAmount = amountType.value === 'outflow'
+      ? -Math.abs(amount.value!)
+      : Math.abs(amount.value!)
 
-  const transactionData: CreateTransactionDto = {
-    date,
-    amount: finalAmount,
-    account_id: props.accountId,
-    category_id: selectedCategory.value!.id === 'uncategorized' ? undefined : selectedCategory.value!.id,
-    memo: memo.value || undefined,
-    is_cleared: false
+    const date = new Date().toISOString().split('T')[0]
+
+    const transactionData: CreateTransactionDto = {
+      date,
+      amount: finalAmount,
+      account_id: props.accountId,
+      category_id: selectedCategory.value!.id === 'uncategorized' ? undefined : selectedCategory.value!.id,
+      memo: memo.value || undefined,
+      is_cleared: false
+    }
+
+    emit('save', transactionData)
+
+    // Keep loading state until parent closes the form
+    await new Promise(resolve => setTimeout(resolve, 500))
+  } finally {
+    isLoading.value = false
   }
-
-  emit('save', transactionData)
 }
 </script>
 
