@@ -89,7 +89,8 @@ export function useGoalProgress() {
   }
 
   const formatProgressPercentage = (percentage: number): string => {
-    return Math.min(percentage, 100).toFixed(1)
+    const safePercentage = percentage || 0
+    return Math.min(safePercentage, 100).toFixed(1)
   }
 
   const formatCurrency = (amount: number): string => {

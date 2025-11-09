@@ -146,7 +146,7 @@
               </div>
               <div class="text-right flex-shrink-0 ml-2">
                 <div class="text-sm font-bold text-foreground">
-                  {{ participant.contribution_percentage.toFixed(1) }}%
+                  {{ (participant.contribution_percentage || 0).toFixed(1) }}%
                 </div>
               </div>
             </div>
