@@ -90,7 +90,12 @@ export function useGoalProgress() {
 
   const formatProgressPercentage = (percentage: number): string => {
     const safePercentage = percentage || 0
-    return Math.min(safePercentage, 100).toFixed(1)
+    const clampedPercentage = Math.min(safePercentage, 100)
+    // Ensure we have a valid number before formatting
+    if (isNaN(clampedPercentage) || !isFinite(clampedPercentage)) {
+      return '0.0'
+    }
+    return clampedPercentage.toFixed(1)
   }
 
   const formatCurrency = (amount: number): string => {

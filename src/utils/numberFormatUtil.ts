@@ -1,8 +1,27 @@
 import { NumberFormat } from '@/types/DTO/budget.dto'
 import { useBudgetStore } from '@/stores/budget.store'
 
+/**
+ * Safe wrapper for toFixed that handles null, undefined, NaN, and Infinity
+ */
+export const safeToFixed = (value: any, decimals: number = 2): string => {
+  // Handle null, undefined, or non-numeric values
+  if (value === null || value === undefined || typeof value !== 'number') {
+    return (0).toFixed(decimals)
+  }
+
+  // Handle NaN and Infinity
+  if (isNaN(value) || !isFinite(value)) {
+    return (0).toFixed(decimals)
+  }
+
+  return value.toFixed(decimals)
+}
+
 export const formatNumberByFormat = (amount: number, format: string): string => {
-  const [integerPart, decimalPart] = amount.toFixed(2).split('.');
+  // Use safeToFixed to handle edge cases
+  const fixedAmount = safeToFixed(amount, 2)
+  const [integerPart, decimalPart] = fixedAmount.split('.');
   const absIntegerPart = Math.abs(parseInt(integerPart)).toString();
   const isNegative = amount < 0;
 
@@ -15,7 +34,8 @@ export const formatNumberByFormat = (amount: number, format: string): string => 
       formattedNumber = `${absIntegerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${decimalPart}`;
       break;
     case NumberFormat.DOT_COMMA_THREE:
-      formattedNumber = `${absIntegerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${amount.toFixed(3).split('.')[1]}`;
+      const fixedAmount3 = safeToFixed(amount, 3)
+      formattedNumber = `${absIntegerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${fixedAmount3.split('.')[1]}`;
       break;
     case NumberFormat.SPACE_DOT:
       formattedNumber = `${absIntegerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}.${decimalPart}`;
@@ -124,23 +144,18 @@ export const parseFormattedNumberToDecimal = (formattedAmount: string): string =
     // Parse the formatted string back to a number
     const number = parseFormattedNumber(formattedAmount, currentFormat);
 
-    // Check for NaN *before* calling toFixed to prevent errors
-    if (isNaN(number)) {
-      return "0.00";
-    }
-
-    // Format to standard decimal format with 2 decimal places
-    return number.toFixed(2);
+    // Format to standard decimal format with 2 decimal places using safeToFixed
+    return safeToFixed(number, 2);
   } catch (error) {
     // Log the error for debugging purposes
     console.error(`Error parsing formatted number "${formattedAmount}":`, error);
-    
+
     // Fallback: Attempt parsing assuming a simple format (like DOT_COMMA or plain float)
     // Remove potential commas as group separators before trying parseFloat
     const cleanedAmount = formattedAmount.replace(/,/g, '');
     const number = parseFloat(cleanedAmount);
 
-    // Return formatted number or "0.00" if fallback also fails
-    return isNaN(number) ? "0.00" : number.toFixed(2);
+    // Return formatted number or "0.00" if fallback also fails using safeToFixed
+    return safeToFixed(number, 2);
   }
 };

@@ -1,6 +1,6 @@
 import { useBudgetStore } from '@/stores/budget.store'
 import { CurrencyPlacement, NumberFormat } from '@/types/DTO/budget.dto'
-import { formatNumberByFormat } from '@/utils/numberFormatUtil'
+import { formatNumberByFormat, safeToFixed } from '@/utils/numberFormatUtil'
 
 export interface Currency {
   code: string;
@@ -78,9 +78,7 @@ export const formatCurrency = (amount: number | undefined | null): string => {
       ? `${currency.symbol}${formattedAmount}`
       : `${formattedAmount}${currency.symbol}`;
   } catch (error) {
-    // Fallback to basic formatting if store is not available
-    // Ensure amount is a valid number for the fallback
-    const safeAmount = (amount === null || amount === undefined || isNaN(amount)) ? 0 : amount;
-    return `$${safeAmount.toFixed(2)}`;
+    // Fallback to basic formatting if store is not available using safeToFixed
+    return `$${safeToFixed(amount, 2)}`;
   }
 };

@@ -146,7 +146,7 @@
               </div>
               <div class="text-right flex-shrink-0 ml-2">
                 <div class="text-sm font-bold text-foreground">
-                  {{ (participant.contribution_percentage || 0).toFixed(1) }}%
+                  {{ safeToFixed(participant.contribution_percentage, 1) }}%
                 </div>
               </div>
             </div>
@@ -165,6 +165,7 @@ import { useUserProfileStore } from '../../stores/user-profile.store'
 import { useSharedGoalsStore } from '../../stores/shared-goals.store'
 import { SharedGoalsService } from '../../services/shared-goals.service'
 import type { SharedGoalResponse, GoalParticipantResponse } from '../../types/DTO/shared-goal.dto'
+import { safeToFixed } from '../../utils/numberFormatUtil'
 
 interface Props {
   goal: SharedGoalResponse

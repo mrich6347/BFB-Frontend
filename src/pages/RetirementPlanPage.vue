@@ -204,6 +204,7 @@ import { useAccountStore } from '../stores/account.store'
 import { useBudgetStore } from '../stores/budget.store'
 import { AccountType } from '../types/DTO/account.dto'
 import { formatCurrency } from '../utils/currencyUtil'
+import { safeToFixed } from '../utils/numberFormatUtil'
 
 const accountStore = useAccountStore()
 const budgetStore = useBudgetStore()
@@ -279,8 +280,7 @@ const totalInterest = computed(() => {
 const interestPercentage = computed(() => {
   if (!isValidInput.value || finalBalance.value === 0) return '0.0'
   const percentage = (totalInterest.value / finalBalance.value) * 100
-  if (isNaN(percentage) || !isFinite(percentage)) return '0.0'
-  return percentage.toFixed(1)
+  return safeToFixed(percentage, 1)
 })
 
 // Handler to ensure starting balance defaults to 0 when empty
