@@ -64,6 +64,7 @@
       @save-transaction="handleSaveTransaction"
       @save-transfer="handleSaveTransfer"
       @save-payment="handleSavePayment"
+      @update-balance="handleUpdateBalance"
     />
 
     <!-- Mobile Assign Money Modal -->
@@ -78,12 +79,14 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toast-notification'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { useAccountStore } from '@/stores/account.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import { AccountService } from '@/services/account.service'
+import { TrackingAccountService } from '@/services/tracking-account.service'
 import CategoryService from '@/services/category.service'
 import { formatCurrency } from '@/utils/currencyUtil'
 import MobileTransactionFlow from '@/components/mobile/MobileTransactionFlow.vue'
@@ -92,6 +95,7 @@ import MobileBottomNav from '@/components/mobile/MobileBottomNav.vue'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 
+const router = useRouter()
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
 const accountStore = useAccountStore()
@@ -233,10 +237,34 @@ const handleAssignMoney = async (categoryId: string, newAssigned: number) => {
   }
 }
 
-const handleNavigate = (tab: 'budget' | 'accounts') => {
+const handleUpdateBalance = async (accountId: string, newBalance: number) => {
+  try {
+    const response = await TrackingAccountService.updateBalance(accountId, {
+      new_balance: newBalance
+    })
+
+    // Update account store with the updated account
+    accountStore.updateAccount(accountId, response.account)
+
+    // Update ready to assign if it changed
+    if (response.readyToAssign !== undefined) {
+      budgetStore.setReadyToAssign(response.readyToAssign)
+    }
+
+    // Optimistic update provides instant feedback
+  } catch (error) {
+    console.error('Failed to update balance:', error)
+    $toast.error('Failed to update balance')
+  }
+}
+
+const handleNavigate = (tab: 'budget' | 'accounts' | 'networth') => {
   if (tab === 'accounts') {
     // Open the transaction flow to account selection
     transactionFlowRef.value?.openFlow()
+  } else if (tab === 'networth') {
+    // Navigate to net worth page
+    router.push('/net-worth')
   }
   // Budget tab is already the current view, no action needed
 }

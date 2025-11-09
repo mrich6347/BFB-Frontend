@@ -1,0 +1,87 @@
+<template>
+  <div class="h-full flex flex-col">
+    <!-- Header -->
+    <div class="sticky top-0 bg-background border-b border-border px-4 flex items-center justify-between" style="padding-top: max(3rem, env(safe-area-inset-top)); padding-bottom: 0.75rem;">
+      <button @click="$emit('close')" class="p-2">
+        <ChevronLeftIcon class="h-5 w-5" />
+      </button>
+      <h2 class="text-lg font-semibold">Update Balance</h2>
+      <button
+        @click="handleSubmit"
+        :disabled="!isValid || isLoading"
+        class="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm min-w-[60px]"
+      >
+        <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
+        <span v-else>Save</span>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <div class="flex-1 overflow-auto p-4 space-y-4">
+      <!-- Account Name -->
+      <div class="text-center py-4">
+        <div class="text-sm text-muted-foreground mb-1">{{ accountName }}</div>
+        <div class="text-2xl font-bold">Current: {{ formatCurrency(currentBalance) }}</div>
+      </div>
+
+      <!-- New Balance -->
+      <div class="space-y-2">
+        <label class="text-sm font-medium">New Balance</label>
+        <input
+          v-model="newBalance"
+          type="number"
+          inputmode="decimal"
+          step="0.01"
+          placeholder="0.00"
+          class="w-full px-4 py-3 border border-input rounded-md bg-background text-lg"
+          autofocus
+        />
+      </div>
+
+      <!-- Info -->
+      <div class="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
+        Enter the current balance of this account as shown in your bank or institution.
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { ChevronLeftIcon } from 'lucide-vue-next'
+import { formatCurrency } from '@/utils/currencyUtil'
+
+const props = defineProps<{
+  accountId: string
+  accountName: string
+  currentBalance: number
+}>()
+
+const emit = defineEmits<{
+  close: []
+  save: [accountId: string, newBalance: number]
+}>()
+
+const newBalance = ref<number | null>(props.currentBalance)
+const isLoading = ref(false)
+
+const isValid = computed(() => {
+  return newBalance.value !== null && newBalance.value !== props.currentBalance
+})
+
+const handleSubmit = async () => {
+  if (!isValid.value || isLoading.value) return
+
+  isLoading.value = true
+  
+  try {
+    emit('save', props.accountId, newBalance.value!)
+    
+    // Keep loading state until parent closes the form
+    await new Promise(resolve => setTimeout(resolve, 500))
+  } finally {
+    isLoading.value = false
+  }
+}
+</script>
+

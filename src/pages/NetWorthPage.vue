@@ -1,5 +1,13 @@
 <template>
-  <div class="flex h-screen">
+  <div v-if="isLoading" class="flex h-screen items-center justify-center">
+    <LoadingSpinner />
+  </div>
+  <!-- Mobile View -->
+  <div v-else-if="isMobile" class="h-screen overflow-auto">
+    <MobileNetWorthView />
+  </div>
+  <!-- Desktop View -->
+  <div v-else class="flex h-screen">
     <Sidebar :budgetId="currentBudgetId" />
     <div class="flex-1 bg-background overflow-auto">
       <div class="max-w-6xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
@@ -128,11 +136,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import Button from '@/components/shadcn-ui/button.vue'
+import MobileNetWorthView from '@/components/mobile/MobileNetWorthView.vue'
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useAccountStore } from '@/stores/account.store'
@@ -151,6 +160,13 @@ const { activeAccounts } = storeToRefs(accountStore)
 
 const isInitializing = ref(true)
 const initializationError = ref<string | null>(null)
+
+// Mobile detection
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768 // Tailwind's md breakpoint
+}
 
 const ynabReferenceNetWorth = 36786.22
 
@@ -279,6 +295,10 @@ const goToDashboard = async () => {
 
 onMounted(async () => {
   try {
+    // Initialize mobile detection
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+
     let targetBudgetId = currentBudgetId.value
 
     if (!targetBudgetId) {
@@ -306,6 +326,11 @@ onMounted(async () => {
   } finally {
     isInitializing.value = false
   }
+})
+
+// Clean up event listener
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 </script>
 
