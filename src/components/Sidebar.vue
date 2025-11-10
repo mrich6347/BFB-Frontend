@@ -367,7 +367,7 @@ const loadExpandedSectionsFromStorage = () => {
       // Update the expandedSections with saved state
       Object.assign(expandedSections.value, savedExpandedSections)
     }
-    // If no saved state, keep the default values (all false)
+    // If no saved state, keep the default values (CASH, TRACKING, CREDIT expanded, CLOSED collapsed)
   }
 }
 
