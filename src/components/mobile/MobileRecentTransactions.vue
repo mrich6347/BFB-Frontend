@@ -1,16 +1,16 @@
 <template>
-  <div class="space-y-3" @click="closeAllSwipes">
-    <h3 class="text-sm font-medium text-muted-foreground px-2">Recent Unreconciled</h3>
-    
+  <div class="flex flex-col" @click="closeAllSwipes">
+    <h3 class="text-sm font-medium text-muted-foreground px-2 mb-3">Recent Unreconciled</h3>
+
     <div v-if="isLoading" class="text-center py-4 text-sm text-muted-foreground">
       Loading transactions...
     </div>
-    
+
     <div v-else-if="recentTransactions.length === 0" class="text-center py-4 text-sm text-muted-foreground">
       No recent transactions
     </div>
-    
-    <div v-else class="space-y-2">
+
+    <div v-else class="overflow-y-auto max-h-[400px] space-y-2 pr-1">
       <div
         v-for="transaction in recentTransactions"
         :key="transaction.id"
@@ -108,11 +108,10 @@ const categoryStore = useCategoryStore()
 const { loadTransactionsByAccount, toggleCleared, isLoading } = useTransactionOperations()
 const transactions = ref<TransactionResponse[]>([])
 
-// Get recent unreconciled transactions (limit to 5)
+// Get all unreconciled transactions
 const recentTransactions = computed(() => {
   return transactions.value
     .filter(t => !t.is_reconciled)
-    .slice(0, 5)
 })
 
 const getCategoryName = (categoryId?: string) => {
