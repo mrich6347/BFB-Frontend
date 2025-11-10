@@ -24,8 +24,8 @@
       </div>
     </div>
 
-    <!-- Category List - scrollable area with bottom nav padding -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-6 pb-24" @click="closeAllSwipes">
+    <!-- Category List - scrollable area with bottom nav padding + floating button padding -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-6 pb-40" @click="closeAllSwipes">
       <div
         v-for="group in visibleGroupsWithCategories"
         :key="group.id"
@@ -87,6 +87,15 @@
       </div>
     </div>
 
+    <!-- Floating Add Transaction Button -->
+    <button
+      @click="showStandaloneTransaction = true"
+      class="fixed bottom-20 right-4 z-40 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-all"
+      style="bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));"
+    >
+      <PlusIcon class="h-6 w-6" />
+    </button>
+
     <!-- Mobile Bottom Navigation -->
     <MobileBottomNav
       active-tab="budget"
@@ -101,6 +110,13 @@
       @save-payment="handleSavePayment"
       @update-balance="handleUpdateBalance"
       @category-balance-change="handleCategoryBalanceChange"
+    />
+
+    <!-- Standalone Transaction Form -->
+    <MobileStandaloneTransactionForm
+      :show="showStandaloneTransaction"
+      @close="showStandaloneTransaction = false"
+      @save="handleStandaloneSaveTransaction"
     />
 
     <!-- Category Balance Toast -->
@@ -152,6 +168,7 @@ import { useMakeCreditCardPayment } from '@/composables/accounts/account-write/u
 import { TrackingAccountService } from '@/services/tracking-account.service'
 import { formatCurrency } from '@/utils/currencyUtil'
 import MobileTransactionFlow from '@/components/mobile/MobileTransactionFlow.vue'
+import MobileStandaloneTransactionForm from '@/components/mobile/MobileStandaloneTransactionForm.vue'
 import MobileAssignMoney from '@/components/mobile/MobileAssignMoney.vue'
 import MobileBottomNav from '@/components/mobile/MobileBottomNav.vue'
 import MobileCreateCategoryModal from '@/components/mobile/MobileCreateCategoryModal.vue'
@@ -179,6 +196,7 @@ const showCreateCategory = ref(false)
 const selectedGroupId = ref<string>('')
 const showEditCategory = ref(false)
 const editingCategory = ref<CategoryResponse | null>(null)
+const showStandaloneTransaction = ref(false)
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
 const categoryBalanceToastRef = ref<InstanceType<typeof MobileCategoryBalanceToast> | null>(null)
 
@@ -383,6 +401,25 @@ const handleSaveTransfer = async (data: CreateTransactionDto) => {
 const handleCategoryBalanceChange = (categoryName: string, oldBalance: number, newBalance: number) => {
   if (categoryBalanceToastRef.value) {
     categoryBalanceToastRef.value.show(categoryName, oldBalance, newBalance)
+  }
+}
+
+const handleStandaloneSaveTransaction = async (data: CreateTransactionDto) => {
+  try {
+    const result = createTransaction(data)
+    // Show category balance toast immediately with optimistic data
+    if (result.categoryBalanceChange && categoryBalanceToastRef.value) {
+      categoryBalanceToastRef.value.show(
+        result.categoryBalanceChange.categoryName,
+        result.categoryBalanceChange.oldBalance,
+        result.categoryBalanceChange.newBalance
+      )
+    }
+    // Wait for the server response in the background
+    await result.promise
+    // Optimistic update provides instant feedback, no need to reload
+  } catch (error) {
+    $toast.error('Failed to save transaction')
   }
 }
 
