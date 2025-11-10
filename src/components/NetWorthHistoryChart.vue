@@ -247,20 +247,20 @@ const chartData = computed(() => {
         borderWidth: 0,
         order: 2
       },
-      // Net Worth - White line with dots
+      // Net Worth - Emerald line with dots (matches app color scheme)
       {
         type: 'line' as const,
         label: 'Net Worth',
         data: dataPoints.map(point => point.net_worth),
-        borderColor: 'rgb(255, 255, 255)',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 2,
+        borderColor: 'rgb(16, 185, 129)', // Emerald-500
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderWidth: 3,
         fill: false,
         tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        pointBackgroundColor: 'rgb(255, 255, 255)',
-        pointBorderColor: 'rgb(255, 255, 255)',
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointBackgroundColor: 'rgb(16, 185, 129)',
+        pointBorderColor: '#fff',
         pointBorderWidth: 2,
         order: 1
       }
