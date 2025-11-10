@@ -186,9 +186,7 @@ const getReadyToAssignTextClass = () => {
 const handleSaveTransaction = async (data: CreateTransactionDto) => {
   try {
     await createTransaction(data)
-    // Reload transactions in the flow after save completes
-    await transactionFlowRef.value?.reloadTransactions()
-    // Optimistic update provides instant feedback, no toast needed
+    // Optimistic update provides instant feedback, no need to reload
   } catch (error) {
     $toast.error('Failed to save transaction')
   }
@@ -197,9 +195,7 @@ const handleSaveTransaction = async (data: CreateTransactionDto) => {
 const handleSaveTransfer = async (data: CreateTransactionDto) => {
   try {
     await createTransaction(data)
-    // Reload transactions in the flow after save completes
-    await transactionFlowRef.value?.reloadTransactions()
-    // Optimistic update provides instant feedback, no toast needed
+    // Optimistic update provides instant feedback, no need to reload
   } catch (error) {
     $toast.error('Failed to create transfer')
   }

@@ -408,8 +408,7 @@ const handleUpdateTransaction = async (id: string, data: UpdateTransactionDto) =
   try {
     await updateTransaction(id, data)
     currentStep.value = 'action'
-    // Reload transactions to show the updated one
-    await recentTransactionsRef.value?.loadTransactions()
+    // Optimistic update provides instant feedback, no need to reload
   } catch (error) {
     console.error('Failed to update transaction:', error)
   }

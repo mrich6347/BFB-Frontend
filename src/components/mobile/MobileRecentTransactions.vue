@@ -89,8 +89,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useCategoryStore } from '@/stores/category.store'
+import { useTransactionStore } from '@/stores/transaction.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { TransactionResponse } from '@/types/DTO/transaction.dto'
@@ -105,13 +106,14 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
+const transactionStore = useTransactionStore()
 const { loadTransactionsByAccount, toggleCleared, isLoading } = useTransactionOperations()
-const transactions = ref<TransactionResponse[]>([])
 
-// Get all unreconciled transactions
+// Get all unreconciled transactions directly from the store (reactive)
+// Access transactions.value directly to ensure reactivity
 const recentTransactions = computed(() => {
-  return transactions.value
-    .filter(t => !t.is_reconciled)
+  return transactionStore.transactions
+    .filter(t => t.account_id === props.accountId && !t.is_reconciled)
 })
 
 const getCategoryName = (categoryId?: string) => {
@@ -275,41 +277,23 @@ const handleToggleCleared = async (transaction: TransactionResponse) => {
     return
   }
 
-  // Optimistically update the UI immediately
-  const originalClearedStatus = transaction.is_cleared
-  const newClearedStatus = !originalClearedStatus
-
-  // Update local state instantly
-  const index = transactions.value.findIndex(t => t.id === transaction.id)
-  if (index !== -1) {
-    transactions.value[index] = {
-      ...transactions.value[index],
-      is_cleared: newClearedStatus
-    }
-  }
-
+  // The toggleCleared composable already handles optimistic updates
+  // Just call it and it will update the store
   try {
-    // Then sync with server in the background
     await toggleCleared(transaction.id)
   } catch (error) {
     console.error('Failed to toggle cleared status:', error)
-    // Rollback on error
-    if (index !== -1) {
-      transactions.value[index] = {
-        ...transactions.value[index],
-        is_cleared: originalClearedStatus
-      }
-    }
+    // Rollback is handled by the composable
   }
 }
 
 const loadTransactions = async () => {
   try {
-    await loadTransactionsByAccount(props.accountId)
-    // Get transactions from store after loading
-    const { useTransactionStore } = await import('@/stores/transaction.store')
-    const transactionStore = useTransactionStore()
-    transactions.value = transactionStore.getTransactionsByAccount(props.accountId)
+    // Only load if this account isn't already the current one
+    // This prevents wiping out optimistic updates when navigating back
+    if (transactionStore.currentAccountId !== props.accountId) {
+      await loadTransactionsByAccount(props.accountId)
+    }
   } catch (error) {
     console.error('Failed to load transactions:', error)
   }
