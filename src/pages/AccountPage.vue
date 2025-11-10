@@ -6,7 +6,7 @@
       :key="accountId"
     />
     <!-- Render regular account page for other account types -->
-    <div class="flex h-screen">
+    <div v-else class="flex h-screen">
       <Sidebar :budgetId="budgetId" />
       <div class="flex-1 overflow-auto">
         <AccountHeader :account="account" />
