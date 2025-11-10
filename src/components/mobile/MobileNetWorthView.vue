@@ -283,6 +283,8 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'n
 const handleSaveTransaction = async (data: CreateTransactionDto) => {
   try {
     await createTransaction(data)
+    // Reload transactions in the flow after save completes
+    await transactionFlowRef.value?.reloadTransactions()
   } catch (error) {
     console.error('Failed to create transaction:', error)
     $toast.error('Failed to create transaction')
@@ -292,6 +294,8 @@ const handleSaveTransaction = async (data: CreateTransactionDto) => {
 const handleSaveTransfer = async (data: CreateTransactionDto) => {
   try {
     await createTransaction(data)
+    // Reload transactions in the flow after save completes
+    await transactionFlowRef.value?.reloadTransactions()
   } catch (error) {
     console.error('Failed to create transfer:', error)
     $toast.error('Failed to create transfer')

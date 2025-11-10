@@ -319,10 +319,6 @@ const openFlow = () => {
   startFlow()
 }
 
-defineExpose({
-  openFlow
-})
-
 const closeFlow = () => {
   showFlow.value = false
   currentStep.value = 'account'
@@ -353,27 +349,31 @@ const selectAction = (action: 'transaction' | 'transfer' | 'payment' | 'updateBa
   currentStep.value = 'form'
 }
 
-const handleSaveTransaction = async (data: CreateTransactionDto) => {
+const handleSaveTransaction = (data: CreateTransactionDto) => {
   emit('saveTransaction', data)
   currentStep.value = 'action'
-  // Reload transactions to show the new one
-  await recentTransactionsRef.value?.loadTransactions()
 }
 
-const handleSaveTransfer = async (data: CreateTransactionDto) => {
+const handleSaveTransfer = (data: CreateTransactionDto) => {
   emit('saveTransfer', data)
   currentStep.value = 'action'
-  // Reload transactions to show the new one
-  await recentTransactionsRef.value?.loadTransactions()
 }
 
-const handleSavePayment = async (amount: number, fromAccountId: string, memo?: string) => {
+const handleSavePayment = (amount: number, fromAccountId: string, memo?: string) => {
   if (!selectedAccount.value) return
   emit('savePayment', selectedAccount.value.id, amount, fromAccountId, memo)
   currentStep.value = 'action'
-  // Reload transactions to show the new one
+}
+
+// Expose method to reload transactions from parent
+const reloadTransactions = async () => {
   await recentTransactionsRef.value?.loadTransactions()
 }
+
+defineExpose({
+  openFlow,
+  reloadTransactions
+})
 
 const handleEditTransaction = (transaction: TransactionResponse) => {
   editingTransaction.value = transaction

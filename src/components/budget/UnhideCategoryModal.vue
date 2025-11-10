@@ -49,6 +49,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCategoryStore } from '@/stores/category.store'
+import { useUnhideCategory } from '@/composables/categories/category-write/useUnhideCategory'
 import type { CategoryGroupResponse } from '@/types/DTO/category-group.dto'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shadcn-ui'
 
@@ -66,6 +67,7 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
+const { unhideCategory } = useUnhideCategory()
 const selectedGroupId = ref('')
 const isLoading = ref(false)
 
@@ -87,7 +89,7 @@ const handleUnhide = async () => {
   isLoading.value = true
 
   try {
-    await categoryStore.unhideCategory(props.categoryId, selectedGroupId.value)
+    await unhideCategory(props.categoryId, selectedGroupId.value)
     emit('unhidden', props.categoryId)
     close()
   } catch (error) {

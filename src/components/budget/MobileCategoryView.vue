@@ -186,6 +186,8 @@ const getReadyToAssignTextClass = () => {
 const handleSaveTransaction = async (data: CreateTransactionDto) => {
   try {
     await createTransaction(data)
+    // Reload transactions in the flow after save completes
+    await transactionFlowRef.value?.reloadTransactions()
     // Optimistic update provides instant feedback, no toast needed
   } catch (error) {
     $toast.error('Failed to save transaction')
@@ -195,6 +197,8 @@ const handleSaveTransaction = async (data: CreateTransactionDto) => {
 const handleSaveTransfer = async (data: CreateTransactionDto) => {
   try {
     await createTransaction(data)
+    // Reload transactions in the flow after save completes
+    await transactionFlowRef.value?.reloadTransactions()
     // Optimistic update provides instant feedback, no toast needed
   } catch (error) {
     $toast.error('Failed to create transfer')
@@ -213,6 +217,9 @@ const handleSavePayment = async (creditCardAccountId: string, amount: number, fr
     budgetStore.setReadyToAssign(response.readyToAssign)
     accountStore.updateAccount(creditCardAccountId, response.account) // Credit card account
     accountStore.updateAccount(fromAccountId, response.sourceAccount) // Cash account
+
+    // Reload transactions in the flow after save completes
+    await transactionFlowRef.value?.reloadTransactions()
 
     // Update payment category balance if provided
     if (response.paymentCategoryBalance) {

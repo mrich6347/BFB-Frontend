@@ -28,7 +28,8 @@ export const useUnhideCategory = () => {
 
       budgetStore.setReadyToAssign(response.readyToAssign)
 
-      categoryStore.unhideCategory(id, targetGroup)
+      // Update the category with the server response
+      categoryStore.updateCategory(response.category)
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to unhide category'
       console.error('Error unhiding category:', err)
