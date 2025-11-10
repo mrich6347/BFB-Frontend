@@ -32,8 +32,16 @@
         class="space-y-2"
       >
         <!-- Group Header -->
-        <div class="px-3 py-2 bg-muted/50 rounded-md">
+        <div class="px-3 py-2 bg-muted/50 rounded-md flex items-center justify-between">
           <h2 class="text-sm font-medium text-muted-foreground">{{ group.name }}</h2>
+          <button
+            v-if="!group.is_system_group"
+            @click.stop="openCreateCategory(group.id)"
+            class="p-1 rounded-md hover:bg-muted transition-colors"
+            :aria-label="`Add category to ${group.name}`"
+          >
+            <PlusIcon class="h-4 w-4 text-muted-foreground" />
+          </button>
         </div>
 
         <!-- Categories in Group -->
@@ -82,6 +90,15 @@
       @cover-overspending="handleCoverOverspending"
       @move-money="handleMoveMoney"
     />
+
+    <!-- Mobile Create Category Modal -->
+    <MobileCreateCategoryModal
+      :show="showCreateCategory"
+      :category-group-id="selectedGroupId"
+      :budget-id="budgetStore.currentBudget?.id || ''"
+      @close="closeCreateCategory"
+      @created="handleCategoryCreated"
+    />
   </div>
 </template>
 
@@ -103,6 +120,8 @@ import { formatCurrency } from '@/utils/currencyUtil'
 import MobileTransactionFlow from '@/components/mobile/MobileTransactionFlow.vue'
 import MobileAssignMoney from '@/components/mobile/MobileAssignMoney.vue'
 import MobileBottomNav from '@/components/mobile/MobileBottomNav.vue'
+import MobileCreateCategoryModal from '@/components/mobile/MobileCreateCategoryModal.vue'
+import { PlusIcon } from 'lucide-vue-next'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 
@@ -119,6 +138,8 @@ const $toast = useToast()
 
 const showAssignMoney = ref(false)
 const selectedCategory = ref<CategoryResponse | null>(null)
+const showCreateCategory = ref(false)
+const selectedGroupId = ref<string>('')
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
 
 // Get categories for a specific group with balances
@@ -239,6 +260,23 @@ const openAssignMoney = (category: CategoryResponse) => {
 const closeAssignMoney = () => {
   showAssignMoney.value = false
   selectedCategory.value = null
+}
+
+const openCreateCategory = (groupId: string) => {
+  selectedGroupId.value = groupId
+  showCreateCategory.value = true
+}
+
+const closeCreateCategory = () => {
+  showCreateCategory.value = false
+  selectedGroupId.value = ''
+}
+
+const handleCategoryCreated = (category: CategoryResponse) => {
+  // Category is already added to store by the composable
+  // Just close the modal
+  closeCreateCategory()
+  $toast.success(`Category "${category.name}" created`)
 }
 
 const handleAssignMoney = async (categoryId: string, newAssigned: number) => {
