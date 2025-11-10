@@ -304,7 +304,7 @@ const handleToggleCleared = async (transaction: TransactionResponse) => {
   }
 }
 
-onMounted(async () => {
+const loadTransactions = async () => {
   try {
     await loadTransactionsByAccount(props.accountId)
     // Get transactions from store after loading
@@ -314,6 +314,15 @@ onMounted(async () => {
   } catch (error) {
     console.error('Failed to load transactions:', error)
   }
+}
+
+onMounted(async () => {
+  await loadTransactions()
+})
+
+// Expose loadTransactions so parent can refresh the list
+defineExpose({
+  loadTransactions
 })
 </script>
 

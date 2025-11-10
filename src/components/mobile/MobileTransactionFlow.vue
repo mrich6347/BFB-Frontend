@@ -151,6 +151,7 @@
           <!-- Recent Transactions Section (not for tracking accounts) -->
           <MobileRecentTransactions
             v-if="selectedAccount && !isTrackingAccount"
+            ref="recentTransactionsRef"
             :account-id="selectedAccount.id"
             @edit="handleEditTransaction"
             @delete="handleDeleteTransaction"
@@ -290,6 +291,7 @@ const selectedAction = ref<'transaction' | 'transfer' | 'payment' | 'reconcile' 
 const transactionType = ref<'inflow' | 'outflow'>('outflow')
 const editingTransaction = ref<TransactionResponse | null>(null)
 const showReconcileConfirm = ref(false)
+const recentTransactionsRef = ref<InstanceType<typeof MobileRecentTransactions> | null>(null)
 
 const cashAccounts = computed(() => accountStore.getAccountsByType('CASH'))
 const creditAccounts = computed(() => accountStore.getAccountsByType('CREDIT'))
@@ -351,20 +353,26 @@ const selectAction = (action: 'transaction' | 'transfer' | 'payment' | 'updateBa
   currentStep.value = 'form'
 }
 
-const handleSaveTransaction = (data: CreateTransactionDto) => {
+const handleSaveTransaction = async (data: CreateTransactionDto) => {
   emit('saveTransaction', data)
   currentStep.value = 'action'
+  // Reload transactions to show the new one
+  await recentTransactionsRef.value?.loadTransactions()
 }
 
-const handleSaveTransfer = (data: CreateTransactionDto) => {
+const handleSaveTransfer = async (data: CreateTransactionDto) => {
   emit('saveTransfer', data)
   currentStep.value = 'action'
+  // Reload transactions to show the new one
+  await recentTransactionsRef.value?.loadTransactions()
 }
 
-const handleSavePayment = (amount: number, fromAccountId: string, memo?: string) => {
+const handleSavePayment = async (amount: number, fromAccountId: string, memo?: string) => {
   if (!selectedAccount.value) return
   emit('savePayment', selectedAccount.value.id, amount, fromAccountId, memo)
   currentStep.value = 'action'
+  // Reload transactions to show the new one
+  await recentTransactionsRef.value?.loadTransactions()
 }
 
 const handleEditTransaction = (transaction: TransactionResponse) => {
@@ -376,6 +384,8 @@ const handleUpdateTransaction = async (id: string, data: UpdateTransactionDto) =
   try {
     await updateTransaction(id, data)
     currentStep.value = 'action'
+    // Reload transactions to show the updated one
+    await recentTransactionsRef.value?.loadTransactions()
   } catch (error) {
     console.error('Failed to update transaction:', error)
   }
@@ -385,6 +395,8 @@ const handleDeleteTransaction = async (transactionId: string) => {
   try {
     await deleteTransaction(transactionId)
     currentStep.value = 'action'
+    // Reload transactions to show the list without the deleted one
+    await recentTransactionsRef.value?.loadTransactions()
   } catch (error) {
     console.error('Failed to delete transaction:', error)
   }
