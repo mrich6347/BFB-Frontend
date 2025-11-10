@@ -91,23 +91,23 @@
                 </div>
 
                 <!-- Scheduled Bills for this day -->
-                <div class="space-y-2 overflow-y-auto flex-1">
+                <div class="space-y-1 overflow-y-auto flex-1">
                   <div
                     v-for="transaction in day.transactions"
                     :key="transaction.id"
                     :class="[
-                      'text-xs p-2 rounded-lg cursor-pointer transition-all hover:shadow-md border',
+                      'text-xs px-2 py-1 rounded cursor-pointer transition-all hover:shadow-sm border',
                       transaction.amount < 0
                         ? 'bg-red-50 dark:bg-red-950/20 text-red-900 dark:text-red-100 border-red-200 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-950/30'
                         : 'bg-green-50 dark:bg-green-950/20 text-green-900 dark:text-green-100 border-green-200 dark:border-green-900/50 hover:bg-green-100 dark:hover:bg-green-950/30'
                     ]"
                     @click="showTransactionDetails(transaction)"
                   >
-                    <div class="font-semibold truncate mb-1">{{ transaction.payee }}</div>
-                    <div class="flex items-center justify-between gap-2">
-                      <span class="text-[10px] text-muted-foreground truncate flex-1">{{ transaction.category }}</span>
+                    <div class="font-semibold truncate text-[11px]">{{ transaction.payee }}</div>
+                    <div class="flex items-center justify-between gap-1">
+                      <span class="text-[9px] text-muted-foreground truncate flex-1">{{ transaction.category }}</span>
                       <span :class="[
-                        'font-bold text-xs whitespace-nowrap',
+                        'font-bold text-[10px] whitespace-nowrap',
                         transaction.amount < 0 ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'
                       ]">
                         {{ formatCurrency(Math.abs(transaction.amount)) }}
