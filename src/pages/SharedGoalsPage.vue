@@ -1,5 +1,13 @@
 <template>
-  <div class="flex h-screen">
+  <div v-if="isLoading" class="flex h-screen items-center justify-center">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+  <!-- Mobile View -->
+  <div v-else-if="isMobile" class="h-screen overflow-auto">
+    <MobileSharedGoalsView />
+  </div>
+  <!-- Desktop View -->
+  <div v-else class="flex h-screen">
     <Sidebar :budgetId="currentBudgetId" />
     <div class="flex-1 bg-background overflow-auto">
       <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -424,7 +432,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { PlusIcon, TargetIcon, UsersIcon, AlertCircleIcon, MailIcon, UserPlusIcon, RefreshCwIcon, TrophyIcon } from 'lucide-vue-next'
 import { useSharedGoalOperations } from '../composables/shared-goals/useSharedGoalOperations'
@@ -434,6 +442,7 @@ import { useSharedGoalsStore } from '../stores/shared-goals.store'
 import { useBudgetStore } from '../stores/budget.store'
 import { useUserProfileStore } from '../stores/user-profile.store'
 import Sidebar from '../components/Sidebar.vue'
+import MobileSharedGoalsView from '../components/mobile/MobileSharedGoalsView.vue'
 import CreateGoalModal from '../components/shared-goals/CreateGoalModal.vue'
 import GoalDetailsModal from '../components/shared-goals/GoalDetailsModal.vue'
 import InviteUserModal from '../components/shared-goals/InviteUserModal.vue'
@@ -449,6 +458,13 @@ const { refreshPageData, isRefreshing, refreshError, clearRefreshError } = useSh
 const sharedGoalsStore = useSharedGoalsStore()
 const budgetStore = useBudgetStore()
 const userProfileStore = useUserProfileStore()
+
+// Mobile detection
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768 // Tailwind's md breakpoint
+}
 
 const isCreateModalOpen = ref(false)
 const isGoalDetailsModalOpen = ref(false)
@@ -472,6 +488,10 @@ const hasUserProfile = computed(() => !!userProfileStore.currentProfile)
 
 // Refresh shared goals data when page is mounted to ensure fresh data
 onMounted(async () => {
+  // Initialize mobile detection
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+
   const currentBudgetId = budgetStore.currentBudget?.id
   if (currentBudgetId) {
     // Clear any previous refresh errors
@@ -489,6 +509,11 @@ onMounted(async () => {
       console.error('Failed to refresh shared goals page data on mount')
     }
   }
+})
+
+// Clean up event listener
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 
 // Methods

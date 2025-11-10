@@ -1,0 +1,336 @@
+<template>
+  <div class="h-screen flex flex-col bg-background">
+    <!-- Header -->
+    <div class="sticky top-0 z-10 bg-background border-b border-border" style="padding-top: max(3rem, env(safe-area-inset-top));">
+      <div class="px-4 pb-4 space-y-3">
+        <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary/80">
+          <PiggyBankIcon class="h-3.5 w-3.5" />
+          <span>Retirement Plan</span>
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold text-foreground">
+            {{ isValidInput ? formatCurrency(finalBalance) : '$0' }}
+          </h1>
+          <p class="text-sm text-muted-foreground mt-1">
+            {{ isValidInput ? `At age ${retirementAge}` : 'Enter your details' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto px-4 pt-4 space-y-4 pb-24">
+      <!-- Input Section -->
+      <div class="rounded-lg border border-border bg-card shadow-sm p-4 space-y-4">
+        <h2 class="text-sm font-semibold text-foreground uppercase tracking-wide">Your Information</h2>
+        
+        <!-- Starting Balance -->
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1.5">
+            Starting Balance
+          </label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+            <input
+              type="number"
+              v-model.number="startingBalance"
+              @blur="handleStartingBalanceBlur"
+              class="w-full pl-8 pr-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+            />
+          </div>
+          <p class="mt-1 text-xs text-muted-foreground">
+            Tracking accounts: {{ formatCurrency(trackingAccountsTotal) }}
+          </p>
+        </div>
+
+        <!-- Age Inputs -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">
+              Current Age
+            </label>
+            <input
+              type="number"
+              v-model.number="currentAge"
+              class="w-full px-3 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              placeholder="30"
+              min="18"
+              max="100"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">
+              Retirement Age
+            </label>
+            <input
+              type="number"
+              v-model.number="retirementAge"
+              class="w-full px-3 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              placeholder="60"
+              :min="currentAge + 1"
+              max="100"
+            />
+          </div>
+        </div>
+
+        <!-- Monthly Contribution -->
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1.5">
+            Monthly Contribution
+          </label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+            <input
+              type="number"
+              v-model.number="monthlyContribution"
+              class="w-full pl-8 pr-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              placeholder="2500.00"
+              step="0.01"
+              min="0"
+            />
+          </div>
+        </div>
+
+        <!-- Annual Return -->
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1.5">
+            Expected Annual Return
+          </label>
+          <div class="relative">
+            <input
+              type="number"
+              v-model.number="annualReturnPercent"
+              class="w-full pr-8 pl-3 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              placeholder="8"
+              step="0.1"
+              min="0"
+              max="20"
+            />
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
+          </div>
+          <p class="mt-1 text-xs text-muted-foreground">
+            Historical average: ~8-10%
+          </p>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div v-if="isValidInput" class="space-y-3">
+        <!-- Years to Retirement -->
+        <div class="rounded-lg border border-border bg-primary/10 p-4">
+          <div class="text-xs text-muted-foreground mb-1">Years to Retirement</div>
+          <div class="text-2xl font-bold text-primary">
+            {{ yearsToRetirement }} years
+          </div>
+        </div>
+
+        <!-- Final Balance -->
+        <div class="rounded-lg border border-border bg-green-500/10 p-4">
+          <div class="text-xs text-muted-foreground mb-1">Projected Balance</div>
+          <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+            {{ formatCurrency(finalBalance) }}
+          </div>
+        </div>
+
+        <!-- Breakdown -->
+        <div class="rounded-lg border border-border bg-card shadow-sm p-4 space-y-3">
+          <h3 class="text-sm font-semibold text-foreground">Breakdown</h3>
+          
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-muted-foreground">Starting Balance</span>
+              <span class="font-medium text-foreground">{{ formatCurrency(startingBalance) }}</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-muted-foreground">Total Contributions</span>
+              <span class="font-medium text-foreground">{{ formatCurrency(totalContributionsOnly) }}</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-muted-foreground">Interest Earned</span>
+              <span class="font-medium text-green-600 dark:text-green-400">{{ formatCurrency(totalInterest) }}</span>
+            </div>
+            <div class="pt-2 border-t border-border flex justify-between items-center">
+              <span class="text-sm font-semibold text-foreground">Total</span>
+              <span class="text-sm font-bold text-foreground">{{ formatCurrency(finalBalance) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Chart -->
+        <div class="rounded-lg border border-border bg-card shadow-sm p-4">
+          <h3 class="text-sm font-semibold text-foreground mb-4">Contributions vs Interest</h3>
+          
+          <!-- Stacked Bar Chart -->
+          <div class="space-y-2">
+            <div class="h-12 flex rounded-lg overflow-hidden">
+              <div
+                class="bg-blue-500 flex items-center justify-center text-white text-xs font-medium"
+                :style="{ width: `${contributionPercentage}%` }"
+              >
+                <span v-if="contributionPercentage > 15">{{ contributionPercentage.toFixed(0) }}%</span>
+              </div>
+              <div
+                class="bg-green-500 flex items-center justify-center text-white text-xs font-medium"
+                :style="{ width: `${interestPercentage}%` }"
+              >
+                <span v-if="interestPercentage > 15">{{ interestPercentage.toFixed(0) }}%</span>
+              </div>
+            </div>
+            
+            <!-- Legend -->
+            <div class="flex items-center justify-center gap-4 text-xs">
+              <div class="flex items-center gap-1.5">
+                <div class="w-3 h-3 bg-blue-500 rounded"></div>
+                <span class="text-muted-foreground">Contributions</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <div class="w-3 h-3 bg-green-500 rounded"></div>
+                <span class="text-muted-foreground">Interest</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 text-center">
+            <p class="text-xs text-muted-foreground">
+              Interest makes up <span class="font-semibold text-foreground">{{ interestPercentage.toFixed(1) }}%</span> of your total!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else class="flex flex-col items-center justify-center min-h-[200px] p-4">
+        <PiggyBankIcon class="h-16 w-16 text-muted-foreground/50 mb-4" />
+        <p class="text-muted-foreground text-center text-sm">
+          Fill in your information above<br />to see your retirement projections
+        </p>
+      </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <MobileBottomNav
+      active-tab="retirement"
+      @navigate="handleNavigate"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { PiggyBankIcon } from 'lucide-vue-next'
+import { useAccountStore } from '../../stores/account.store'
+import { useBudgetStore } from '../../stores/budget.store'
+import { AccountType } from '../../types/DTO/account.dto'
+import { formatCurrency } from '../../utils/currencyUtil'
+import MobileBottomNav from './MobileBottomNav.vue'
+
+const router = useRouter()
+const accountStore = useAccountStore()
+const budgetStore = useBudgetStore()
+
+// Reactive state
+const currentAge = ref(27)
+const retirementAge = ref(60)
+const monthlyContribution = ref(2000)
+const annualReturnPercent = ref(8)
+const startingBalance = ref(0)
+
+// Computed values
+const currentBudget = computed(() => budgetStore.currentBudget)
+
+const trackingAccountsTotal = computed(() => {
+  const trackingAccounts = accountStore.getAccountsByType(AccountType.TRACKING)
+  return trackingAccounts.reduce((sum, account) => sum + (account.working_balance || 0), 0)
+})
+
+const annualReturnRate = computed(() => annualReturnPercent.value / 100)
+
+const isValidInput = computed(() => {
+  return currentAge.value > 0 &&
+         retirementAge.value > currentAge.value &&
+         monthlyContribution.value >= 0 &&
+         startingBalance.value != null &&
+         !isNaN(startingBalance.value) &&
+         startingBalance.value >= 0
+})
+
+const yearsToRetirement = computed(() => {
+  return retirementAge.value - currentAge.value
+})
+
+const finalBalance = computed(() => {
+  if (!isValidInput.value) return 0
+
+  const years = yearsToRetirement.value
+  const annualRate = annualReturnRate.value
+  const monthlyContrib = monthlyContribution.value || 0
+  const annualContrib = monthlyContrib * 12
+
+  let balance = startingBalance.value || 0
+
+  for (let year = 0; year < years; year++) {
+    balance += annualContrib
+    balance *= (1 + annualRate)
+  }
+
+  return balance
+})
+
+const totalContributions = computed(() => {
+  if (!isValidInput.value) return 0
+  return (startingBalance.value || 0) + ((monthlyContribution.value || 0) * yearsToRetirement.value * 12)
+})
+
+const totalContributionsOnly = computed(() => {
+  if (!isValidInput.value) return 0
+  return (monthlyContribution.value || 0) * yearsToRetirement.value * 12
+})
+
+const totalInterest = computed(() => {
+  if (!isValidInput.value) return 0
+  return finalBalance.value - totalContributions.value
+})
+
+const contributionPercentage = computed(() => {
+  if (!isValidInput.value || finalBalance.value === 0) return 0
+  return (totalContributions.value / finalBalance.value) * 100
+})
+
+const interestPercentage = computed(() => {
+  if (!isValidInput.value || finalBalance.value === 0) return 0
+  return (totalInterest.value / finalBalance.value) * 100
+})
+
+// Methods
+const handleStartingBalanceBlur = () => {
+  if (startingBalance.value === null || isNaN(startingBalance.value)) {
+    startingBalance.value = trackingAccountsTotal.value
+  }
+}
+
+const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'retirement') => {
+  if (tab === 'budget') {
+    const budgetId = currentBudget.value?.id
+    if (budgetId) {
+      router.push(`/budget/${budgetId}`)
+    }
+  } else if (tab === 'accounts') {
+    router.push('/net-worth')
+  } else if (tab === 'networth') {
+    router.push('/net-worth')
+  } else if (tab === 'goals') {
+    router.push('/shared-goals')
+  }
+  // Retirement tab is already the current view
+}
+
+// Initialize starting balance with tracking accounts total
+onMounted(() => {
+  startingBalance.value = trackingAccountsTotal.value
+})
+</script>
+

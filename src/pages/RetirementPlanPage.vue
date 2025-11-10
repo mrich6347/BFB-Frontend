@@ -1,5 +1,10 @@
 <template>
-  <div class="flex h-screen">
+  <!-- Mobile View -->
+  <div v-if="isMobile" class="h-screen overflow-auto">
+    <MobileRetirementPlanView />
+  </div>
+  <!-- Desktop View -->
+  <div v-else class="flex h-screen">
     <Sidebar :budgetId="currentBudgetId" />
     <div class="flex-1 bg-background overflow-auto">
       <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -196,9 +201,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { AlertCircleIcon } from 'lucide-vue-next'
 import Sidebar from '../components/Sidebar.vue'
+import MobileRetirementPlanView from '../components/mobile/MobileRetirementPlanView.vue'
 import RetirementChart from '../components/retirement/RetirementChart.vue'
 import { useAccountStore } from '../stores/account.store'
 import { useBudgetStore } from '../stores/budget.store'
@@ -208,6 +214,13 @@ import { safeToFixed } from '../utils/numberFormatUtil'
 
 const accountStore = useAccountStore()
 const budgetStore = useBudgetStore()
+
+// Mobile detection
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768 // Tailwind's md breakpoint
+}
 
 // Reactive state
 const currentAge = ref(27)
@@ -226,7 +239,16 @@ const trackingAccountsTotal = computed(() => {
 
 // Initialize starting balance with tracking accounts total
 onMounted(() => {
+  // Initialize mobile detection
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+
   startingBalance.value = trackingAccountsTotal.value
+})
+
+// Clean up event listener
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 
 const annualReturnRate = computed(() => annualReturnPercent.value / 100)

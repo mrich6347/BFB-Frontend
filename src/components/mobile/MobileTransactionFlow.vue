@@ -351,7 +351,7 @@ const handleUpdateBalance = (accountId: string, newBalance: number) => {
   currentStep.value = 'account'
 }
 
-const handleNavigate = async (tab: 'budget' | 'accounts' | 'networth') => {
+const handleNavigate = async (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth') => {
   if (tab === 'budget') {
     const budgetId = budgetStore.currentBudget?.id
     if (budgetId) {
@@ -359,6 +359,12 @@ const handleNavigate = async (tab: 'budget' | 'accounts' | 'networth') => {
       await router.push(`/budget/${budgetId}`)
       closeFlow()
     }
+  } else if (tab === 'goals') {
+    await router.push('/shared-goals')
+    closeFlow()
+  } else if (tab === 'retirement') {
+    await router.push('/retirement-plan')
+    closeFlow()
   } else if (tab === 'networth') {
     // Navigate first, then close modal after navigation completes
     await router.push('/net-worth')

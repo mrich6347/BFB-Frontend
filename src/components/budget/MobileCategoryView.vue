@@ -322,10 +322,14 @@ const handleUpdateBalance = async (accountId: string, newBalance: number) => {
   }
 }
 
-const handleNavigate = (tab: 'budget' | 'accounts' | 'networth') => {
+const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth') => {
   if (tab === 'accounts') {
     // Open the transaction flow to account selection
     transactionFlowRef.value?.openFlow()
+  } else if (tab === 'goals') {
+    router.push('/shared-goals')
+  } else if (tab === 'retirement') {
+    router.push('/retirement-plan')
   } else if (tab === 'networth') {
     // Navigate to net worth page
     router.push('/net-worth')
