@@ -125,7 +125,7 @@ import { useToast } from 'vue-toast-notification'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useAccountStore } from '@/stores/account.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
-import { AccountService } from '@/services/account.service'
+import { useMakeCreditCardPayment } from '@/composables/accounts/account-write/useMakeCreditCardPayment'
 import { TrackingAccountService } from '@/services/tracking-account.service'
 import { AccountType, type AccountResponse } from '@/types/DTO/account.dto'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
@@ -139,6 +139,7 @@ const router = useRouter()
 const budgetStore = useBudgetStore()
 const accountStore = useAccountStore()
 const { createTransaction } = useTransactionOperations()
+const { makeCreditCardPayment } = useMakeCreditCardPayment()
 const $toast = useToast()
 
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
@@ -302,32 +303,8 @@ const handleSaveTransfer = async (data: CreateTransactionDto) => {
 
 const handleSavePayment = async (creditCardAccountId: string, amount: number, fromAccountId: string, memo?: string) => {
   try {
-    // Create the payment transaction
-    const paymentData: CreateTransactionDto = {
-      account_id: creditCardAccountId,
-      amount: amount,
-      transaction_date: new Date().toISOString().split('T')[0],
-      transaction_type: 'inflow',
-      category_id: 'ready-to-assign',
-      memo: memo || 'Credit card payment',
-      is_cleared: true,
-      payee_name: 'Payment'
-    }
-    await createTransaction(paymentData)
-
-    // Create the corresponding outflow from the paying account
-    const outflowData: CreateTransactionDto = {
-      account_id: fromAccountId,
-      amount: amount,
-      transaction_date: new Date().toISOString().split('T')[0],
-      transaction_type: 'outflow',
-      category_id: 'ready-to-assign',
-      memo: memo || 'Credit card payment',
-      is_cleared: true,
-      payee_name: 'Payment'
-    }
-    await createTransaction(outflowData)
-
+    await makeCreditCardPayment(creditCardAccountId, amount, fromAccountId, memo)
+    // Optimistic update provides instant feedback, no need to show toast
   } catch (error) {
     console.error('Failed to create payment:', error)
     $toast.error('Failed to create payment')

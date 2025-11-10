@@ -144,7 +144,7 @@ import { useMoveMoneyBetweenCategories } from '@/composables/categories/category
 import { usePullFromReadyToAssign } from '@/composables/categories/category-write/usePullFromReadyToAssign'
 import { useMoveMoneyToReadyToAssign } from '@/composables/categories/category-write/useMoveMoneyToReadyToAssign'
 import { useUpdateCategoryBalance } from '@/composables/categories/category-write/useUpdateCategoryBalance'
-import { AccountService } from '@/services/account.service'
+import { useMakeCreditCardPayment } from '@/composables/accounts/account-write/useMakeCreditCardPayment'
 import { TrackingAccountService } from '@/services/tracking-account.service'
 import { formatCurrency } from '@/utils/currencyUtil'
 import MobileTransactionFlow from '@/components/mobile/MobileTransactionFlow.vue'
@@ -165,6 +165,7 @@ const { moveMoney } = useMoveMoneyBetweenCategories()
 const { pullFromReadyToAssign } = usePullFromReadyToAssign()
 const { moveMoneyToReadyToAssign } = useMoveMoneyToReadyToAssign()
 const { updateCategoryBalance } = useUpdateCategoryBalance()
+const { makeCreditCardPayment } = useMakeCreditCardPayment()
 const $toast = useToast()
 
 const showAssignMoney = ref(false)
@@ -355,29 +356,8 @@ const handleSaveTransfer = async (data: CreateTransactionDto) => {
 
 const handleSavePayment = async (creditCardAccountId: string, amount: number, fromAccountId: string, memo?: string) => {
   try {
-    const response = await AccountService.makeCreditCardPayment(creditCardAccountId, {
-      amount,
-      from_account_id: fromAccountId,
-      memo
-    })
-
-    // Update stores with server response
-    budgetStore.setReadyToAssign(response.readyToAssign)
-    accountStore.updateAccount(creditCardAccountId, response.account) // Credit card account
-    accountStore.updateAccount(fromAccountId, response.sourceAccount) // Cash account
-
-    // Reload transactions in the flow after save completes
-    await transactionFlowRef.value?.reloadTransactions()
-
-    // Update payment category balance if provided
-    if (response.paymentCategoryBalance) {
-      categoryStore.updateCategoryBalance(
-        response.paymentCategoryBalance.category_id,
-        response.paymentCategoryBalance
-      )
-    }
-
-    // Optimistic update provides instant feedback, no toast needed
+    await makeCreditCardPayment(creditCardAccountId, amount, fromAccountId, memo)
+    // Optimistic update provides instant feedback, no need to reload or show toast
   } catch (error) {
     $toast.error('Failed to make payment')
   }
