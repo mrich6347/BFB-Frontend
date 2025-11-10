@@ -45,7 +45,7 @@ export const useMakeCreditCardPayment = () => {
       memo: memo || 'Credit Card Payment',
       payee: `Transfer : ${cashAccount.name}`,
       category_id: undefined,
-      is_cleared: true,
+      is_cleared: false,
       is_reconciled: false,
       transfer_id: undefined,
       created_at: new Date().toISOString(),
@@ -61,7 +61,7 @@ export const useMakeCreditCardPayment = () => {
       memo: memo || 'Credit Card Payment',
       payee: `Transfer : ${creditCardAccount.name}`,
       category_id: undefined,
-      is_cleared: true,
+      is_cleared: false,
       is_reconciled: false,
       transfer_id: undefined,
       created_at: new Date().toISOString(),
@@ -73,15 +73,15 @@ export const useMakeCreditCardPayment = () => {
     transactionStore.addTransaction(optimisticCashTransaction)
 
     // Optimistically update account balances (instant UI update)
-    // Credit card: add positive amount to cleared balance (reduces debt)
+    // Credit card: add positive amount to uncleared balance (reduces debt)
     accountStore.updateAccount(creditCardAccountId, {
-      cleared_balance: creditCardAccount.cleared_balance + positiveAmount,
+      uncleared_balance: creditCardAccount.uncleared_balance + positiveAmount,
       working_balance: creditCardAccount.working_balance + positiveAmount
     })
 
-    // Cash account: subtract amount from cleared balance
+    // Cash account: subtract amount from uncleared balance
     accountStore.updateAccount(fromAccountId, {
-      cleared_balance: cashAccount.cleared_balance - positiveAmount,
+      uncleared_balance: cashAccount.uncleared_balance - positiveAmount,
       working_balance: cashAccount.working_balance - positiveAmount
     })
 
@@ -121,12 +121,12 @@ export const useMakeCreditCardPayment = () => {
 
       // Restore original account balances
       accountStore.updateAccount(creditCardAccountId, {
-        cleared_balance: creditCardAccount.cleared_balance,
+        uncleared_balance: creditCardAccount.uncleared_balance,
         working_balance: creditCardAccount.working_balance
       })
 
       accountStore.updateAccount(fromAccountId, {
-        cleared_balance: cashAccount.cleared_balance,
+        uncleared_balance: cashAccount.uncleared_balance,
         working_balance: cashAccount.working_balance
       })
 

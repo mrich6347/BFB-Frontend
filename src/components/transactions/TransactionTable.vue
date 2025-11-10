@@ -534,7 +534,7 @@ const handleSavePayment = async (amount: number, fromAccountId: string, memo?: s
     amount: Math.abs(amount), // Positive amount (inflow to credit card)
     payee: 'Credit Card Payment',
     memo: memo || 'Credit Card Payment',
-    is_cleared: true,
+    is_cleared: false,
     is_reconciled: false,
     category_id: undefined, // Will be set by backend
     created_at: new Date(),
@@ -547,11 +547,11 @@ const handleSavePayment = async (amount: number, fromAccountId: string, memo?: s
   // Optimistically update account balance (positive amount reduces credit card debt)
   const account = accountStore.accounts.find(acc => acc.id === props.accountId)
   if (account) {
-    const newClearedBalance = account.cleared_balance + Math.abs(amount)
+    const newUnclearedBalance = account.uncleared_balance + Math.abs(amount)
     const newWorkingBalance = account.working_balance + Math.abs(amount)
 
     accountStore.updateAccount(props.accountId, {
-      cleared_balance: newClearedBalance,
+      uncleared_balance: newUnclearedBalance,
       working_balance: newWorkingBalance
     })
   }
@@ -592,11 +592,11 @@ const handleSavePayment = async (amount: number, fromAccountId: string, memo?: s
     transactionStore.removeTransaction(optimisticTransaction.id)
 
     if (account) {
-      const rollbackClearedBalance = account.cleared_balance - Math.abs(amount)
+      const rollbackUnclearedBalance = account.uncleared_balance - Math.abs(amount)
       const rollbackWorkingBalance = account.working_balance - Math.abs(amount)
 
       accountStore.updateAccount(props.accountId, {
-        cleared_balance: rollbackClearedBalance,
+        uncleared_balance: rollbackUnclearedBalance,
         working_balance: rollbackWorkingBalance
       })
     }
