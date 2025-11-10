@@ -153,7 +153,12 @@
                   class="w-full flex items-center justify-between px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors"
                 >
                   <span class="font-medium">{{ account.name }}</span>
-                  <span class="text-sm text-muted-foreground">{{ formatCurrency(account.working_balance) }}</span>
+                  <span
+                    class="text-sm font-medium"
+                    :class="getBalanceColor(account.working_balance)"
+                  >
+                    {{ formatCurrency(account.working_balance) }}
+                  </span>
                 </button>
               </div>
 
@@ -167,7 +172,12 @@
                   class="w-full flex items-center justify-between px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors"
                 >
                   <span class="font-medium">{{ account.name }}</span>
-                  <span class="text-sm text-muted-foreground">{{ formatCurrency(account.working_balance) }}</span>
+                  <span
+                    class="text-sm font-medium"
+                    :class="getBalanceColor(account.working_balance)"
+                  >
+                    {{ formatCurrency(account.working_balance) }}
+                  </span>
                 </button>
               </div>
             </div>
@@ -448,6 +458,12 @@ const getFilteredCategoriesForGroup = (groupId: string) => {
 const isValid = computed(() => {
   return selectedAccount.value && selectedCategory.value && amount.value && amount.value > 0
 })
+
+const getBalanceColor = (balance: number) => {
+  if (balance > 0) return 'text-emerald-600 dark:text-emerald-400'
+  if (balance < 0) return 'text-destructive'
+  return 'text-muted-foreground'
+}
 
 const getCategoryAvailableColor = (available: number) => {
   if (available > 0) return 'text-emerald-600 dark:text-emerald-400'

@@ -22,7 +22,12 @@
               class="w-full flex items-center justify-between px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors"
             >
               <span class="font-medium">{{ account.name }}</span>
-              <span class="text-sm text-muted-foreground">{{ formatCurrency(account.working_balance) }}</span>
+              <span
+                class="text-sm font-medium"
+                :class="getBalanceColor(account.working_balance)"
+              >
+                {{ formatCurrency(account.working_balance) }}
+              </span>
             </button>
           </div>
 
@@ -37,8 +42,8 @@
             >
               <span class="font-medium">{{ account.name }}</span>
               <span
-                class="text-sm font-semibold"
-                :class="account.working_balance < 0 ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'"
+                class="text-sm font-medium"
+                :class="getBalanceColor(account.working_balance)"
               >
                 {{ formatCurrency(account.working_balance) }}
               </span>
@@ -55,7 +60,12 @@
               class="w-full flex items-center justify-between px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors"
             >
               <span class="font-medium">{{ account.name }}</span>
-              <span class="text-sm text-muted-foreground">{{ formatCurrency(account.working_balance) }}</span>
+              <span
+                class="text-sm font-medium"
+                :class="getBalanceColor(account.working_balance)"
+              >
+                {{ formatCurrency(account.working_balance) }}
+              </span>
             </button>
           </div>
         </div>
@@ -331,6 +341,12 @@ const selectedAccount = computed(() => {
 const isCashAccount = computed(() => selectedAccount.value?.account_type === 'CASH')
 const isCreditAccount = computed(() => selectedAccount.value?.account_type === 'CREDIT')
 const isTrackingAccount = computed(() => selectedAccount.value?.account_type === 'TRACKING')
+
+const getBalanceColor = (balance: number) => {
+  if (balance > 0) return 'text-emerald-600 dark:text-emerald-400'
+  if (balance < 0) return 'text-destructive'
+  return 'text-muted-foreground'
+}
 
 const startFlow = () => {
   showFlow.value = true
