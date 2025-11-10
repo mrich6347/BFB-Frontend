@@ -90,10 +90,10 @@
     <!-- Floating Add Transaction Button -->
     <button
       @click="showStandaloneTransaction = true"
-      class="fixed bottom-20 right-4 z-40 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-all"
-      style="bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));"
+      class="fixed bottom-20 right-4 z-40 w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200"
+      style="bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom))); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2), 0 0 0 4px rgba(var(--primary-rgb), 0.15), inset 0 -2px 4px rgba(0, 0, 0, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.2);"
     >
-      <PlusIcon class="h-6 w-6" />
+      <PlusIcon class="h-7 w-7 stroke-[3]" />
     </button>
 
     <!-- Mobile Bottom Navigation -->
