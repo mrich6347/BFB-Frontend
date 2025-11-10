@@ -25,7 +25,7 @@
     </div>
 
     <!-- Category List - scrollable area with bottom nav padding -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-6 pb-24">
+    <div class="flex-1 overflow-y-auto p-4 space-y-6 pb-24" @click="closeAllSwipes">
       <div
         v-for="group in visibleGroupsWithCategories"
         :key="group.id"
@@ -46,17 +46,38 @@
 
         <!-- Categories in Group -->
         <div class="space-y-1">
-          <button
+          <div
             v-for="category in getCategoriesForGroup(group.id)"
             :key="category.id"
-            @click="openAssignMoney(category)"
-            class="w-full flex items-center justify-between px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors text-left"
+            class="relative overflow-hidden rounded-md"
           >
-            <span class="text-sm text-foreground">{{ category.name }}</span>
-            <span class="text-sm font-semibold" :class="getAvailableColorClass(category.available)">
-              {{ formatCurrency(category.available) }}
-            </span>
-          </button>
+            <!-- Edit button (revealed on swipe) -->
+            <div class="absolute inset-y-0 right-0 flex items-center">
+              <button
+                @click.stop="handleEditCategory(category)"
+                class="h-full px-6 bg-blue-500 text-white font-medium flex items-center justify-center"
+              >
+                Edit
+              </button>
+            </div>
+
+            <!-- Swipeable category content -->
+            <button
+              :ref="el => setCategoryRef(category.id, el)"
+              class="w-full flex items-center justify-between px-4 py-3 bg-card border border-border hover:bg-accent transition-colors text-left touch-pan-y"
+              :class="{ 'transition-transform duration-200 ease-out': !isSwiping(category.id) }"
+              :style="{ transform: `translateX(${getSwipeOffset(category.id)}px)` }"
+              @touchstart="handleTouchStart($event, category.id)"
+              @touchmove="handleTouchMove($event, category.id)"
+              @touchend="handleTouchEnd(category.id)"
+              @click.stop="handleCategoryClick(category)"
+            >
+              <span class="text-sm text-foreground">{{ category.name }}</span>
+              <span class="text-sm font-semibold" :class="getAvailableColorClass(category.available)">
+                {{ formatCurrency(category.available) }}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -99,6 +120,15 @@
       @close="closeCreateCategory"
       @created="handleCategoryCreated"
     />
+
+    <!-- Mobile Edit Category Modal -->
+    <MobileEditCategoryModal
+      :show="showEditCategory"
+      :category="editingCategory"
+      @close="closeEditCategory"
+      @updated="handleCategoryUpdated"
+      @hidden="handleCategoryHidden"
+    />
   </div>
 </template>
 
@@ -121,6 +151,7 @@ import MobileTransactionFlow from '@/components/mobile/MobileTransactionFlow.vue
 import MobileAssignMoney from '@/components/mobile/MobileAssignMoney.vue'
 import MobileBottomNav from '@/components/mobile/MobileBottomNav.vue'
 import MobileCreateCategoryModal from '@/components/mobile/MobileCreateCategoryModal.vue'
+import MobileEditCategoryModal from '@/components/mobile/MobileEditCategoryModal.vue'
 import { PlusIcon } from 'lucide-vue-next'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
@@ -140,7 +171,107 @@ const showAssignMoney = ref(false)
 const selectedCategory = ref<CategoryResponse | null>(null)
 const showCreateCategory = ref(false)
 const selectedGroupId = ref<string>('')
+const showEditCategory = ref(false)
+const editingCategory = ref<CategoryResponse | null>(null)
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
+
+// Swipe state management
+const swipeStates = ref<Record<string, { offset: number, startX: number, startTime: number, isSwiping: boolean }>>({})
+const categoryRefs = ref<Record<string, HTMLElement>>({})
+const SWIPE_THRESHOLD = -80 // How far to swipe to reveal edit button
+const SWIPE_VELOCITY_THRESHOLD = 0.3 // Minimum velocity to trigger swipe
+
+// Swipe functions
+const setCategoryRef = (id: string, el: any) => {
+  if (el) {
+    categoryRefs.value[id] = el
+  }
+}
+
+const getSwipeOffset = (id: string) => {
+  return swipeStates.value[id]?.offset || 0
+}
+
+const isSwiping = (id: string) => {
+  return swipeStates.value[id]?.isSwiping || false
+}
+
+const closeOtherSwipes = (exceptId?: string) => {
+  Object.keys(swipeStates.value).forEach(id => {
+    if (id !== exceptId) {
+      swipeStates.value[id] = { offset: 0, startX: 0, startTime: 0, isSwiping: false }
+    }
+  })
+}
+
+const closeAllSwipes = () => {
+  closeOtherSwipes()
+}
+
+const handleTouchStart = (event: TouchEvent, id: string) => {
+  // Close other open swipes when starting a new swipe
+  closeOtherSwipes(id)
+
+  const touch = event.touches[0]
+  swipeStates.value[id] = {
+    offset: swipeStates.value[id]?.offset || 0,
+    startX: touch.clientX,
+    startTime: Date.now(),
+    isSwiping: true
+  }
+}
+
+const handleTouchMove = (event: TouchEvent, id: string) => {
+  const state = swipeStates.value[id]
+  if (!state) return
+
+  const touch = event.touches[0]
+  const deltaX = touch.clientX - state.startX
+  const currentOffset = state.offset || 0
+
+  // Only allow swiping left (negative direction)
+  const newOffset = Math.min(0, Math.max(SWIPE_THRESHOLD, currentOffset + deltaX))
+
+  swipeStates.value[id] = {
+    ...state,
+    offset: newOffset,
+    startX: touch.clientX,
+    isSwiping: true
+  }
+}
+
+const handleTouchEnd = (id: string) => {
+  const state = swipeStates.value[id]
+  if (!state) return
+
+  const duration = Date.now() - state.startTime
+  const distance = state.offset
+  const velocity = Math.abs(distance) / duration
+
+  // Snap to open or closed based on threshold or velocity
+  if (state.offset < SWIPE_THRESHOLD / 2 || velocity > SWIPE_VELOCITY_THRESHOLD) {
+    // Snap to open (reveal edit button)
+    swipeStates.value[id] = { ...state, offset: SWIPE_THRESHOLD, isSwiping: false }
+  } else {
+    // Snap to closed
+    swipeStates.value[id] = { ...state, offset: 0, isSwiping: false }
+  }
+}
+
+const handleCategoryClick = (category: CategoryResponse) => {
+  // If the category is swiped open, close it instead of opening assign money
+  if (swipeStates.value[category.id]?.offset !== 0) {
+    swipeStates.value[category.id] = {
+      ...swipeStates.value[category.id],
+      offset: 0,
+      isSwiping: false
+    }
+    return
+  }
+
+  // Otherwise, open assign money modal
+  openAssignMoney(category)
+}
 
 // Get categories for a specific group with balances
 const getCategoriesForGroup = (groupId: string) => {
@@ -276,7 +407,31 @@ const handleCategoryCreated = (category: CategoryResponse) => {
   // Category is already added to store by the composable
   // Just close the modal
   closeCreateCategory()
-  $toast.success(`Category "${category.name}" created`)
+}
+
+const handleEditCategory = (category: CategoryResponse) => {
+  // Close the swipe
+  swipeStates.value[category.id] = { offset: 0, startX: 0, startTime: 0, isSwiping: false }
+  // Open edit modal
+  editingCategory.value = category
+  showEditCategory.value = true
+}
+
+const closeEditCategory = () => {
+  showEditCategory.value = false
+  editingCategory.value = null
+}
+
+const handleCategoryUpdated = (category: CategoryResponse) => {
+  // Category is already updated in store by the composable
+  // Just close the modal
+  closeEditCategory()
+}
+
+const handleCategoryHidden = (categoryId: string) => {
+  // Category is already hidden in store by the composable
+  // Just close the modal
+  closeEditCategory()
 }
 
 const handleAssignMoney = async (categoryId: string, newAssigned: number) => {
