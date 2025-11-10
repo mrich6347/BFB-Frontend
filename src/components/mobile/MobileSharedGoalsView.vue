@@ -20,13 +20,8 @@
 
     <!-- Content -->
     <div class="flex-1 overflow-y-auto px-4 pt-4 space-y-4 pb-24">
-      <!-- Loading State -->
-      <div v-if="isRefreshing" class="flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-
       <!-- Error State -->
-      <div v-else-if="refreshError" class="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
+      <div v-if="refreshError" class="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
         <div class="flex items-start gap-3">
           <AlertCircleIcon class="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
           <div class="flex-1">
@@ -87,11 +82,56 @@
         <div
           v-for="goal in activeGoals"
           :key="goal.id"
-          @click="handleGoalClick(goal)"
-          class="rounded-lg border border-border bg-card shadow-sm overflow-hidden active:scale-[0.98] transition-transform"
+          @click="!isRefreshing && handleGoalClick(goal)"
+          class="rounded-lg border border-border bg-card shadow-sm overflow-hidden transition-transform"
+          :class="isRefreshing ? 'pointer-events-none' : 'active:scale-[0.98]'"
         >
-          <!-- Goal Header -->
-          <div class="p-4">
+          <!-- Loading Skeleton Overlay -->
+          <div v-if="isRefreshing" class="p-4">
+            <!-- Header skeleton -->
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="flex-1 min-w-0 space-y-2">
+                <div class="h-5 bg-muted rounded animate-pulse w-3/4"></div>
+                <div class="h-3 bg-muted rounded animate-pulse w-1/2"></div>
+              </div>
+              <div class="h-4 w-8 bg-muted rounded animate-pulse"></div>
+            </div>
+
+            <!-- Progress bar skeleton -->
+            <div class="mb-3">
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="h-3 w-16 bg-muted rounded animate-pulse"></div>
+                <div class="h-3 w-10 bg-muted rounded animate-pulse"></div>
+              </div>
+              <div class="h-2 bg-muted rounded-full animate-pulse"></div>
+            </div>
+
+            <!-- Amounts skeleton -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="space-y-1">
+                <div class="h-3 w-12 bg-muted rounded animate-pulse"></div>
+                <div class="h-8 w-24 bg-muted rounded animate-pulse"></div>
+              </div>
+              <div class="space-y-1 items-end flex flex-col">
+                <div class="h-3 w-12 bg-muted rounded animate-pulse"></div>
+                <div class="h-6 w-20 bg-muted rounded animate-pulse"></div>
+              </div>
+            </div>
+
+            <!-- Contributions skeleton -->
+            <div class="pt-3 border-t border-border">
+              <div class="h-3 w-24 bg-muted rounded animate-pulse mb-2"></div>
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <div class="h-3 w-20 bg-muted rounded animate-pulse"></div>
+                  <div class="h-3 w-24 bg-muted rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actual Goal Content -->
+          <div v-else class="p-4">
             <div class="flex items-start justify-between gap-3 mb-3">
               <div class="flex-1 min-w-0">
                 <h3 class="text-base font-semibold text-foreground truncate">
@@ -175,19 +215,32 @@
         <div
           v-for="goal in completedGoals"
           :key="goal.id"
-          class="rounded-lg border border-border bg-card/50 shadow-sm p-4 opacity-75"
+          class="rounded-lg border border-border bg-card/50 shadow-sm opacity-75"
         >
-          <div class="flex items-center justify-between gap-3">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1">
-                <TrophyIcon class="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                <h3 class="text-sm font-semibold text-foreground truncate">
-                  {{ goal.name }}
-                </h3>
+          <!-- Loading Skeleton for Completed Goal -->
+          <div v-if="isRefreshing" class="p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex-1 min-w-0 space-y-2">
+                <div class="h-4 bg-muted rounded animate-pulse w-2/3"></div>
+                <div class="h-3 bg-muted rounded animate-pulse w-1/3"></div>
               </div>
-              <p class="text-xs text-muted-foreground">
-                {{ formatCurrency(goal.target_amount) }}
-              </p>
+            </div>
+          </div>
+
+          <!-- Actual Completed Goal Content -->
+          <div v-else class="p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <TrophyIcon class="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                  <h3 class="text-sm font-semibold text-foreground truncate">
+                    {{ goal.name }}
+                  </h3>
+                </div>
+                <p class="text-xs text-muted-foreground">
+                  {{ formatCurrency(goal.target_amount) }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
