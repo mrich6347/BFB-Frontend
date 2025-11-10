@@ -126,11 +126,11 @@ const readyToAssignColorClass = computed(() => {
   const amount = budgetStore.readyToAssign
   // Use a small epsilon to handle floating point precision issues
   if (Math.abs(amount) < 0.01) {
-    return 'bg-gray-500 opacity-75' // Greyed out for zero (with reduced opacity)
+    return 'bg-muted-foreground/70' // Greyed out for zero
   } else if (amount < 0) {
-    return 'bg-red-600' // Red for negative
+    return 'bg-red-600 dark:bg-red-600' // Red for negative
   } else {
-    return 'bg-green-600' // Green for positive
+    return 'bg-emerald-600 dark:bg-emerald-600' // Emerald for positive (matches app style)
   }
 })
 
