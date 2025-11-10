@@ -1,9 +1,11 @@
 import { ref, readonly } from 'vue'
 import { useAccountStore } from '@/stores/account.store'
+import { useTransactionStore } from '@/stores/transaction.store'
 import { AccountService } from '@/services/account.service'
 
 export const useReconcileAccount = () => {
   const accountStore = useAccountStore()
+  const transactionStore = useTransactionStore()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -25,6 +27,15 @@ export const useReconcileAccount = () => {
           working_balance: actualBalance + account.uncleared_balance
         })
       }
+
+      // Update all cleared transactions for this account to be reconciled
+      // This ensures the UI immediately reflects the reconciliation
+      const accountTransactions = transactionStore.transactions.filter(
+        t => t.account_id === accountId && t.is_cleared && !t.is_reconciled
+      )
+      accountTransactions.forEach(transaction => {
+        transactionStore.updateTransaction(transaction.id, { is_reconciled: true })
+      })
 
       return response
     } catch (err) {
