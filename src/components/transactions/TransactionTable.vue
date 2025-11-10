@@ -96,6 +96,7 @@
       v-if="!isMobile && (isCashAccount || isCreditAccount)"
       :scheduled-transactions="accountScheduledTransactions"
       :selected-scheduled-ids="selectedScheduledTransactionIds"
+      :initially-expanded="expandScheduled"
       @update:selected-scheduled-ids="handleScheduledSelectionChange"
       @edit="handleEditScheduledTransaction"
     />
@@ -212,9 +213,14 @@ import { scheduledTransactionService } from '@/services/scheduled-transaction.se
 import { useToast } from 'vue-toast-notification'
 import confetti from 'canvas-confetti'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   accountId: string
-}>()
+  highlightScheduledId?: string
+  expandScheduled?: boolean
+}>(), {
+  highlightScheduledId: undefined,
+  expandScheduled: false
+})
 
 const transactionStore = useTransactionStore()
 const accountStore = useAccountStore()
@@ -249,6 +255,19 @@ const isSubmittingScheduled = ref(false)
 const accountScheduledTransactions = computed(() =>
   scheduledTransactionStore.getScheduledTransactionsByAccount(props.accountId)
 )
+
+// Handle highlighting scheduled transaction from query params
+watch(() => props.highlightScheduledId, (scheduledId) => {
+  if (scheduledId) {
+    // Select the transaction briefly to highlight it
+    selectedScheduledTransactionIds.value = [scheduledId]
+
+    // Clear the selection after 3 seconds
+    setTimeout(() => {
+      selectedScheduledTransactionIds.value = []
+    }, 3000)
+  }
+}, { immediate: true })
 
 // Combined selected count for both regular and scheduled transactions
 const selectedCount = computed(() =>

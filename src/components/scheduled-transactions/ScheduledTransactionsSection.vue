@@ -83,10 +83,13 @@ import type { ScheduledTransactionResponse } from '@/types/DTO/scheduled-transac
 import { useCategoryStore } from '@/stores/category.store'
 import { formatCurrency } from '@/utils/currencyUtil'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   scheduledTransactions: ScheduledTransactionResponse[]
   selectedScheduledIds: string[]
-}>()
+  initiallyExpanded?: boolean
+}>(), {
+  initiallyExpanded: false
+})
 
 const emit = defineEmits<{
   edit: [transaction: ScheduledTransactionResponse]
@@ -94,7 +97,7 @@ const emit = defineEmits<{
 }>()
 
 const categoryStore = useCategoryStore()
-const isExpanded = ref(false)
+const isExpanded = ref(props.initiallyExpanded)
 const lastSelectedId = ref<string | null>(null)
 
 const selectedCount = computed(() => props.selectedScheduledIds.length)

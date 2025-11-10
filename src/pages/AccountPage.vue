@@ -11,7 +11,11 @@
       <div class="flex-1 overflow-auto">
         <AccountHeader :account="account" />
         <div class="p-4">
-          <TransactionTable :accountId="accountId" />
+          <TransactionTable
+            :accountId="accountId"
+            :highlightScheduledId="highlightScheduledId"
+            :expandScheduled="expandScheduled"
+          />
         </div>
       </div>
     </div>
@@ -33,6 +37,10 @@ const accountStore = useAccountStore()
 // Make route parameters reactive
 const accountId = computed(() => route.params.accountId as string)
 const budgetId = computed(() => route.params.budgetId as string)
+
+// Get query params for highlighting scheduled transaction
+const highlightScheduledId = computed(() => route.query.highlightScheduledId as string | undefined)
+const expandScheduled = computed(() => route.query.expandScheduled === 'true')
 
 const account = computed(() => {
   return accountStore.accounts.find(acc => acc.id === accountId.value)

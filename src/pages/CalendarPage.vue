@@ -104,6 +104,7 @@
                     @click="showTransactionDetails(transaction)"
                   >
                     <div class="font-semibold truncate text-[11px]">{{ transaction.payee }}</div>
+                    <div class="text-[9px] text-muted-foreground truncate">{{ transaction.account }}</div>
                     <div class="flex items-center justify-between gap-1">
                       <span class="text-[9px] text-muted-foreground truncate flex-1">{{ transaction.category }}</span>
                       <span :class="[
@@ -138,7 +139,7 @@
                     </div>
                     <div>
                       <div class="font-semibold text-foreground">{{ transaction.payee }}</div>
-                      <div class="text-sm text-muted-foreground">{{ transaction.category }}</div>
+                      <div class="text-sm text-muted-foreground">{{ transaction.account }} • {{ transaction.category }}</div>
                     </div>
                   </div>
                   <div class="text-right">
@@ -172,11 +173,13 @@ import { storeToRefs } from 'pinia'
 import type { ScheduledTransactionResponse } from '@/types/DTO/scheduled-transaction.dto'
 import { useCategoryStore } from '@/stores/category.store'
 import { useScheduledTransactionStore } from '@/stores/scheduled-transaction.store'
+import { useAccountStore } from '@/stores/account.store'
 
 const router = useRouter()
 const { ensureDataLoaded, isLoading } = useMainDataOperations()
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
+const accountStore = useAccountStore()
 const { currentBudget } = storeToRefs(budgetStore)
 
 const currentBudgetId = computed(() => currentBudget.value?.id || '')
@@ -264,11 +267,15 @@ const calendarDays = computed(() => {
         const category = t.category_id
           ? categoryStore.categories.find(c => c.id === t.category_id)
           : null
+        const account = accountStore.getAccountById(t.account_id)
         return {
           id: t.id,
           payee: t.payee,
           amount: t.amount,
           category: category?.name || 'Uncategorized',
+          account: account?.name || 'Unknown Account',
+          accountId: t.account_id,
+          budgetId: t.budget_id,
           date: fullDate,
           frequency: t.frequency
         }
@@ -335,12 +342,16 @@ const upcomingTransactions = computed(() => {
       const category = t.category_id
         ? categoryStore.categories.find(c => c.id === t.category_id)
         : null
+      const account = accountStore.getAccountById(t.account_id)
 
       return {
         id: t.id,
         payee: t.payee,
         amount: t.amount,
         category: category?.name || 'Uncategorized',
+        account: account?.name || 'Unknown Account',
+        accountId: t.account_id,
+        budgetId: t.budget_id,
         date,
         frequency: t.frequency
       }
@@ -366,8 +377,14 @@ const formatDate = (date: Date) => {
 }
 
 const showTransactionDetails = (transaction: any) => {
-  // TODO: Open modal with transaction details
-  console.log('Show details for:', transaction)
+  // Navigate to the account page with query params to expand and highlight the scheduled transaction
+  router.push({
+    path: `/budget/${transaction.budgetId}/account/${transaction.accountId}`,
+    query: {
+      highlightScheduledId: transaction.id,
+      expandScheduled: 'true'
+    }
+  })
 }
 
 onMounted(async () => {
