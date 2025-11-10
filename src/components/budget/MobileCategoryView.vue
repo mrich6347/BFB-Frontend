@@ -16,7 +16,7 @@
     <div class="sticky top-[calc(3rem+3.5rem)] z-10 px-4 py-3" :class="getReadyToAssignBgClass()">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-xs font-medium opacity-90">Ready to Assign</p>
+          <p class="text-xs font-medium" :class="Math.round(budgetStore.readyToAssign * 100) / 100 === 0 ? 'text-muted-foreground' : 'opacity-90'">Ready to Assign</p>
           <p class="text-2xl font-bold" :class="getReadyToAssignTextClass()">
             {{ formatCurrency(budgetStore.readyToAssign) }}
           </p>
@@ -159,9 +159,11 @@ const getAvailableColorClass = (amount: number) => {
 // Get background class for Ready to Assign banner
 const getReadyToAssignBgClass = () => {
   const amount = budgetStore.readyToAssign
-  if (amount > 0) {
+  // Round to 2 decimal places to avoid floating point issues
+  const rounded = Math.round(amount * 100) / 100
+  if (rounded > 0) {
     return 'bg-emerald-500/20 dark:bg-emerald-500/10'
-  } else if (amount < 0) {
+  } else if (rounded < 0) {
     return 'bg-red-500/20 dark:bg-red-500/10'
   }
   return 'bg-muted/50'
@@ -170,12 +172,14 @@ const getReadyToAssignBgClass = () => {
 // Get text color class for Ready to Assign
 const getReadyToAssignTextClass = () => {
   const amount = budgetStore.readyToAssign
-  if (amount > 0) {
+  // Round to 2 decimal places to avoid floating point issues
+  const rounded = Math.round(amount * 100) / 100
+  if (rounded > 0) {
     return 'text-emerald-700 dark:text-emerald-300'
-  } else if (amount < 0) {
+  } else if (rounded < 0) {
     return 'text-red-700 dark:text-red-300'
   }
-  return 'text-foreground'
+  return 'text-gray-400 dark:text-gray-500'
 }
 
 // Transaction handlers
