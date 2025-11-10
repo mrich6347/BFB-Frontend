@@ -299,6 +299,7 @@ const emit = defineEmits<{
   updateTransaction: [id: string, data: UpdateTransactionDto]
   deleteTransaction: [transactionId: string]
   updateBalance: [accountId: string, newBalance: number]
+  categoryBalanceChange: [categoryName: string, oldBalance: number, newBalance: number]
 }>()
 
 const router = useRouter()
@@ -410,7 +411,17 @@ const handleUpdateTransaction = async (id: string, data: UpdateTransactionDto) =
 
   // Update in background
   try {
-    await updateTransaction(id, data)
+    const result = updateTransaction(id, data)
+    // Show category balance toast immediately with optimistic data
+    if (result.categoryBalanceChange) {
+      emit('categoryBalanceChange',
+        result.categoryBalanceChange.categoryName,
+        result.categoryBalanceChange.oldBalance,
+        result.categoryBalanceChange.newBalance
+      )
+    }
+    // Wait for server response in background
+    await result.promise
   } catch (error) {
     console.error('Failed to update transaction:', error)
     $toast.error('Failed to update transaction')
@@ -423,7 +434,17 @@ const handleDeleteTransaction = async (transactionId: string) => {
 
   // Delete in background
   try {
-    await deleteTransaction(transactionId)
+    const result = deleteTransaction(transactionId)
+    // Show category balance toast immediately with optimistic data
+    if (result.categoryBalanceChange) {
+      emit('categoryBalanceChange',
+        result.categoryBalanceChange.categoryName,
+        result.categoryBalanceChange.oldBalance,
+        result.categoryBalanceChange.newBalance
+      )
+    }
+    // Wait for server response in background
+    await result.promise
   } catch (error) {
     console.error('Failed to delete transaction:', error)
     $toast.error('Failed to delete transaction')

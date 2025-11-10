@@ -100,7 +100,11 @@
       @save-transfer="handleSaveTransfer"
       @save-payment="handleSavePayment"
       @update-balance="handleUpdateBalance"
+      @category-balance-change="handleCategoryBalanceChange"
     />
+
+    <!-- Category Balance Toast -->
+    <MobileCategoryBalanceToast ref="categoryBalanceToastRef" />
 
     <!-- Mobile Assign Money Modal -->
     <MobileAssignMoney
@@ -152,6 +156,7 @@ import MobileAssignMoney from '@/components/mobile/MobileAssignMoney.vue'
 import MobileBottomNav from '@/components/mobile/MobileBottomNav.vue'
 import MobileCreateCategoryModal from '@/components/mobile/MobileCreateCategoryModal.vue'
 import MobileEditCategoryModal from '@/components/mobile/MobileEditCategoryModal.vue'
+import MobileCategoryBalanceToast from '@/components/mobile/MobileCategoryBalanceToast.vue'
 import { PlusIcon } from 'lucide-vue-next'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
@@ -175,6 +180,7 @@ const selectedGroupId = ref<string>('')
 const showEditCategory = ref(false)
 const editingCategory = ref<CategoryResponse | null>(null)
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
+const categoryBalanceToastRef = ref<InstanceType<typeof MobileCategoryBalanceToast> | null>(null)
 
 // Swipe state management
 const swipeStates = ref<Record<string, { offset: number, startX: number, startTime: number, isSwiping: boolean }>>({})
@@ -338,7 +344,17 @@ const getReadyToAssignTextClass = () => {
 // Transaction handlers
 const handleSaveTransaction = async (data: CreateTransactionDto) => {
   try {
-    await createTransaction(data)
+    const result = createTransaction(data)
+    // Show category balance toast immediately with optimistic data
+    if (result.categoryBalanceChange && categoryBalanceToastRef.value) {
+      categoryBalanceToastRef.value.show(
+        result.categoryBalanceChange.categoryName,
+        result.categoryBalanceChange.oldBalance,
+        result.categoryBalanceChange.newBalance
+      )
+    }
+    // Wait for the server response in the background
+    await result.promise
     // Optimistic update provides instant feedback, no need to reload
   } catch (error) {
     $toast.error('Failed to save transaction')
@@ -347,10 +363,26 @@ const handleSaveTransaction = async (data: CreateTransactionDto) => {
 
 const handleSaveTransfer = async (data: CreateTransactionDto) => {
   try {
-    await createTransaction(data)
+    const result = createTransaction(data)
+    // Show category balance toast immediately with optimistic data
+    if (result.categoryBalanceChange && categoryBalanceToastRef.value) {
+      categoryBalanceToastRef.value.show(
+        result.categoryBalanceChange.categoryName,
+        result.categoryBalanceChange.oldBalance,
+        result.categoryBalanceChange.newBalance
+      )
+    }
+    // Wait for the server response in the background
+    await result.promise
     // Optimistic update provides instant feedback, no need to reload
   } catch (error) {
     $toast.error('Failed to create transfer')
+  }
+}
+
+const handleCategoryBalanceChange = (categoryName: string, oldBalance: number, newBalance: number) => {
+  if (categoryBalanceToastRef.value) {
+    categoryBalanceToastRef.value.show(categoryName, oldBalance, newBalance)
   }
 }
 

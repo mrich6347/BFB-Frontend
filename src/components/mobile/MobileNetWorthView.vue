@@ -114,7 +114,11 @@
       @save-transfer="handleSaveTransfer"
       @save-payment="handleSavePayment"
       @update-balance="handleUpdateBalance"
+      @category-balance-change="handleCategoryBalanceChange"
     />
+
+    <!-- Category Balance Toast -->
+    <MobileCategoryBalanceToast ref="categoryBalanceToastRef" />
   </div>
 </template>
 
@@ -134,6 +138,7 @@ import { TrendingUpIcon, WalletIcon, CreditCardIcon, InfoIcon } from 'lucide-vue
 import { storeToRefs } from 'pinia'
 import MobileBottomNav from './MobileBottomNav.vue'
 import MobileTransactionFlow from './MobileTransactionFlow.vue'
+import MobileCategoryBalanceToast from './MobileCategoryBalanceToast.vue'
 
 const router = useRouter()
 const budgetStore = useBudgetStore()
@@ -143,6 +148,7 @@ const { makeCreditCardPayment } = useMakeCreditCardPayment()
 const $toast = useToast()
 
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
+const categoryBalanceToastRef = ref<InstanceType<typeof MobileCategoryBalanceToast> | null>(null)
 
 const { currentBudget } = storeToRefs(budgetStore)
 const { activeAccounts } = storeToRefs(accountStore)
@@ -283,7 +289,17 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'n
 // Transaction handlers
 const handleSaveTransaction = async (data: CreateTransactionDto) => {
   try {
-    await createTransaction(data)
+    const result = createTransaction(data)
+    // Show category balance toast immediately with optimistic data
+    if (result.categoryBalanceChange && categoryBalanceToastRef.value) {
+      categoryBalanceToastRef.value.show(
+        result.categoryBalanceChange.categoryName,
+        result.categoryBalanceChange.oldBalance,
+        result.categoryBalanceChange.newBalance
+      )
+    }
+    // Wait for the server response in the background
+    await result.promise
     // Optimistic update provides instant feedback, no need to reload
   } catch (error) {
     console.error('Failed to create transaction:', error)
@@ -293,7 +309,17 @@ const handleSaveTransaction = async (data: CreateTransactionDto) => {
 
 const handleSaveTransfer = async (data: CreateTransactionDto) => {
   try {
-    await createTransaction(data)
+    const result = createTransaction(data)
+    // Show category balance toast immediately with optimistic data
+    if (result.categoryBalanceChange && categoryBalanceToastRef.value) {
+      categoryBalanceToastRef.value.show(
+        result.categoryBalanceChange.categoryName,
+        result.categoryBalanceChange.oldBalance,
+        result.categoryBalanceChange.newBalance
+      )
+    }
+    // Wait for the server response in the background
+    await result.promise
     // Optimistic update provides instant feedback, no need to reload
   } catch (error) {
     console.error('Failed to create transfer:', error)
@@ -308,6 +334,12 @@ const handleSavePayment = async (creditCardAccountId: string, amount: number, fr
   } catch (error) {
     console.error('Failed to create payment:', error)
     $toast.error('Failed to create payment')
+  }
+}
+
+const handleCategoryBalanceChange = (categoryName: string, oldBalance: number, newBalance: number) => {
+  if (categoryBalanceToastRef.value) {
+    categoryBalanceToastRef.value.show(categoryName, oldBalance, newBalance)
   }
 }
 

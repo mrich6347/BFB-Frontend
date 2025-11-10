@@ -49,9 +49,27 @@ export const useTransactionOperations = () => {
     }
   }
 
-  const createTransaction = async (transactionData: CreateTransactionDto) => {
+  const createTransaction = (transactionData: CreateTransactionDto) => {
     // Don't set isLoading - we want instant UI feedback with optimistic updates
     error.value = null
+
+    // Capture old category balance before transaction and calculate optimistic new balance
+    let categoryBalanceChange: { categoryName: string; oldBalance: number; newBalance: number } | null = null
+    if (transactionData.category_id && transactionData.category_id !== 'ready-to-assign') {
+      const category = categoryStore.categories.find(c => c.id === transactionData.category_id)
+      if (category) {
+        const balance = categoryStore.categoryBalances.find(b => b.category_id === transactionData.category_id)
+        const oldBalance = balance?.available ?? 0
+        // Calculate optimistic new balance (transaction amount is negative for outflows)
+        const newBalance = oldBalance + transactionData.amount
+
+        categoryBalanceChange = {
+          categoryName: category.name,
+          oldBalance,
+          newBalance
+        }
+      }
+    }
 
     // Create optimistic transaction with temporary ID
     const optimisticTransaction: TransactionResponse = {
@@ -79,6 +97,9 @@ export const useTransactionOperations = () => {
       optimisticTransaction.amount,
       optimisticTransaction.is_cleared
     )
+
+    // Return the optimistic category balance change immediately, and start the async operation
+    const asyncOperation = (async () => {
 
     try {
       const result = await TransactionService.createTransaction(transactionData)
@@ -153,7 +174,7 @@ export const useTransactionOperations = () => {
         }
       }
 
-      return newTransaction
+      return { transaction: newTransaction, categoryBalanceChange }
     } catch (err) {
       // Roll back optimistic updates on failure
       transactionStore.removeTransaction(optimisticTransaction.id)
@@ -167,9 +188,16 @@ export const useTransactionOperations = () => {
       console.error('Error creating transaction:', err)
       throw err
     }
+    })()
+
+    // Return both the optimistic data and the promise
+    return {
+      categoryBalanceChange,
+      promise: asyncOperation
+    }
   }
 
-  const updateTransaction = async (id: string, transactionData: UpdateTransactionDto) => {
+  const updateTransaction = (id: string, transactionData: UpdateTransactionDto) => {
     // Don't set isLoading - we want instant UI feedback with optimistic updates
     error.value = null
 
@@ -177,6 +205,45 @@ export const useTransactionOperations = () => {
     if (!originalTransaction) {
       error.value = 'Transaction not found'
       throw new Error('Transaction not found')
+    }
+
+    // Calculate optimistic category balance change
+    let categoryBalanceChange: { categoryName: string; oldBalance: number; newBalance: number } | null = null
+
+    // Determine which category to use (new or original)
+    const newCategoryId = transactionData.category_id !== undefined ? transactionData.category_id : originalTransaction.category_id
+    const oldCategoryId = originalTransaction.category_id
+    const newAmount = transactionData.amount ?? originalTransaction.amount
+    const oldAmount = originalTransaction.amount
+
+    // If category changed or amount changed, calculate the balance change
+    if (newCategoryId && newCategoryId !== 'ready-to-assign') {
+      const category = categoryStore.categories.find(c => c.id === newCategoryId)
+      if (category) {
+        const balance = categoryStore.categoryBalances.find(b => b.category_id === newCategoryId)
+        const currentBalance = balance?.available ?? 0
+
+        // Calculate the effect of removing old transaction and adding new one
+        let oldBalance = currentBalance
+        let newBalance = currentBalance
+
+        // If category didn't change, we need to reverse the old amount and apply the new amount
+        if (newCategoryId === oldCategoryId) {
+          // Remove old transaction's effect
+          oldBalance = currentBalance - oldAmount
+          // Apply new transaction's effect
+          newBalance = oldBalance + newAmount
+        } else {
+          // Category changed - just apply the new transaction
+          newBalance = currentBalance + newAmount
+        }
+
+        categoryBalanceChange = {
+          categoryName: category.name,
+          oldBalance,
+          newBalance
+        }
+      }
     }
 
     // Create snapshot for rollback
@@ -209,6 +276,8 @@ export const useTransactionOperations = () => {
       updatedIsCleared
     )
 
+    // Return the optimistic category balance change immediately, and start the async operation
+    const asyncOperation = (async () => {
     try {
       const result = await TransactionService.updateTransaction(id, transactionData)
 
@@ -262,7 +331,7 @@ export const useTransactionOperations = () => {
 
       // Update transaction with actual server data
       transactionStore.updateTransaction(id, updatedTransaction)
-      return updatedTransaction
+      return { transaction: updatedTransaction, categoryBalanceChange }
     } catch (err) {
       // Roll back optimistic updates on failure
       transactionStore.updateTransaction(id, transactionSnapshot)
@@ -285,6 +354,13 @@ export const useTransactionOperations = () => {
       error.value = err instanceof Error ? err.message : 'Failed to update transaction'
       console.error('Error updating transaction:', err)
       throw err
+    }
+    })()
+
+    // Return both the optimistic data and the promise
+    return {
+      categoryBalanceChange,
+      promise: asyncOperation
     }
   }
 
@@ -431,7 +507,7 @@ export const useTransactionOperations = () => {
     }
   }
 
-  const deleteTransaction = async (id: string) => {
+  const deleteTransaction = (id: string) => {
     // Don't set isLoading - we want instant UI feedback with optimistic updates
     error.value = null
 
@@ -443,6 +519,24 @@ export const useTransactionOperations = () => {
 
     // Create snapshot for rollback
     const transactionSnapshot = { ...transactionToDelete }
+
+    // Calculate optimistic category balance change (deleting reverses the transaction)
+    let categoryBalanceChange: { categoryName: string; oldBalance: number; newBalance: number } | null = null
+    if (transactionToDelete.category_id) {
+      const category = categoryStore.categories.find(c => c.id === transactionToDelete.category_id)
+      if (category) {
+        const balance = categoryStore.categoryBalances.find(b => b.category_id === transactionToDelete.category_id)
+        const oldBalance = balance?.available ?? 0
+        // Deleting a transaction reverses its effect (subtract the amount)
+        const newBalance = oldBalance - transactionToDelete.amount
+
+        categoryBalanceChange = {
+          categoryName: category.name,
+          oldBalance,
+          newBalance
+        }
+      }
+    }
 
     // Check if this is a transfer transaction and find the linked transaction
     let linkedTransaction: TransactionResponse | undefined
@@ -483,6 +577,8 @@ export const useTransactionOperations = () => {
       )
     }
 
+    // Return the optimistic category balance change immediately, and start the async operation
+    const asyncOperation = (async () => {
     try {
       const result = await TransactionService.deleteTransaction(id)
 
@@ -510,6 +606,8 @@ export const useTransactionOperations = () => {
         await new Promise(resolve => setTimeout(resolve, 100))
         await fetchCategoryBalances(budgetStore.currentBudget.id)
       }
+
+      return { categoryBalanceChange }
     } catch (err) {
       // Roll back optimistic updates on failure
       transactionStore.addTransaction(transactionSnapshot)
@@ -532,6 +630,13 @@ export const useTransactionOperations = () => {
       error.value = err instanceof Error ? err.message : 'Failed to delete transaction'
       console.error('Error deleting transaction:', err)
       throw err
+    }
+    })()
+
+    // Return both the optimistic data and the promise
+    return {
+      categoryBalanceChange,
+      promise: asyncOperation
     }
   }
 
