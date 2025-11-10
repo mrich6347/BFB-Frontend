@@ -285,7 +285,7 @@ const $toast = useToast()
 
 const showFlow = ref(false)
 const currentStep = ref<'account' | 'action' | 'form' | 'edit'>('account')
-const selectedAccount = ref<AccountResponse | null>(null)
+const selectedAccountId = ref<string | null>(null)
 const selectedAction = ref<'transaction' | 'transfer' | 'payment' | 'reconcile' | null>(null)
 const transactionType = ref<'inflow' | 'outflow'>('outflow')
 const editingTransaction = ref<TransactionResponse | null>(null)
@@ -295,6 +295,12 @@ const cashAccounts = computed(() => accountStore.getAccountsByType('CASH'))
 const creditAccounts = computed(() => accountStore.getAccountsByType('CREDIT'))
 const trackingAccounts = computed(() => accountStore.getAccountsByType('TRACKING'))
 
+// Make selectedAccount reactive to account store changes
+const selectedAccount = computed(() => {
+  if (!selectedAccountId.value) return null
+  return accountStore.accounts.find(acc => acc.id === selectedAccountId.value) || null
+})
+
 const isCashAccount = computed(() => selectedAccount.value?.account_type === 'CASH')
 const isCreditAccount = computed(() => selectedAccount.value?.account_type === 'CREDIT')
 const isTrackingAccount = computed(() => selectedAccount.value?.account_type === 'TRACKING')
@@ -302,7 +308,7 @@ const isTrackingAccount = computed(() => selectedAccount.value?.account_type ===
 const startFlow = () => {
   showFlow.value = true
   currentStep.value = 'account'
-  selectedAccount.value = null
+  selectedAccountId.value = null
   selectedAction.value = null
 }
 
@@ -318,13 +324,13 @@ defineExpose({
 const closeFlow = () => {
   showFlow.value = false
   currentStep.value = 'account'
-  selectedAccount.value = null
+  selectedAccountId.value = null
   selectedAction.value = null
   editingTransaction.value = null
 }
 
 const selectAccount = (account: AccountResponse) => {
-  selectedAccount.value = account
+  selectedAccountId.value = account.id
   currentStep.value = 'action'
 }
 

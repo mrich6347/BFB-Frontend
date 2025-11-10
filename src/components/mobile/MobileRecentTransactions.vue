@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-3">
+  <div class="space-y-3" @click="closeAllSwipes">
     <h3 class="text-sm font-medium text-muted-foreground px-2">Recent Unreconciled</h3>
     
     <div v-if="isLoading" class="text-center py-4 text-sm text-muted-foreground">
@@ -14,53 +14,72 @@
       <div
         v-for="transaction in recentTransactions"
         :key="transaction.id"
-        @click="$emit('edit', transaction)"
-        class="w-full bg-card rounded-lg border border-border active:bg-accent transition-colors"
+        class="relative overflow-hidden rounded-lg"
       >
-        <div class="flex items-center gap-3 p-4">
-          <!-- Cleared indicator - tap to toggle -->
+        <!-- Edit button (revealed on swipe) -->
+        <div class="absolute inset-y-0 right-0 flex items-center">
           <button
-            @click.stop="handleToggleCleared(transaction)"
-            :disabled="transaction.is_reconciled"
-            class="flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all active:scale-90"
-            :class="transaction.is_cleared
-              ? 'bg-emerald-500 border-emerald-500'
-              : 'border-gray-300 dark:border-gray-600'"
+            @click.stop="handleEdit(transaction)"
+            class="h-full px-6 bg-blue-500 text-white font-medium flex items-center justify-center"
           >
-            <svg
-              v-if="transaction.is_cleared"
-              class="w-4 h-4 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-            </svg>
+            Edit
           </button>
+        </div>
 
-          <!-- Transaction details -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-baseline justify-between gap-2 mb-1">
-              <span class="text-sm font-medium text-foreground truncate">
-                {{ transaction.payee || getCategoryName(transaction.category_id) }}
-              </span>
-              <span
-                class="text-sm font-semibold whitespace-nowrap flex-shrink-0"
-                :class="getAmountColorClass(transaction.amount)"
+        <!-- Swipeable transaction content -->
+        <div
+          :ref="el => setTransactionRef(transaction.id, el)"
+          class="w-full bg-card border border-border touch-pan-y active:bg-accent transition-colors"
+          :class="{ 'transition-transform duration-200 ease-out': !isSwiping(transaction.id) }"
+          :style="{ transform: `translateX(${getSwipeOffset(transaction.id)}px)` }"
+          @touchstart="handleTouchStart($event, transaction.id)"
+          @touchmove="handleTouchMove($event, transaction.id)"
+          @touchend="handleTouchEnd(transaction.id)"
+          @click.stop="handleTransactionClick(transaction)"
+        >
+          <div class="flex items-center gap-3 p-4">
+            <!-- Cleared indicator -->
+            <div
+              class="flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all"
+              :class="transaction.is_cleared
+                ? 'bg-emerald-500 border-emerald-500'
+                : 'border-gray-300 dark:border-gray-600'"
+            >
+              <svg
+                v-if="transaction.is_cleared"
+                class="w-4 h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {{ formatCurrency(Math.abs(transaction.amount)) }}
-              </span>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-xs text-muted-foreground truncate">
-                {{ getCategoryName(transaction.category_id) }}
-              </span>
-              <span class="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
-                {{ formatDate(transaction.date) }}
-              </span>
-            </div>
-            <div v-if="transaction.memo" class="text-xs text-muted-foreground truncate mt-1">
-              {{ transaction.memo }}
+
+            <!-- Transaction details -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline justify-between gap-2 mb-1">
+                <span class="text-sm font-medium text-foreground truncate">
+                  {{ transaction.payee || getCategoryName(transaction.category_id) }}
+                </span>
+                <span
+                  class="text-sm font-semibold whitespace-nowrap flex-shrink-0"
+                  :class="getAmountColorClass(transaction.amount)"
+                >
+                  {{ formatCurrency(Math.abs(transaction.amount)) }}
+                </span>
+              </div>
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs text-muted-foreground truncate">
+                  {{ getCategoryName(transaction.category_id) }}
+                </span>
+                <span class="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
+                  {{ formatDate(transaction.date) }}
+                </span>
+              </div>
+              <div v-if="transaction.memo" class="text-xs text-muted-foreground truncate mt-1">
+                {{ transaction.memo }}
+              </div>
             </div>
           </div>
         </div>
@@ -131,6 +150,124 @@ const formatDate = (dateString: string) => {
   } else {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
+}
+
+// Swipe state management
+const swipeStates = ref<Record<string, { offset: number, startX: number, startTime: number, isSwiping: boolean }>>({})
+const transactionRefs = ref<Record<string, HTMLElement>>({})
+const SWIPE_THRESHOLD = -80 // How far to swipe to reveal edit button
+const SWIPE_VELOCITY_THRESHOLD = 0.3 // Minimum velocity to trigger swipe
+
+const setTransactionRef = (id: string, el: any) => {
+  if (el) {
+    transactionRefs.value[id] = el
+  }
+}
+
+const getSwipeOffset = (id: string) => {
+  return swipeStates.value[id]?.offset || 0
+}
+
+const isSwiping = (id: string) => {
+  return swipeStates.value[id]?.isSwiping || false
+}
+
+const closeAllSwipes = () => {
+  // Close all open swipes
+  Object.keys(swipeStates.value).forEach(id => {
+    if (swipeStates.value[id]?.offset !== 0) {
+      swipeStates.value[id] = {
+        ...swipeStates.value[id],
+        offset: 0,
+        isSwiping: false
+      }
+    }
+  })
+}
+
+const closeOtherSwipes = (currentId: string) => {
+  // Close all swipes except the current one
+  Object.keys(swipeStates.value).forEach(id => {
+    if (id !== currentId && swipeStates.value[id]?.offset !== 0) {
+      swipeStates.value[id] = {
+        ...swipeStates.value[id],
+        offset: 0,
+        isSwiping: false
+      }
+    }
+  })
+}
+
+const handleTouchStart = (event: TouchEvent, id: string) => {
+  // Close other open swipes when starting a new swipe
+  closeOtherSwipes(id)
+
+  const touch = event.touches[0]
+  swipeStates.value[id] = {
+    offset: swipeStates.value[id]?.offset || 0,
+    startX: touch.clientX,
+    startTime: Date.now(),
+    isSwiping: true
+  }
+}
+
+const handleTouchMove = (event: TouchEvent, id: string) => {
+  const state = swipeStates.value[id]
+  if (!state) return
+
+  const touch = event.touches[0]
+  const deltaX = touch.clientX - state.startX
+  const currentOffset = state.offset || 0
+
+  // Only allow swiping left (negative direction)
+  const newOffset = Math.min(0, Math.max(SWIPE_THRESHOLD, currentOffset + deltaX))
+
+  swipeStates.value[id] = {
+    ...state,
+    offset: newOffset,
+    startX: touch.clientX,
+    isSwiping: true
+  }
+}
+
+const handleTouchEnd = (id: string) => {
+  const state = swipeStates.value[id]
+  if (!state) return
+
+  const duration = Date.now() - state.startTime
+  const distance = state.offset
+  const velocity = Math.abs(distance) / duration
+
+  // Snap to open or closed based on threshold or velocity
+  if (state.offset < SWIPE_THRESHOLD / 2 || velocity > SWIPE_VELOCITY_THRESHOLD) {
+    // Snap to open (reveal edit button)
+    swipeStates.value[id] = { ...state, offset: SWIPE_THRESHOLD, isSwiping: false }
+  } else {
+    // Snap to closed
+    swipeStates.value[id] = { ...state, offset: 0, isSwiping: false }
+  }
+}
+
+const handleTransactionClick = (transaction: TransactionResponse) => {
+  // If the transaction is swiped open, close it instead of toggling cleared
+  if (swipeStates.value[transaction.id]?.offset !== 0) {
+    swipeStates.value[transaction.id] = {
+      ...swipeStates.value[transaction.id],
+      offset: 0,
+      isSwiping: false
+    }
+    return
+  }
+
+  // Otherwise, toggle cleared status
+  handleToggleCleared(transaction)
+}
+
+const handleEdit = (transaction: TransactionResponse) => {
+  // Close the swipe
+  swipeStates.value[transaction.id] = { offset: 0, startX: 0, startTime: 0, isSwiping: false }
+  // Emit edit event
+  emit('edit', transaction)
 }
 
 const handleToggleCleared = async (transaction: TransactionResponse) => {
