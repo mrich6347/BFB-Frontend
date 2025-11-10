@@ -108,10 +108,10 @@
         <button
           @click="handleSubmit"
           :disabled="!isValid || isLoading"
-          class="w-full py-3 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full py-3 bg-primary text-primary-foreground rounded-md font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          :class="isLoading ? 'animate-pulse' : 'hover:bg-primary/90'"
         >
-          <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
-          <span v-else>Save</span>
+          {{ isLoading ? 'Saving...' : 'Save' }}
         </button>
       </div>
 
@@ -120,13 +120,14 @@
         <button
           @click="handleDelete"
           :disabled="isDeleting"
-          class="w-full py-3 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full py-3 bg-red-600 text-white rounded-md font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          :class="isDeleting ? 'animate-pulse' : 'hover:bg-red-700'"
         >
-          <span v-if="isDeleting" class="inline-block animate-spin">⏳</span>
-          <template v-else>
+          <template v-if="!isDeleting">
             <TrashIcon class="h-5 w-5" />
             Delete Transaction
           </template>
+          <span v-else>Deleting...</span>
         </button>
       </div>
     </div>

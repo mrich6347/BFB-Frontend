@@ -70,10 +70,10 @@
         <button
           @click="handleSubmit"
           :disabled="!isValid || isLoading"
-          class="w-full py-3 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full py-3 bg-primary text-primary-foreground rounded-md font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          :class="isLoading ? 'animate-pulse' : 'hover:bg-primary/90'"
         >
-          <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
-          <span v-else>Save</span>
+          {{ isLoading ? 'Saving...' : 'Save' }}
         </button>
       </div>
     </div>
