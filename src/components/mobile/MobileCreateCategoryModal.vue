@@ -8,13 +8,13 @@
     >
       <!-- Modal that slides up from bottom -->
       <div
-        class="absolute bottom-0 left-0 right-0 bg-background rounded-t-2xl shadow-lg transition-transform duration-300"
+        class="absolute bottom-0 left-0 right-0 bg-background rounded-t-2xl shadow-lg transition-transform duration-300 max-h-[90vh] overflow-y-auto"
         :class="isClosing ? 'translate-y-full' : 'translate-y-0'"
         @click.stop
-        style="padding-bottom: max(2rem, calc(2rem + env(safe-area-inset-bottom)));"
+        style="padding-bottom: max(1rem, env(safe-area-inset-bottom));"
       >
         <!-- Header -->
-        <div class="px-4 py-4 border-b border-border">
+        <div class="sticky top-0 bg-background px-4 py-4 border-b border-border z-10">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold">Create Category</h3>
             <button @click="handleClose" class="p-2 hover:bg-accent rounded-md">
@@ -81,7 +81,12 @@ watch(() => props.show, async (newValue) => {
     isClosing.value = false
     categoryName.value = ''
     await nextTick()
-    nameInputRef.value?.focus()
+    // Small delay to ensure modal is fully rendered and positioned
+    setTimeout(() => {
+      nameInputRef.value?.focus()
+      // Scroll input into view if needed
+      nameInputRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 350)
   }
 })
 
