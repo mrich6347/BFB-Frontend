@@ -169,9 +169,9 @@ import { useBudgetStore } from '@/stores/budget.store'
 import { formatCurrency } from '@/utils/currencyUtil'
 import { ChevronLeftIcon, ChevronRightIcon, TrendingDownIcon, CalendarIcon } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
-import { scheduledTransactionService } from '@/services/scheduled-transaction.service'
 import type { ScheduledTransactionResponse } from '@/types/DTO/scheduled-transaction.dto'
 import { useCategoryStore } from '@/stores/category.store'
+import { useScheduledTransactionStore } from '@/stores/scheduled-transaction.store'
 
 const router = useRouter()
 const { ensureDataLoaded, isLoading } = useMainDataOperations()
@@ -192,31 +192,9 @@ const checkMobile = () => {
 const currentDate = ref(new Date())
 const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-// Scheduled transactions
-const scheduledTransactions = ref<ScheduledTransactionResponse[]>([])
-const isLoadingScheduled = ref(false)
-
-// Load scheduled transactions
-const loadScheduledTransactions = async () => {
-  if (!currentBudgetId.value) return
-
-  isLoadingScheduled.value = true
-  try {
-    const transactions = await scheduledTransactionService.findAllByBudget(currentBudgetId.value)
-    scheduledTransactions.value = transactions
-  } catch (error) {
-    console.error('Error loading scheduled transactions:', error)
-  } finally {
-    isLoadingScheduled.value = false
-  }
-}
-
-// Watch for budget changes and reload scheduled transactions
-watch(currentBudgetId, () => {
-  if (currentBudgetId.value) {
-    loadScheduledTransactions()
-  }
-}, { immediate: true })
+// Scheduled transactions from store
+const scheduledTransactionStore = useScheduledTransactionStore()
+const scheduledTransactions = computed(() => scheduledTransactionStore.scheduledTransactions)
 
 const currentMonthYear = computed(() => {
   return currentDate.value.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })

@@ -2,7 +2,7 @@
   <Dialog :open="isOpen" @update:open="(value: boolean) => !value && $emit('close')">
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
-        <DialogTitle>Add Scheduled Transaction</DialogTitle>
+        <DialogTitle>Edit Scheduled Transaction</DialogTitle>
       </DialogHeader>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -32,7 +32,7 @@
         </div>
 
         <!-- Outflow Toggle (always outflow for scheduled transactions) -->
-        <div class="mb-4">
+        <div>
           <label class="text-sm font-medium text-foreground mb-2 block">Type</label>
           <div class="inline-flex rounded-md border border-input bg-background p-1">
             <button
@@ -67,10 +67,10 @@
             class="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option :value="ScheduledFrequency.ONCE">Once</option>
-            <option value="MONTHLY">Monthly</option>
-            <option value="WEEKLY">Weekly</option>
-            <option value="BIWEEKLY">Bi-weekly</option>
-            <option value="YEARLY">Yearly</option>
+            <option :value="ScheduledFrequency.MONTHLY">Monthly</option>
+            <option :value="ScheduledFrequency.WEEKLY">Weekly</option>
+            <option :value="ScheduledFrequency.BIWEEKLY">Bi-weekly</option>
+            <option :value="ScheduledFrequency.YEARLY">Yearly</option>
           </select>
         </div>
 
@@ -95,7 +95,6 @@
             max="31"
             required
             class="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder="1-31"
           />
         </div>
 
@@ -165,7 +164,7 @@
             type="submit"
             :disabled="isSubmitting"
           >
-            {{ isSubmitting ? 'Creating...' : 'Create' }}
+            {{ isSubmitting ? 'Saving...' : 'Save' }}
           </Button>
         </div>
       </form>
@@ -180,20 +179,19 @@ import Button from '@/components/shadcn-ui/button.vue'
 import CategorySelector from '@/components/categories/CategorySelector.vue'
 import PayeeSelector from '@/components/payees/PayeeSelector.vue'
 import { ScheduledFrequency } from '@/types/DTO/scheduled-transaction.dto'
-import type { CreateScheduledTransactionDto } from '@/types/DTO/scheduled-transaction.dto'
+import type { UpdateScheduledTransactionDto, ScheduledTransactionResponse } from '@/types/DTO/scheduled-transaction.dto'
 import type { PayeeResponse } from '@/types/DTO/payee.dto'
 import { usePayeeStore } from '@/stores/payee.store'
 
 const props = defineProps<{
   isOpen: boolean
-  accountId: string
-  budgetId: string
+  transaction: ScheduledTransactionResponse | null
   isSubmitting?: boolean
 }>()
 
 const emit = defineEmits<{
   close: []
-  save: [data: CreateScheduledTransactionDto]
+  save: [id: string, data: UpdateScheduledTransactionDto]
 }>()
 
 const payeeStore = usePayeeStore()
@@ -205,9 +203,7 @@ const amountValue = ref<number>(0)
 const categorySelectorRef = ref<InstanceType<typeof CategorySelector> | null>(null)
 const amountFieldRef = ref<HTMLDivElement | null>(null)
 
-const formData = ref<CreateScheduledTransactionDto>({
-  budget_id: props.budgetId,
-  account_id: props.accountId,
+const formData = ref<UpdateScheduledTransactionDto>({
   payee: '',
   amount: 0,
   category_id: undefined,
@@ -222,22 +218,13 @@ const formData = ref<CreateScheduledTransactionDto>({
 
 // Handle payee selection and auto-populate category
 const handlePayeeSelect = (payee: PayeeResponse | null, payeeName: string) => {
-  console.log('🔍 handlePayeeSelect called:', { payee, payeeName })
-  console.log('🔍 Payee object:', JSON.stringify(payee, null, 2))
-  console.log('🔍 last_category_id:', payee?.last_category_id)
-
   selectedPayeeName.value = payeeName
   formData.value.payee = payeeName
 
-  // If payee has a last category, auto-populate it and jump to amount
   if (payee?.last_category_id) {
-    console.log('✅ Auto-populating category:', payee.last_category_id)
     selectedCategoryId.value = payee.last_category_id
     formData.value.category_id = payee.last_category_id
-    console.log('✅ selectedCategoryId set to:', selectedCategoryId.value)
-    console.log('✅ formData.category_id set to:', formData.value.category_id)
 
-    // Jump directly to amount field since category is auto-populated
     nextTick(() => {
       const amountInput = amountFieldRef.value?.querySelector('input[type="number"]') as HTMLInputElement
       if (amountInput) {
@@ -246,21 +233,15 @@ const handlePayeeSelect = (payee: PayeeResponse | null, payeeName: string) => {
       }
     })
   } else {
-    console.log('❌ No last_category_id found on payee')
-    // No category set, move focus to category selector
     nextTick(() => {
       categorySelectorRef.value?.focus()
     })
   }
 }
 
-// Handle category selection - jump to amount field
 const handleCategorySelect = () => {
-  console.log('🔍 handleCategorySelect called, selectedCategoryId:', selectedCategoryId.value)
-  // Update formData when category changes
   formData.value.category_id = selectedCategoryId.value || undefined
 
-  // Jump to amount field
   nextTick(() => {
     const amountInput = amountFieldRef.value?.querySelector('input[type="number"]') as HTMLInputElement
     if (amountInput) {
@@ -270,46 +251,35 @@ const handleCategorySelect = () => {
   })
 }
 
-// Reset form when modal opens
-watch(() => props.isOpen, (isOpen) => {
-  if (isOpen) {
-    console.log('🔍 Modal opened, resetting form')
-    selectedPayeeName.value = ''
-    selectedPayeeId.value = null
-    selectedCategoryId.value = null
-    amountValue.value = 0
+// Populate form when transaction changes
+watch(() => props.transaction, (transaction) => {
+  if (transaction && props.isOpen) {
+    selectedPayeeName.value = transaction.payee
+    selectedCategoryId.value = transaction.category_id || null
+    amountValue.value = Math.abs(transaction.amount)
+    
     formData.value = {
-      budget_id: props.budgetId,
-      account_id: props.accountId,
-      payee: '',
-      amount: 0,
-      category_id: undefined,
-      memo: '',
-      frequency: ScheduledFrequency.ONCE,
-      specific_date: undefined,
-      day_of_month: 1,
-      day_of_week: undefined,
-      month_of_year: undefined,
-      is_active: true
+      payee: transaction.payee,
+      amount: transaction.amount,
+      category_id: transaction.category_id,
+      memo: transaction.memo,
+      frequency: transaction.frequency,
+      specific_date: transaction.specific_date,
+      day_of_month: transaction.day_of_month,
+      day_of_week: transaction.day_of_week,
+      month_of_year: transaction.month_of_year,
+      is_active: transaction.is_active
     }
   }
-})
-
-// Update budget_id and account_id when props change
-watch(() => props.budgetId, (newBudgetId) => {
-  formData.value.budget_id = newBudgetId
-})
-
-watch(() => props.accountId, (newAccountId) => {
-  formData.value.account_id = newAccountId
-})
+}, { immediate: true })
 
 const handleSubmit = () => {
+  if (!props.transaction) return
+
   // Always outflow (negative amount) for scheduled transactions
   const finalAmount = -Math.abs(amountValue.value)
 
-  // Clean up the data based on frequency
-  const data: CreateScheduledTransactionDto = {
+  const data: UpdateScheduledTransactionDto = {
     ...formData.value,
     amount: finalAmount
   }
@@ -332,7 +302,7 @@ const handleSubmit = () => {
     delete data.day_of_week
   }
 
-  emit('save', data)
+  emit('save', props.transaction.id, data)
 }
 </script>
 

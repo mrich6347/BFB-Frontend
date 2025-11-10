@@ -38,13 +38,18 @@ export function useMainDataOperations() {
     console.error('Main data loading error:', errorMessage)
   }
 
-  const resetAllStores = () => {
+  const resetAllStores = async () => {
     budgetStore.reset()
     accountStore.reset()
     categoryStore.reset()
     transactionStore.reset()
     userProfileStore.reset()
     sharedGoalsStore.reset()
+
+    // Reset scheduled transactions store (lazy loaded)
+    const { useScheduledTransactionStore } = await import('../../stores/scheduled-transaction.store')
+    const scheduledTransactionStore = useScheduledTransactionStore()
+    scheduledTransactionStore.reset()
   }
 
   const distributeMainDataToStores = async (mainData: MainDataResponse) => {
@@ -109,6 +114,13 @@ export function useMainDataOperations() {
         if (mainData.budget?.id) {
           payeeStore.setPayees(mainData.budget.id, mainData.payees)
         }
+      }
+
+      // Scheduled transactions data
+      if (mainData?.scheduledTransactions) {
+        const { useScheduledTransactionStore } = await import('../../stores/scheduled-transaction.store')
+        const scheduledTransactionStore = useScheduledTransactionStore()
+        scheduledTransactionStore.setScheduledTransactions(mainData.scheduledTransactions)
       }
 
       // All data distributed to stores successfully

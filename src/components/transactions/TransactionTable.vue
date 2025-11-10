@@ -91,6 +91,15 @@
       <span class="hidden sm:inline">Double-click a row to edit</span>
     </div>
 
+    <!-- Scheduled Transactions Section -->
+    <ScheduledTransactionsSection
+      v-if="!isMobile && (isCashAccount || isCreditAccount)"
+      :scheduled-transactions="accountScheduledTransactions"
+      :selected-scheduled-ids="selectedScheduledTransactionIds"
+      @update:selected-scheduled-ids="handleScheduledSelectionChange"
+      @edit="handleEditScheduledTransaction"
+    />
+
     <!-- Transaction Table -->
     <div class="rounded-md border border-border bg-card/50 overflow-hidden">
       <div v-if="isLoading" class="py-10 text-center text-sm text-muted-foreground">
@@ -167,6 +176,15 @@
       @close="showScheduledTransactionModal = false"
       @save="handleSaveScheduledTransaction"
     />
+
+    <!-- Edit Scheduled Transaction Modal -->
+    <EditScheduledTransactionModal
+      :is-open="showEditScheduledTransactionModal"
+      :transaction="editingScheduledTransaction"
+      :is-submitting="isSubmittingScheduled"
+      @close="closeEditScheduledTransactionModal"
+      @save="handleUpdateScheduledTransaction"
+    />
   </div>
 </template>
 
@@ -179,13 +197,16 @@ import TransactionModal from './TransactionModal.vue'
 import TransferModal from './TransferModal.vue'
 import CreditCardPaymentModal from './CreditCardPaymentModal.vue'
 import CreateScheduledTransactionModal from '@/components/scheduled-transactions/CreateScheduledTransactionModal.vue'
+import EditScheduledTransactionModal from '@/components/scheduled-transactions/EditScheduledTransactionModal.vue'
+import ScheduledTransactionsSection from '@/components/scheduled-transactions/ScheduledTransactionsSection.vue'
 import { useTransactionStore } from '@/stores/transaction.store'
 import { useAccountStore } from '@/stores/account.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { useBudgetStore } from '@/stores/budget.store'
+import { useScheduledTransactionStore } from '@/stores/scheduled-transaction.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
-import type { CreateScheduledTransactionDto } from '@/types/DTO/scheduled-transaction.dto'
+import type { CreateScheduledTransactionDto, UpdateScheduledTransactionDto, ScheduledTransactionResponse } from '@/types/DTO/scheduled-transaction.dto'
 import { AccountService } from '@/services/account.service'
 import { scheduledTransactionService } from '@/services/scheduled-transaction.service'
 import { useToast } from 'vue-toast-notification'
@@ -199,6 +220,7 @@ const transactionStore = useTransactionStore()
 const accountStore = useAccountStore()
 const categoryStore = useCategoryStore()
 const budgetStore = useBudgetStore()
+const scheduledTransactionStore = useScheduledTransactionStore()
 const {
   createTransaction,
   updateTransaction,
@@ -214,11 +236,24 @@ const showEditTransactionModal = ref(false)
 const showTransferModal = ref(false)
 const showPaymentModal = ref(false)
 const showScheduledTransactionModal = ref(false)
+const showEditScheduledTransactionModal = ref(false)
 const editingTransaction = ref<TransactionResponse | null>(null)
+const editingScheduledTransaction = ref<ScheduledTransactionResponse | null>(null)
 const showReconciled = ref(false)
 const selectedTransactionIds = ref<string[]>([])
+const selectedScheduledTransactionIds = ref<string[]>([])
 const lastSelectedId = ref<string | null>(null)
 const isSubmittingScheduled = ref(false)
+
+// Get scheduled transactions from store for this account
+const accountScheduledTransactions = computed(() =>
+  scheduledTransactionStore.getScheduledTransactionsByAccount(props.accountId)
+)
+
+// Combined selected count for both regular and scheduled transactions
+const selectedCount = computed(() =>
+  selectedTransactionIds.value.length + selectedScheduledTransactionIds.value.length
+)
 
 // Mobile detection
 const isMobile = ref(window.innerWidth < 768)
@@ -256,10 +291,9 @@ const selectedTransactions = computed(() => {
   )
 })
 
-const selectedCount = computed(() => selectedTransactions.value.length)
-
 const clearSelection = () => {
   selectedTransactionIds.value = []
+  selectedScheduledTransactionIds.value = []
   lastSelectedId.value = null
 }
 
@@ -286,6 +320,9 @@ const handleRowSelect = ({ transaction, shiftKey, metaKey }: RowSelectEvent) => 
   if (transaction.is_reconciled) {
     return
   }
+
+  // Clear scheduled transaction selection when selecting regular transactions
+  selectedScheduledTransactionIds.value = []
 
   const id = transaction.id
   const currentIds = new Set(selectedTransactionIds.value)
@@ -365,21 +402,29 @@ const deleteTransactionsHandler = async (transactionsToDelete: TransactionRespon
 }
 
 const deleteSelectedTransactions = async () => {
-  const deleted = await deleteTransactionsHandler(selectedTransactions.value)
-  if (deleted) {
-    clearSelection()
+  // Check if we're deleting regular transactions or scheduled transactions
+  if (selectedScheduledTransactionIds.value.length > 0) {
+    // Delete scheduled transactions
+    await handleDeleteScheduledTransactions(selectedScheduledTransactionIds.value)
+  } else if (selectedTransactions.value.length > 0) {
+    // Delete regular transactions
+    const deleted = await deleteTransactionsHandler(selectedTransactions.value)
+    if (deleted) {
+      clearSelection()
+    }
   }
 }
 
 const handleGlobalKeydown = (event: KeyboardEvent) => {
-  if (!selectedTransactionIds.value.length) return
+  // Check if any transactions (regular or scheduled) are selected
+  if (!selectedTransactionIds.value.length && !selectedScheduledTransactionIds.value.length) return
 
   const target = event.target as HTMLElement | null
   if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
     return
   }
 
-  if (showAddTransactionModal.value || showEditTransactionModal.value || showTransferModal.value || showPaymentModal.value) {
+  if (showAddTransactionModal.value || showEditTransactionModal.value || showTransferModal.value || showPaymentModal.value || showScheduledTransactionModal.value || showEditScheduledTransactionModal.value) {
     return
   }
 
@@ -644,14 +689,72 @@ const handleSaveScheduledTransaction = async (data: CreateScheduledTransactionDt
   isSubmittingScheduled.value = true
 
   try {
-    await scheduledTransactionService.create(data)
-    $toast.success('Scheduled transaction created successfully')
+    const newScheduledTransaction = await scheduledTransactionService.create(data)
+    scheduledTransactionStore.addScheduledTransaction(newScheduledTransaction)
     showScheduledTransactionModal.value = false
+    // No success toast - optimistic update provides instant feedback
   } catch (error) {
     console.error('Error creating scheduled transaction:', error)
     $toast.error('Failed to create scheduled transaction')
   } finally {
     isSubmittingScheduled.value = false
+  }
+}
+
+const handleEditScheduledTransaction = (transaction: ScheduledTransactionResponse) => {
+  editingScheduledTransaction.value = transaction
+  showEditScheduledTransactionModal.value = true
+}
+
+const closeEditScheduledTransactionModal = () => {
+  showEditScheduledTransactionModal.value = false
+  editingScheduledTransaction.value = null
+}
+
+const handleUpdateScheduledTransaction = async (id: string, data: UpdateScheduledTransactionDto) => {
+  if (isSubmittingScheduled.value) return
+
+  isSubmittingScheduled.value = true
+
+  try {
+    const updatedScheduledTransaction = await scheduledTransactionService.update(id, data)
+    scheduledTransactionStore.updateScheduledTransaction(id, updatedScheduledTransaction)
+    closeEditScheduledTransactionModal()
+    // No success toast - optimistic update provides instant feedback
+  } catch (error) {
+    console.error('Error updating scheduled transaction:', error)
+    $toast.error('Failed to update scheduled transaction')
+  } finally {
+    isSubmittingScheduled.value = false
+  }
+}
+
+const handleScheduledSelectionChange = (ids: string[]) => {
+  // When scheduled transactions are selected, clear regular transaction selection
+  if (ids.length > 0) {
+    selectedTransactionIds.value = []
+  }
+  selectedScheduledTransactionIds.value = ids
+}
+
+const handleDeleteScheduledTransactions = async (transactionIds: string[]) => {
+  try {
+    // Delete all selected scheduled transactions
+    await Promise.all(
+      transactionIds.map(id => scheduledTransactionService.remove(id))
+    )
+
+    // Remove from store
+    transactionIds.forEach(id => {
+      scheduledTransactionStore.removeScheduledTransaction(id)
+    })
+
+    // Clear selection
+    selectedScheduledTransactionIds.value = []
+    // No success toast - optimistic update provides instant feedback
+  } catch (error) {
+    console.error('Error deleting scheduled transaction(s):', error)
+    $toast.error('Failed to delete scheduled transaction(s)')
   }
 }
 
