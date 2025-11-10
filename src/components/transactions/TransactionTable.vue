@@ -38,6 +38,18 @@
           Add Transaction
         </Button>
 
+        <!-- Add Scheduled Transaction button (Web only, CASH and CREDIT accounts) -->
+        <Button
+          v-if="!isMobile && (isCashAccount || isCreditAccount)"
+          size="sm"
+          variant="outline"
+          @click="showScheduledTransactionModal = true"
+          class="flex items-center gap-2"
+        >
+          <CalendarClockIcon class="w-4 h-4" />
+          Add Scheduled
+        </Button>
+
         <!-- Transfer button for cash accounts -->
         <Button
           v-if="isCashAccount"
@@ -144,24 +156,38 @@
       @close="closePaymentModal"
       @save="handleSavePayment"
     />
+
+    <!-- Scheduled Transaction Modal -->
+    <CreateScheduledTransactionModal
+      v-if="currentAccount"
+      :is-open="showScheduledTransactionModal"
+      :account-id="accountId"
+      :budget-id="currentAccount.budget_id"
+      :is-submitting="isSubmittingScheduled"
+      @close="showScheduledTransactionModal = false"
+      @save="handleSaveScheduledTransaction"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { PlusIcon, TrashIcon, ArrowRightLeftIcon, CreditCard as CreditCardIcon } from 'lucide-vue-next'
+import { PlusIcon, TrashIcon, ArrowRightLeftIcon, CreditCard as CreditCardIcon, CalendarClock as CalendarClockIcon } from 'lucide-vue-next'
 import Button from '@/components/shadcn-ui/button.vue'
 import TransactionRow from './TransactionRow.vue'
 import TransactionModal from './TransactionModal.vue'
 import TransferModal from './TransferModal.vue'
 import CreditCardPaymentModal from './CreditCardPaymentModal.vue'
+import CreateScheduledTransactionModal from '@/components/scheduled-transactions/CreateScheduledTransactionModal.vue'
 import { useTransactionStore } from '@/stores/transaction.store'
 import { useAccountStore } from '@/stores/account.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import type { TransactionResponse, CreateTransactionDto, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
+import type { CreateScheduledTransactionDto } from '@/types/DTO/scheduled-transaction.dto'
 import { AccountService } from '@/services/account.service'
+import { scheduledTransactionService } from '@/services/scheduled-transaction.service'
 import { useToast } from 'vue-toast-notification'
 import confetti from 'canvas-confetti'
 
@@ -187,10 +213,15 @@ const showAddTransactionModal = ref(false)
 const showEditTransactionModal = ref(false)
 const showTransferModal = ref(false)
 const showPaymentModal = ref(false)
+const showScheduledTransactionModal = ref(false)
 const editingTransaction = ref<TransactionResponse | null>(null)
 const showReconciled = ref(false)
 const selectedTransactionIds = ref<string[]>([])
 const lastSelectedId = ref<string | null>(null)
+const isSubmittingScheduled = ref(false)
+
+// Mobile detection
+const isMobile = ref(window.innerWidth < 768)
 
 // Check account type
 const currentAccount = computed(() => {
@@ -604,6 +635,23 @@ const handleSavePayment = async (amount: number, fromAccountId: string, memo?: s
     $toast.error('Failed to process payment')
   } finally {
     isSubmitting.value = false
+  }
+}
+
+const handleSaveScheduledTransaction = async (data: CreateScheduledTransactionDto) => {
+  if (isSubmittingScheduled.value) return
+
+  isSubmittingScheduled.value = true
+
+  try {
+    await scheduledTransactionService.create(data)
+    $toast.success('Scheduled transaction created successfully')
+    showScheduledTransactionModal.value = false
+  } catch (error) {
+    console.error('Error creating scheduled transaction:', error)
+    $toast.error('Failed to create scheduled transaction')
+  } finally {
+    isSubmittingScheduled.value = false
   }
 }
 
