@@ -125,16 +125,16 @@
             </div>
 
             <!-- Amounts -->
-            <div class="flex items-center justify-between text-sm mb-3">
+            <div class="flex items-center justify-between mb-3">
               <div>
-                <p class="text-xs text-muted-foreground">Current</p>
-                <p class="font-semibold text-green-600 dark:text-green-400">
+                <p class="text-xs text-muted-foreground mb-1">Current</p>
+                <p class="text-2xl font-bold text-green-600 dark:text-green-400">
                   {{ formatCurrency(goal.current_amount || 0) }}
                 </p>
               </div>
               <div class="text-right">
-                <p class="text-xs text-muted-foreground">Target</p>
-                <p class="font-semibold text-foreground">
+                <p class="text-xs text-muted-foreground mb-1">Target</p>
+                <p class="text-lg font-semibold text-foreground">
                   {{ formatCurrency(goal.target_amount) }}
                 </p>
               </div>
