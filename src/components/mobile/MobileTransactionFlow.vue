@@ -108,21 +108,6 @@
               </div>
             </button>
 
-          <!-- Got Paid (cash accounts only) -->
-          <button
-            v-if="isCashAccount && !isTrackingAccount"
-            @click="selectAction('gotPaid')"
-            class="w-full flex items-center gap-4 px-4 py-4 bg-card rounded-md border border-border hover:bg-accent transition-colors"
-          >
-            <div class="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center">
-              <DollarSignIcon class="h-5 w-5 text-emerald-600" />
-            </div>
-            <div class="flex-1 text-left">
-              <div class="font-medium">Got Paid</div>
-              <div class="text-sm text-muted-foreground">Quick income entry</div>
-            </div>
-          </button>
-
           <!-- Transfer (not available for credit cards or tracking) -->
           <button
             v-if="!isCreditAccount && !isTrackingAccount"
@@ -253,7 +238,7 @@ const { deleteTransaction, updateTransaction } = useTransactionOperations()
 const showFlow = ref(false)
 const currentStep = ref<'account' | 'action' | 'form' | 'edit'>('account')
 const selectedAccount = ref<AccountResponse | null>(null)
-const selectedAction = ref<'transaction' | 'gotPaid' | 'transfer' | 'payment' | null>(null)
+const selectedAction = ref<'transaction' | 'transfer' | 'payment' | null>(null)
 const transactionType = ref<'inflow' | 'outflow'>('outflow')
 const editingTransaction = ref<TransactionResponse | null>(null)
 
@@ -294,13 +279,11 @@ const selectAccount = (account: AccountResponse) => {
   currentStep.value = 'action'
 }
 
-const selectAction = (action: 'transaction' | 'gotPaid' | 'transfer' | 'payment' | 'updateBalance') => {
+const selectAction = (action: 'transaction' | 'transfer' | 'payment' | 'updateBalance') => {
   selectedAction.value = action
 
   // Set transaction type based on action
-  if (action === 'gotPaid') {
-    transactionType.value = 'inflow'
-  } else if (action === 'transaction') {
+  if (action === 'transaction') {
     transactionType.value = isCashAccount.value ? 'outflow' : 'outflow' // Default to outflow
   }
 
