@@ -10,17 +10,21 @@
   <div v-else class="flex h-screen">
     <Sidebar :budgetId="currentBudgetId" />
     <div class="flex-1 bg-background overflow-auto">
-      <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <!-- Header -->
-      <div class="mb-8">
-        <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-3xl font-bold text-foreground">Shared Goals</h1>
-            <p class="mt-2 text-muted-foreground">
-              Collaborate with others to achieve your financial goals together.
-            </p>
-          </div>
-          <div class="flex items-center space-x-3">
+      <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <div class="space-y-10">
+          <section class="space-y-3">
+            <div class="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-primary/80">
+              <TargetIcon class="h-4 w-4" />
+              <span>Shared Goals</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-5xl font-bold text-foreground">Goals</h1>
+                <p class="mt-2 text-muted-foreground max-w-2xl">
+                  Collaborate with others to achieve your financial goals together.
+                </p>
+              </div>
+              <div class="flex items-center space-x-3">
             <button
               @click="handleRefreshData"
               :disabled="isRefreshing"
@@ -60,8 +64,8 @@
               Create Profile First
             </button>
           </div>
-        </div>
-      </div>
+            </div>
+          </section>
 
       <!-- Invitations Panel -->
       <div v-if="showInvitations" class="mb-8">
@@ -128,8 +132,8 @@
         </div>
       </div>
 
-      <!-- Goals Sections -->
-      <div v-else class="space-y-8">
+          <!-- Goals Sections -->
+          <div v-else class="space-y-8">
         <!-- Active Goals Section -->
         <div v-if="activeGoals.length > 0">
           <h2 class="text-xl font-semibold text-foreground mb-4">Active Goals</h2>
@@ -388,7 +392,8 @@
             </div>
           </div>
         </div>
-      </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

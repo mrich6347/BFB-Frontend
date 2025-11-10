@@ -7,21 +7,23 @@
   <div v-else class="flex h-screen">
     <Sidebar :budgetId="currentBudgetId" />
     <div class="flex-1 bg-background overflow-auto">
-      <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="mb-8">
-          <div class="flex items-center justify-between">
-            <div>
-              <h1 class="text-3xl font-bold text-foreground">Retirement Plan</h1>
-              <p class="mt-2 text-muted-foreground">
-                Plan your retirement with our calculator and see how your savings will grow over time.
-              </p>
+      <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <div class="space-y-10">
+          <section class="space-y-3">
+            <div class="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-primary/80">
+              <PiggyBankIcon class="h-4 w-4" />
+              <span>Retirement Plan</span>
             </div>
-          </div>
-        </div>
+            <div class="flex flex-wrap items-baseline gap-3">
+              <h1 class="text-5xl font-bold text-foreground">Plan Your Future</h1>
+            </div>
+            <p class="text-muted-foreground max-w-2xl">
+              Plan your retirement with our calculator and see how your savings will grow over time.
+            </p>
+          </section>
 
-        <!-- Calculator Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <!-- Calculator Section -->
+          <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Input Card -->
           <div class="bg-card rounded-lg border border-border shadow-sm p-6">
             <h2 class="text-xl font-semibold text-foreground mb-6">Your Information</h2>
@@ -180,10 +182,10 @@
               </p>
             </div>
           </div>
-        </div>
+          </section>
 
-        <!-- Chart Section -->
-        <div class="bg-card rounded-lg border border-border shadow-sm p-6">
+          <!-- Chart Section -->
+          <section class="bg-card rounded-lg border border-border shadow-sm p-6">
           <h2 class="text-xl font-semibold text-foreground mb-6">Growth Over Time</h2>
           <RetirementChart
             :current-age="currentAge"
@@ -192,9 +194,8 @@
             :starting-balance="startingBalance"
             :annual-return="annualReturnRate"
           />
+          </section>
         </div>
-
-
       </div>
     </div>
   </div>
@@ -202,7 +203,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { AlertCircleIcon } from 'lucide-vue-next'
+import { AlertCircleIcon, PiggyBankIcon } from 'lucide-vue-next'
 import Sidebar from '../components/Sidebar.vue'
 import MobileRetirementPlanView from '../components/mobile/MobileRetirementPlanView.vue'
 import RetirementChart from '../components/retirement/RetirementChart.vue'
