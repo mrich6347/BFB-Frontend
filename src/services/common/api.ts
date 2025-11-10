@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
 import { useToast } from 'vue-toast-notification';
 import 'vue-toast-notification/dist/theme-sugar.css';
+import { markLocalMutation } from '@/composables/common/useRealtimeSync';
 
 // Create the axios instance
 const api = axios.create({
@@ -23,6 +24,12 @@ api.interceptors.request.use(async (config) => {
         if (authStore.getAccessToken) {
             config.headers = config.headers || {};
             config.headers.Authorization = `Bearer ${authStore.getAccessToken}`;
+        }
+
+        // Mark mutations BEFORE they happen (so realtime changes are ignored)
+        const method = config.method?.toUpperCase();
+        if (method && ['POST', 'PATCH', 'PUT', 'DELETE'].includes(method)) {
+            markLocalMutation();
         }
     } catch (error) {
         console.error('Error in API interceptor:', error);

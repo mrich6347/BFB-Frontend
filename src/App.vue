@@ -3,9 +3,13 @@ import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { RouterView } from 'vue-router'
 import { useTheme } from '@/composables/common/useTheme'
+import { useRealtimeSync } from '@/composables/common/useRealtimeSync'
 
 // Initialize color theme
 useTheme()
+
+// Initialize real-time sync for cross-device/tab synchronization
+useRealtimeSync()
 
 const route = useRoute()
 const router = useRouter()
