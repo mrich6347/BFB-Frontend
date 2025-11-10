@@ -693,7 +693,6 @@ const handleSubmit = async () => {
       }
 
       await createScheduledTransaction(scheduledData)
-      $toast.success('Scheduled transaction created')
       emit('close')
     } else {
       // Create standard transaction

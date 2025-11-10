@@ -13,6 +13,7 @@
             :payee-name="selectedPayeeName"
             label="Payee"
             placeholder="Select or add payee..."
+            :auto-focus="false"
             @select="handlePayeeSelect"
           />
         </div>
@@ -167,13 +168,31 @@
             {{ isSubmitting ? 'Saving...' : 'Save' }}
           </Button>
         </div>
+
+        <!-- Delete Button (Mobile Only) -->
+        <div v-if="isMobile" class="pt-2">
+          <button
+            @click="handleDelete"
+            :disabled="isDeleting"
+            type="button"
+            class="w-full py-3 bg-red-600 text-white rounded-md font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            :class="isDeleting ? 'animate-pulse' : 'hover:bg-red-700'"
+          >
+            <template v-if="!isDeleting">
+              <TrashIcon class="h-5 w-5" />
+              Delete Scheduled Transaction
+            </template>
+            <span v-else>Deleting...</span>
+          </button>
+        </div>
       </form>
     </DialogContent>
   </Dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { TrashIcon } from 'lucide-vue-next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/shadcn-ui'
 import Button from '@/components/shadcn-ui/button.vue'
 import CategorySelector from '@/components/categories/CategorySelector.vue'
@@ -192,6 +211,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   save: [id: string, data: UpdateScheduledTransactionDto]
+  delete: [id: string]
 }>()
 
 const payeeStore = usePayeeStore()
@@ -202,6 +222,23 @@ const selectedCategoryId = ref<string | null>(null)
 const amountValue = ref<number>(0)
 const categorySelectorRef = ref<InstanceType<typeof CategorySelector> | null>(null)
 const amountFieldRef = ref<HTMLDivElement | null>(null)
+const isDeleting = ref(false)
+
+// Mobile detection
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768 // Tailwind's md breakpoint
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 const formData = ref<UpdateScheduledTransactionDto>({
   payee: '',
@@ -251,27 +288,39 @@ const handleCategorySelect = () => {
   })
 }
 
+// Function to populate form from transaction
+const populateForm = (transaction: ScheduledTransactionResponse) => {
+  selectedPayeeName.value = transaction.payee
+  selectedCategoryId.value = transaction.category_id || null
+  amountValue.value = Math.abs(transaction.amount)
+
+  formData.value = {
+    payee: transaction.payee,
+    amount: transaction.amount,
+    category_id: transaction.category_id,
+    memo: transaction.memo,
+    frequency: transaction.frequency,
+    specific_date: transaction.specific_date,
+    day_of_month: transaction.day_of_month,
+    day_of_week: transaction.day_of_week,
+    month_of_year: transaction.month_of_year,
+    is_active: transaction.is_active
+  }
+}
+
 // Populate form when transaction changes
 watch(() => props.transaction, (transaction) => {
   if (transaction && props.isOpen) {
-    selectedPayeeName.value = transaction.payee
-    selectedCategoryId.value = transaction.category_id || null
-    amountValue.value = Math.abs(transaction.amount)
-    
-    formData.value = {
-      payee: transaction.payee,
-      amount: transaction.amount,
-      category_id: transaction.category_id,
-      memo: transaction.memo,
-      frequency: transaction.frequency,
-      specific_date: transaction.specific_date,
-      day_of_month: transaction.day_of_month,
-      day_of_week: transaction.day_of_week,
-      month_of_year: transaction.month_of_year,
-      is_active: transaction.is_active
-    }
+    populateForm(transaction)
   }
 }, { immediate: true })
+
+// Also populate when modal opens
+watch(() => props.isOpen, (isOpen) => {
+  if (isOpen && props.transaction) {
+    populateForm(props.transaction)
+  }
+})
 
 const handleSubmit = () => {
   if (!props.transaction) return
@@ -303,6 +352,21 @@ const handleSubmit = () => {
   }
 
   emit('save', props.transaction.id, data)
+}
+
+const handleDelete = async () => {
+  if (!props.transaction || isDeleting.value) return
+
+  isDeleting.value = true
+
+  try {
+    emit('delete', props.transaction.id)
+
+    // Keep loading state until parent closes the form
+    await new Promise(resolve => setTimeout(resolve, 500))
+  } finally {
+    isDeleting.value = false
+  }
 }
 </script>
 

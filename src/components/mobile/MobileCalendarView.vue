@@ -139,10 +139,10 @@
     <!-- Edit Scheduled Transaction Modal -->
     <EditScheduledTransactionModal
       :is-open="isEditModalOpen"
-      :scheduled-transaction="selectedTransaction"
-      :budget-id="currentBudget?.id || ''"
+      :transaction="selectedTransaction"
       @close="closeEditModal"
       @save="handleSaveEdit"
+      @delete="handleDeleteScheduledTransaction"
     />
   </div>
 </template>
@@ -170,7 +170,7 @@ const scheduledTransactionStore = useScheduledTransactionStore()
 const categoryStore = useCategoryStore()
 const accountStore = useAccountStore()
 const { currentBudget } = storeToRefs(budgetStore)
-const { updateScheduledTransaction } = useScheduledTransactionOperations()
+const { updateScheduledTransaction, deleteScheduledTransaction } = useScheduledTransactionOperations()
 
 const isLoading = ref(false)
 const isEditModalOpen = ref(false)
@@ -381,6 +381,15 @@ const handleSaveEdit = async (updates: Partial<ScheduledTransactionResponse>) =>
     closeEditModal()
   } catch (error) {
     console.error('Failed to update scheduled transaction:', error)
+  }
+}
+
+const handleDeleteScheduledTransaction = async (id: string) => {
+  try {
+    await deleteScheduledTransaction(id)
+    closeEditModal()
+  } catch (error) {
+    console.error('Failed to delete scheduled transaction:', error)
   }
 }
 
