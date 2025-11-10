@@ -156,11 +156,19 @@ export function useMainDataOperations() {
       // Check if this is a "budget not found" error
       const isBudgetNotFound = errorMessage.includes('Budget not found') ||
                                errorMessage.includes('not found') ||
+                               errorMessage.includes('0 rows') ||
+                               errorMessage.includes('multiple (or no) rows') ||
                                error.response?.status === 404
 
       if (isBudgetNotFound) {
         // Budget not found - this is handled gracefully now
-        console.log('Budget not found')
+        console.log('Budget not found, clearing localStorage')
+
+        // Clear localStorage if this was the last visited budget
+        const lastVisitedBudgetId = localStorage.getItem('lastVisitedBudgetId')
+        if (lastVisitedBudgetId === budgetId) {
+          localStorage.removeItem('lastVisitedBudgetId')
+        }
 
         // Don't set error for budget not found - just silently redirect
         // This prevents showing error messages to users for deleted/missing budgets

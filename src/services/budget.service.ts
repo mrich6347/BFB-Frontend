@@ -44,6 +44,11 @@ export class BudgetService {
     return response.data
   }
 
+  static async deleteBudget(id: string): Promise<{ message: string }> {
+    const response = await api.delete<{ message: string }>(`${this.BASE_PATH}/${id}`)
+    return response.data
+  }
+
   /**
    * Import budget from YNAB zip file
    */

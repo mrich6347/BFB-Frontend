@@ -20,7 +20,7 @@ onMounted(async () => {
     if (route.path === '/') {
       // Try to load the last visited budget from localStorage
       const lastVisitedBudgetId = localStorage.getItem('lastVisitedBudgetId')
-      
+
       if (lastVisitedBudgetId) {
         // Try to navigate to the last visited budget
         try {
@@ -28,9 +28,11 @@ onMounted(async () => {
           return
         } catch (error) {
           console.log('Could not navigate to last visited budget, falling back to dashboard')
+          // Clear the invalid budget ID from localStorage
+          localStorage.removeItem('lastVisitedBudgetId')
         }
       }
-      
+
       // Fall back to dashboard if no last visited budget or navigation failed
       await router.push('/dashboard')
     }
