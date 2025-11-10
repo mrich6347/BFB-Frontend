@@ -29,7 +29,7 @@
         <!-- Swipeable transaction content -->
         <div
           :ref="el => setTransactionRef(transaction.id, el)"
-          class="w-full bg-card border border-border touch-pan-y active:bg-accent transition-colors"
+          class="w-full bg-card border border-border touch-pan-y"
           :class="{ 'transition-transform duration-200 ease-out': !isSwiping(transaction.id) }"
           :style="{ transform: `translateX(${getSwipeOffset(transaction.id)}px)` }"
           @touchstart="handleTouchStart($event, transaction.id)"
