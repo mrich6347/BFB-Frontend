@@ -232,6 +232,29 @@
             <!-- Simple instruction -->
             <p class="text-sm text-blue-600 dark:text-blue-400 text-center">Select a destination category</p>
 
+            <!-- Search Bar -->
+            <div class="relative">
+              <input
+                v-model="categorySearchQuery"
+                type="text"
+                placeholder="Search categories..."
+                class="w-full px-4 py-2 pl-10 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              />
+              <svg
+                class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+
             <!-- Ready to Assign Option -->
             <div class="space-y-2">
               <h3 class="text-sm font-medium text-muted-foreground px-2">Available Funds</h3>
@@ -243,7 +266,7 @@
                   <div>
                     <div class="font-medium">Ready to Assign</div>
                     <div class="text-sm text-muted-foreground">
-                      Current: <span :class="readyToAssign > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : ''">{{ formatCurrency(readyToAssign) }}</span>
+                      Current: <span :class="getAvailableColorClass(readyToAssign)">{{ formatCurrency(readyToAssign) }}</span>
                     </div>
                   </div>
                 </div>
@@ -390,6 +413,7 @@ const showCoverOverspending = ref(false)
 const showMoveMoney = ref(false)
 const moveAmount = ref<number | null>(null)
 const selectedMoveDestination = ref<string | null>(null)
+const categorySearchQuery = ref('')
 
 // Computed properties
 const isOverspent = computed(() => (props.category?.available || 0) < 0)
@@ -423,6 +447,8 @@ const categoriesWithPositiveBalance = computed(() => {
 })
 
 const allCategoryGroups = computed(() => {
+  const searchLower = categorySearchQuery.value.toLowerCase().trim()
+
   const groups = categoryStore.visibleCategoryGroups
     .filter(group => {
       if (group.name === 'Hidden Categories' && group.is_system_group) {
@@ -432,7 +458,16 @@ const allCategoryGroups = computed(() => {
     })
     .map(group => {
       const categories = categoryStore.getCategoriesByGroupWithBalances(group.id)
-        .filter(cat => cat.id !== props.category?.id) // Exclude current category
+        .filter(cat => {
+          if (cat.id === props.category?.id) return false // Exclude current category
+
+          // Apply search filter
+          if (searchLower) {
+            return cat.name.toLowerCase().includes(searchLower)
+          }
+
+          return true
+        })
 
       return {
         id: group.id,
@@ -446,9 +481,11 @@ const allCategoryGroups = computed(() => {
 })
 
 const getAvailableColorClass = (available: number) => {
-  if (available > 0) {
+  // Use a small threshold to handle floating point precision
+  const threshold = 0.01
+  if (available > threshold) {
     return 'text-emerald-600 dark:text-emerald-400 font-semibold'
-  } else if (available < 0) {
+  } else if (available < -threshold) {
     return 'text-red-600 dark:text-red-400 font-semibold'
   }
   return 'text-muted-foreground'
@@ -478,10 +515,12 @@ const closeMoveMoney = () => {
   showMoveMoney.value = false
   moveAmount.value = null
   selectedMoveDestination.value = null
+  categorySearchQuery.value = ''
 }
 
 const selectDestinationCategory = (destinationId: string) => {
   selectedMoveDestination.value = destinationId
+  categorySearchQuery.value = ''
 }
 
 const getDestinationCategoryName = () => {
