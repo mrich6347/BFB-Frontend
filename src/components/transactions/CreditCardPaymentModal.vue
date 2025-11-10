@@ -29,9 +29,8 @@
           <label class="text-sm font-medium text-foreground">Payment Amount</label>
           <input
             v-model="amount"
-            type="number"
-            step="0.01"
-            min="0.01"
+            type="text"
+            inputmode="decimal"
             placeholder="0.00"
             class="w-full px-3 py-2 border rounded-md bg-background border-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
             @keydown.enter="handleSubmit"
@@ -95,7 +94,7 @@ const emit = defineEmits<{
 const accountStore = useAccountStore()
 
 // Form state
-const amount = ref<number | null>(null)
+const amount = ref<string>('')
 const memo = ref('')
 const selectedFromAccountId = ref<string | null>(null)
 const amountError = ref('')
@@ -112,14 +111,16 @@ const cashAccounts = computed(() => {
 })
 
 const isFormValid = computed(() => {
-  return amount.value !== null && amount.value > 0 && selectedFromAccountId.value !== null
+  const amountNum = parseFloat(amount.value)
+  return amount.value && !isNaN(amountNum) && amountNum > 0 && selectedFromAccountId.value !== null
 })
 
 // Validation
 const validateAmount = () => {
   amountError.value = ''
 
-  if (!amount.value || amount.value <= 0) {
+  const amountNum = parseFloat(amount.value)
+  if (!amount.value || isNaN(amountNum) || amountNum <= 0) {
     amountError.value = 'Please enter a valid payment amount'
     return false
   }
@@ -160,14 +161,16 @@ const handleSubmit = () => {
     return
   }
 
-  emit('save', amount.value!, selectedFromAccountId.value!, memo.value || undefined)
+  const amountNum = parseFloat(amount.value)
+  emit('save', amountNum, selectedFromAccountId.value!, memo.value || undefined)
 }
 
 // Reset form when modal opens
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     // Set default amount if provided (e.g., cleared balance)
-    amount.value = props.defaultAmount ? Math.abs(props.defaultAmount) : null
+    // Format to 2 decimal places as a string to preserve trailing zeros
+    amount.value = props.defaultAmount ? Math.abs(props.defaultAmount).toFixed(2) : ''
     memo.value = ''
     selectedFromAccountId.value = null
     amountError.value = ''
