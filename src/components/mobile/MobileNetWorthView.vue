@@ -268,7 +268,7 @@ const totalLiabilitiesDisplay = computed(() => Math.abs(totalLiabilities.value))
 
 const hasActiveAccounts = computed(() => activeAccounts.value.length > 0)
 
-const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth') => {
+const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth' | 'calendar') => {
   if (tab === 'budget') {
     // Navigate to budget page
     const budgetId = currentBudget.value?.id
@@ -282,6 +282,8 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'n
     router.push('/shared-goals')
   } else if (tab === 'retirement') {
     router.push('/retirement-plan')
+  } else if (tab === 'calendar') {
+    router.push('/calendar')
   }
   // Net worth tab is already the current view, no action needed
 }

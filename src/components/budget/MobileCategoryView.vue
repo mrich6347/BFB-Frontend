@@ -571,7 +571,7 @@ const handleUpdateBalance = async (accountId: string, newBalance: number) => {
   }
 }
 
-const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth') => {
+const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth' | 'calendar') => {
   if (tab === 'accounts') {
     // Open the transaction flow to account selection
     transactionFlowRef.value?.openFlow()
@@ -582,6 +582,8 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'n
   } else if (tab === 'networth') {
     // Navigate to net worth page
     router.push('/net-worth')
+  } else if (tab === 'calendar') {
+    router.push('/calendar')
   }
   // Budget tab is already the current view, no action needed
 }

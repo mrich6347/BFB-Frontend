@@ -312,7 +312,7 @@ const handleStartingBalanceBlur = () => {
   }
 }
 
-const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'retirement') => {
+const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'retirement' | 'calendar') => {
   if (tab === 'budget') {
     const budgetId = currentBudget.value?.id
     if (budgetId) {
@@ -324,6 +324,8 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'ret
     router.push('/net-worth')
   } else if (tab === 'goals') {
     router.push('/shared-goals')
+  } else if (tab === 'calendar') {
+    router.push('/calendar')
   }
   // Retirement tab is already the current view
 }

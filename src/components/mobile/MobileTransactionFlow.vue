@@ -487,7 +487,7 @@ const handleReconcile = async () => {
   }
 }
 
-const handleNavigate = async (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth') => {
+const handleNavigate = async (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth' | 'calendar') => {
   if (tab === 'budget') {
     const budgetId = budgetStore.currentBudget?.id
     if (budgetId) {
@@ -504,6 +504,9 @@ const handleNavigate = async (tab: 'budget' | 'accounts' | 'goals' | 'retirement
   } else if (tab === 'networth') {
     // Navigate first, then close modal after navigation completes
     await router.push('/net-worth')
+    closeFlow()
+  } else if (tab === 'calendar') {
+    await router.push('/calendar')
     closeFlow()
   }
   // Accounts tab is already the current view, no action needed

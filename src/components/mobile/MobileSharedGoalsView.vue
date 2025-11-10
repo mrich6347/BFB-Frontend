@@ -314,7 +314,7 @@ const getSortedParticipants = (participants: GoalParticipantResponse[]) => {
     return bContribution - aContribution // Sort descending (highest first)
   })
 }
-const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'retirement') => {
+const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'retirement' | 'calendar') => {
   if (tab === 'budget') {
     const budgetId = currentBudget.value?.id
     if (budgetId) {
@@ -327,6 +327,8 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'ret
     router.push('/net-worth')
   } else if (tab === 'retirement') {
     router.push('/retirement-plan')
+  } else if (tab === 'calendar') {
+    router.push('/calendar')
   }
   // Goals tab is already the current view
 }

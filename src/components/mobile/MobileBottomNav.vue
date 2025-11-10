@@ -3,7 +3,7 @@
     class="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-40"
     style="padding-bottom: env(safe-area-inset-bottom);"
   >
-    <div class="grid grid-cols-5">
+    <div class="grid grid-cols-6">
       <!-- Budget Tab -->
       <button
         @click="$emit('navigate', 'budget')"
@@ -46,6 +46,20 @@
         <span class="text-[10px] font-medium">Goals</span>
       </button>
 
+      <!-- Calendar Tab -->
+      <button
+        @click="$emit('navigate', 'calendar')"
+        :class="[
+          'flex flex-col items-center justify-center py-2.5 transition-colors',
+          activeTab === 'calendar'
+            ? 'text-primary'
+            : 'text-muted-foreground hover:text-foreground'
+        ]"
+      >
+        <CalendarIcon :class="['h-5 w-5 mb-0.5', activeTab === 'calendar' ? 'fill-primary' : '']" />
+        <span class="text-[10px] font-medium">Calendar</span>
+      </button>
+
       <!-- Retirement Tab -->
       <button
         @click="$emit('navigate', 'retirement')"
@@ -78,14 +92,14 @@
 </template>
 
 <script setup lang="ts">
-import { WalletIcon, CreditCardIcon, TargetIcon, PiggyBankIcon, TrendingUpIcon } from 'lucide-vue-next'
+import { WalletIcon, CreditCardIcon, TargetIcon, PiggyBankIcon, TrendingUpIcon, CalendarIcon } from 'lucide-vue-next'
 
 defineProps<{
-  activeTab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth'
+  activeTab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth' | 'calendar'
 }>()
 
 defineEmits<{
-  navigate: [tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth']
+  navigate: [tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth' | 'calendar']
 }>()
 </script>
 

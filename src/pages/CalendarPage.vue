@@ -2,16 +2,8 @@
   <div v-if="isLoading" class="flex h-screen items-center justify-center">
     <LoadingSpinner />
   </div>
-  <!-- Mobile Not Supported Message -->
-  <div v-else-if="isMobile" class="flex h-screen items-center justify-center p-6">
-    <div class="text-center max-w-md">
-      <CalendarIcon class="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-      <h2 class="text-2xl font-bold text-foreground mb-2">Desktop Only</h2>
-      <p class="text-muted-foreground">
-        The Calendar feature is currently only available on desktop. Please visit this page on a larger screen to view your scheduled bills.
-      </p>
-    </div>
-  </div>
+  <!-- Mobile View -->
+  <MobileCalendarView v-else-if="isMobile" />
   <!-- Desktop View -->
   <div v-else class="flex h-screen">
     <Sidebar :budgetId="currentBudgetId" />
@@ -161,10 +153,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import MobileCalendarView from '@/components/mobile/MobileCalendarView.vue'
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 import { useBudgetStore } from '@/stores/budget.store'
 import { formatCurrency } from '@/utils/currencyUtil'
@@ -388,6 +381,12 @@ const showTransactionDetails = (transaction: any) => {
 }
 
 onMounted(async () => {
+  // Check if mobile on mount
+  checkMobile()
+
+  // Add resize listener
+  window.addEventListener('resize', checkMobile)
+
   try {
     let targetBudgetId = currentBudgetId.value
     if (!targetBudgetId) {
@@ -411,6 +410,10 @@ onMounted(async () => {
     console.error('Error loading calendar page:', error)
     router.push('/dashboard')
   }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', checkMobile)
 })
 </script>
 
