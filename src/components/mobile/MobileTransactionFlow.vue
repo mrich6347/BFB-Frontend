@@ -74,6 +74,30 @@
         </div>
 
         <div class="flex-1 overflow-auto p-4 space-y-6" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));">
+          <!-- Balance Display (for non-tracking accounts) -->
+          <div v-if="!isTrackingAccount && selectedAccount" class="bg-card rounded-lg border border-border p-4">
+            <div class="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div class="text-xs text-muted-foreground mb-1">Cleared</div>
+                <div class="text-sm font-semibold tabular-nums" :class="selectedAccount.cleared_balance < 0 ? 'text-destructive' : 'text-foreground'">
+                  {{ formatCurrency(selectedAccount.cleared_balance) }}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs text-muted-foreground mb-1">Uncleared</div>
+                <div class="text-sm font-semibold tabular-nums" :class="selectedAccount.uncleared_balance < 0 ? 'text-destructive' : 'text-foreground'">
+                  {{ formatCurrency(selectedAccount.uncleared_balance) }}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs text-muted-foreground mb-1">Working</div>
+                <div class="text-sm font-semibold tabular-nums" :class="selectedAccount.working_balance < 0 ? 'text-destructive' : 'text-foreground'">
+                  {{ formatCurrency(selectedAccount.working_balance) }}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Actions Section -->
           <div class="space-y-3">
             <!-- Update Balance (tracking accounts only) -->
@@ -413,9 +437,9 @@ const handleReconcile = async () => {
   try {
     const clearedBalance = selectedAccount.value.cleared_balance
     await reconcileAccount(selectedAccount.value.id, clearedBalance)
-    $toast.success('Account reconciled successfully')
     showReconcileConfirm.value = false
-    closeFlow()
+    // Go back to account page instead of closing
+    currentStep.value = 'action'
   } catch (error) {
     console.error('Failed to reconcile account:', error)
     $toast.error('Failed to reconcile account')

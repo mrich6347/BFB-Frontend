@@ -169,31 +169,40 @@
           </div>
 
           <div class="flex-1 overflow-auto p-4 space-y-2">
-            <!-- Filtered Payees -->
-            <button
-              v-for="payee in filteredPayees"
-              :key="payee.id"
-              @click="selectPayee(payee.name, payee.last_category_id)"
-              class="w-full px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors text-left"
-            >
-              <div class="font-medium">{{ payee.name }}</div>
-            </button>
+            <!-- Only show payees if user is searching -->
+            <template v-if="payeeSearchQuery.trim()">
+              <!-- Filtered Payees -->
+              <button
+                v-for="payee in filteredPayees"
+                :key="payee.id"
+                @click="selectPayee(payee.name, payee.last_category_id)"
+                class="w-full px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors text-left"
+              >
+                <div class="font-medium">{{ payee.name }}</div>
+              </button>
 
-            <!-- New Payee Option -->
-            <button
-              v-if="payeeSearchQuery.trim() && !exactPayeeMatch"
-              @click="selectPayee(payeeSearchQuery.trim(), null)"
-              class="w-full px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors text-left border-dashed"
-            >
-              <div class="font-medium">
-                <span class="text-muted-foreground">Create: </span>
-                <span>{{ payeeSearchQuery.trim() }}</span>
+              <!-- New Payee Option -->
+              <button
+                v-if="!exactPayeeMatch"
+                @click="selectPayee(payeeSearchQuery.trim(), null)"
+                class="w-full px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors text-left border-dashed"
+              >
+                <div class="font-medium">
+                  <span class="text-muted-foreground">Create: </span>
+                  <span>{{ payeeSearchQuery.trim() }}</span>
+                </div>
+              </button>
+
+              <!-- No Results -->
+              <div v-if="filteredPayees.length === 0" class="text-center py-8 text-muted-foreground">
+                No payees found
               </div>
-            </button>
+            </template>
 
-            <!-- No Results -->
-            <div v-if="!payeeSearchQuery.trim() && filteredPayees.length === 0" class="text-center py-8 text-muted-foreground">
-              No payees yet. Start typing to add one.
+            <!-- Empty State - Show when not searching -->
+            <div v-else class="text-center py-8 text-muted-foreground">
+              <p class="text-sm">Start typing to search for a payee</p>
+              <p class="text-xs mt-2">or create a new one</p>
             </div>
           </div>
         </div>
@@ -246,15 +255,6 @@
               <div class="font-medium">Ready to Assign</div>
             </button>
 
-            <!-- Uncategorized -->
-            <button
-              v-if="!categorySearchQuery || 'uncategorized'.includes(categorySearchQuery.toLowerCase())"
-              @click="selectCategory({ id: 'uncategorized', name: 'Uncategorized' })"
-              class="w-full px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors text-left"
-            >
-              <div class="font-medium">Uncategorized</div>
-            </button>
-
             <!-- Category Groups -->
             <div
               v-for="group in filteredCategoryGroups"
@@ -269,7 +269,12 @@
                 class="w-full px-4 py-3 bg-card rounded-md border border-border hover:bg-accent transition-colors text-left"
               >
                 <div class="font-medium">{{ category.name }}</div>
-                <div class="text-sm text-muted-foreground">{{ formatCurrency(category.available) }}</div>
+                <div
+                  class="text-sm font-medium"
+                  :class="getCategoryAvailableColor(category.available)"
+                >
+                  {{ formatCurrency(category.available) }}
+                </div>
               </button>
             </div>
 
@@ -392,6 +397,12 @@ const getFilteredCategoriesForGroup = (groupId: string) => {
 const isValid = computed(() => {
   return selectedCategory.value && amount.value && amount.value > 0
 })
+
+const getCategoryAvailableColor = (available: number) => {
+  if (available > 0) return 'text-emerald-600 dark:text-emerald-400'
+  if (available < 0) return 'text-destructive'
+  return 'text-muted-foreground'
+}
 
 const selectPayee = (payeeName: string, lastCategoryId: string | null | undefined) => {
   selectedPayeeName.value = payeeName
