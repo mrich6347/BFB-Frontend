@@ -405,23 +405,28 @@ const handleEditTransaction = (transaction: TransactionResponse) => {
 }
 
 const handleUpdateTransaction = async (id: string, data: UpdateTransactionDto) => {
+  // Go back immediately - optimistic update provides instant feedback
+  currentStep.value = 'action'
+
+  // Update in background
   try {
     await updateTransaction(id, data)
-    currentStep.value = 'action'
-    // Optimistic update provides instant feedback, no need to reload
   } catch (error) {
     console.error('Failed to update transaction:', error)
+    $toast.error('Failed to update transaction')
   }
 }
 
 const handleDeleteTransaction = async (transactionId: string) => {
+  // Go back immediately - optimistic update provides instant feedback
+  currentStep.value = 'action'
+
+  // Delete in background
   try {
     await deleteTransaction(transactionId)
-    currentStep.value = 'action'
-    // Reload transactions to show the list without the deleted one
-    await recentTransactionsRef.value?.loadTransactions()
   } catch (error) {
     console.error('Failed to delete transaction:', error)
+    $toast.error('Failed to delete transaction')
   }
 }
 
