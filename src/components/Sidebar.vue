@@ -252,9 +252,9 @@ const mainNavItems = computed(() => {
 
   items.push(
     { name: 'Calendar', to: '/calendar', icon: CalendarIcon },
-    { name: 'Net Worth', to: '/net-worth', icon: TrendingUpIcon },
     { name: 'Shared Goals', to: '/shared-goals', icon: TargetIcon },
-    { name: 'Retirement Plan', to: '/retirement-plan', icon: PiggyBankIcon }
+    { name: 'Retirement Plan', to: '/retirement-plan', icon: PiggyBankIcon },
+    { name: 'Net Worth', to: '/net-worth', icon: TrendingUpIcon }
   )
 
   return items
