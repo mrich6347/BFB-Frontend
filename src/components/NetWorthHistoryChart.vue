@@ -399,7 +399,6 @@ const handleFileUpload = async (event: Event) => {
       csv_data: csvData
     })
 
-    $toast.success(`Successfully imported ${result.imported_count} records`)
     await loadHistory()
   } catch (error: any) {
     console.error('Failed to upload CSV:', error)
