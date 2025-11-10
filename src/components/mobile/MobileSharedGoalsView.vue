@@ -82,10 +82,29 @@
         <div
           v-for="goal in activeGoals"
           :key="goal.id"
-          @click="!isRefreshing && handleGoalClick(goal)"
-          class="rounded-lg border border-border bg-card shadow-sm overflow-hidden transition-transform"
-          :class="isRefreshing ? 'pointer-events-none' : 'active:scale-[0.98]'"
+          class="relative overflow-hidden rounded-lg border border-border bg-card shadow-sm"
         >
+          <!-- Edit button (revealed on swipe) - only show if user is the creator -->
+          <div v-if="isGoalCreator(goal)" class="absolute inset-y-0 right-0 flex items-center">
+            <button
+              @click.stop="handleEditGoal(goal)"
+              class="h-full px-6 bg-blue-500 text-white font-medium flex items-center justify-center"
+            >
+              Edit
+            </button>
+          </div>
+
+          <!-- Swipeable goal content -->
+          <div
+            :ref="el => setGoalRef(goal.id, el)"
+            class="w-full touch-pan-y bg-card"
+            :class="{ 'transition-transform duration-200 ease-out': !isSwiping(goal.id) }"
+            :style="{ transform: `translateX(${getSwipeOffset(goal.id)}px)` }"
+            @touchstart="isGoalCreator(goal) ? handleTouchStart($event, goal.id) : null"
+            @touchmove="isGoalCreator(goal) ? handleTouchMove($event, goal.id) : null"
+            @touchend="isGoalCreator(goal) ? handleTouchEnd(goal.id) : null"
+            @click.stop="handleGoalClick(goal)"
+          >
           <!-- Loading Skeleton Overlay -->
           <div v-if="isRefreshing" class="p-4">
             <!-- Header skeleton -->
@@ -191,6 +210,9 @@
                 >
                   <span class="text-muted-foreground truncate pr-2">
                     {{ participant.user_profile?.display_name || 'Unknown' }}
+                    <span v-if="participant.monthly_contribution" class="text-muted-foreground/70">
+                      ({{ formatCurrency(participant.monthly_contribution) }}/mo)
+                    </span>
                   </span>
                   <div class="flex items-center gap-2 flex-shrink-0">
                     <span class="font-medium text-foreground">
@@ -214,6 +236,7 @@
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -280,6 +303,14 @@
       @close="closeOnboarding"
       @complete="handleOnboardingComplete"
     />
+
+    <!-- Mobile Edit Goal Modal -->
+    <MobileEditGoalModal
+      :show="showEditGoal"
+      :goal="editingGoal"
+      @close="closeEditGoal"
+      @updated="handleGoalUpdated"
+    />
   </div>
 </template>
 
@@ -289,16 +320,19 @@ import { useRouter } from 'vue-router'
 import { TargetIcon, UsersIcon, AlertCircleIcon, MailIcon, TrophyIcon } from 'lucide-vue-next'
 import { useSharedGoalsStore } from '../../stores/shared-goals.store'
 import { useBudgetStore } from '../../stores/budget.store'
+import { useUserProfileStore } from '../../stores/user-profile.store'
 import { useSharedGoalsPageData } from '../../composables/shared-goals/useSharedGoalsPageData'
 import { useGoalInvitations } from '../../composables/shared-goals/useGoalInvitations'
 import { useGoalProgress } from '../../composables/shared-goals/useGoalProgress'
 import MobileBottomNav from './MobileBottomNav.vue'
 import GoalOnboardingModal from '../shared-goals/GoalOnboardingModal.vue'
+import MobileEditGoalModal from './MobileEditGoalModal.vue'
 import type { SharedGoalResponse, InvitationResponse, InvitationStatus, GoalParticipantResponse } from '../../types/DTO/shared-goal.dto'
 
 const router = useRouter()
 const sharedGoalsStore = useSharedGoalsStore()
 const budgetStore = useBudgetStore()
+const userProfileStore = useUserProfileStore()
 const { refreshPageData, isRefreshing, refreshError } = useSharedGoalsPageData()
 const { acceptInvitation, declineInvitation } = useGoalInvitations()
 const { formatProgressPercentage, formatCurrency, getProgressBarColor } = useGoalProgress()
@@ -306,9 +340,18 @@ const { formatProgressPercentage, formatCurrency, getProgressBarColor } = useGoa
 // State
 const showOnboarding = ref(false)
 const selectedInvitationGoal = ref<InvitationResponse | null>(null)
+const showEditGoal = ref(false)
+const editingGoal = ref<SharedGoalResponse | null>(null)
+
+// Swipe state management
+const swipeStates = ref<Record<string, { offset: number, startX: number, startTime: number, isSwiping: boolean }>>({})
+const goalRefs = ref<Record<string, HTMLElement>>({})
+const SWIPE_THRESHOLD = -80 // How far to swipe to reveal edit button
+const SWIPE_VELOCITY_THRESHOLD = 0.3 // Minimum velocity to trigger swipe
 
 // Computed
 const currentBudget = computed(() => budgetStore.currentBudget)
+const currentUserProfileId = computed(() => userProfileStore.currentProfile?.id)
 const goals = computed(() => sharedGoalsStore.goals)
 const activeGoals = computed(() => goals.value.filter(goal => goal.status !== 'COMPLETED'))
 const completedGoals = computed(() => goals.value.filter(goal => goal.status === 'COMPLETED'))
@@ -317,7 +360,83 @@ const pendingInvitations = computed(() =>
   invitations.value.filter(inv => inv.status === 'PENDING' as InvitationStatus)
 )
 
+// Swipe functions
+const setGoalRef = (id: string, el: any) => {
+  if (el) {
+    goalRefs.value[id] = el
+  }
+}
+
+const getSwipeOffset = (id: string) => {
+  return swipeStates.value[id]?.offset || 0
+}
+
+const isSwiping = (id: string) => {
+  return swipeStates.value[id]?.isSwiping || false
+}
+
+const closeOtherSwipes = (exceptId?: string) => {
+  Object.keys(swipeStates.value).forEach(id => {
+    if (id !== exceptId) {
+      swipeStates.value[id] = { offset: 0, startX: 0, startTime: 0, isSwiping: false }
+    }
+  })
+}
+
+const handleTouchStart = (event: TouchEvent, id: string) => {
+  // Close other open swipes when starting a new swipe
+  closeOtherSwipes(id)
+
+  const touch = event.touches[0]
+  swipeStates.value[id] = {
+    offset: swipeStates.value[id]?.offset || 0,
+    startX: touch.clientX,
+    startTime: Date.now(),
+    isSwiping: true
+  }
+}
+
+const handleTouchMove = (event: TouchEvent, id: string) => {
+  const state = swipeStates.value[id]
+  if (!state) return
+
+  const touch = event.touches[0]
+  const deltaX = touch.clientX - state.startX
+  const currentOffset = state.offset || 0
+
+  // Only allow swiping left (negative direction)
+  const newOffset = Math.min(0, Math.max(SWIPE_THRESHOLD, currentOffset + deltaX))
+
+  swipeStates.value[id] = {
+    ...state,
+    offset: newOffset,
+    startX: touch.clientX,
+    isSwiping: true
+  }
+}
+
+const handleTouchEnd = (id: string) => {
+  const state = swipeStates.value[id]
+  if (!state) return
+
+  const duration = Date.now() - state.startTime
+  const distance = state.offset
+  const velocity = Math.abs(distance) / duration
+
+  // Snap to open or closed based on threshold or velocity
+  if (state.offset < SWIPE_THRESHOLD / 2 || velocity > SWIPE_VELOCITY_THRESHOLD) {
+    // Snap to open (reveal edit button)
+    swipeStates.value[id] = { ...state, offset: SWIPE_THRESHOLD, isSwiping: false }
+  } else {
+    // Snap to closed
+    swipeStates.value[id] = { ...state, offset: 0, isSwiping: false }
+  }
+}
+
 // Methods
+const isGoalCreator = (goal: SharedGoalResponse): boolean => {
+  return goal.created_by === currentUserProfileId.value
+}
 const getSortedParticipants = (participants: GoalParticipantResponse[]) => {
   return [...participants].sort((a, b) => {
     const aContribution = a.current_contribution || 0
@@ -388,10 +507,43 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'ret
 }
 
 const handleGoalClick = (goal: SharedGoalResponse) => {
+  // If the goal is swiped open, close it instead of navigating
+  if (swipeStates.value[goal.id]?.offset !== 0) {
+    swipeStates.value[goal.id] = {
+      ...swipeStates.value[goal.id],
+      offset: 0,
+      isSwiping: false
+    }
+    return
+  }
+
   // For mobile, we could show a simple detail modal or navigate to desktop view
   // For now, just log - we can enhance this later
   console.log('Goal clicked:', goal.name)
   // TODO: Could add a simple mobile detail modal here
+}
+
+const handleEditGoal = (goal: SharedGoalResponse) => {
+  // Close the swipe
+  swipeStates.value[goal.id] = { offset: 0, startX: 0, startTime: 0, isSwiping: false }
+  // Open edit modal
+  editingGoal.value = goal
+  showEditGoal.value = true
+}
+
+const closeEditGoal = () => {
+  showEditGoal.value = false
+  editingGoal.value = null
+}
+
+const handleGoalUpdated = async () => {
+  // Goal is already updated in store by the modal
+  // Just close the modal and refresh data
+  closeEditGoal()
+  const budgetId = currentBudget.value?.id
+  if (budgetId) {
+    await refreshPageData(budgetId)
+  }
 }
 
 const handleAcceptInvitation = (invitation: InvitationResponse) => {
