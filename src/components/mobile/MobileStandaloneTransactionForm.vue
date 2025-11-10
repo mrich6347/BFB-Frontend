@@ -17,30 +17,65 @@
       <!-- Form -->
       <div class="flex-1 overflow-auto p-4 space-y-4" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));">
 
+        <!-- Transaction Mode Toggle -->
+        <div class="flex gap-2 bg-muted/50 p-1 rounded-lg">
+          <button
+            @click="transactionMode = 'standard'"
+            :class="[
+              'flex-1 py-2 rounded-md text-sm font-medium transition-colors',
+              transactionMode === 'standard'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground'
+            ]"
+          >
+            Standard
+          </button>
+          <button
+            @click="transactionMode = 'scheduled'"
+            :class="[
+              'flex-1 py-2 rounded-md text-sm font-medium transition-colors',
+              transactionMode === 'scheduled'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground'
+            ]"
+          >
+            Scheduled
+          </button>
+        </div>
+
         <!-- Amount Type Toggle -->
         <div class="flex gap-2">
-          <button
-            @click="amountType = 'outflow'"
-            :class="[
-              'flex-1 py-3 rounded-md font-medium transition-colors',
-              amountType === 'outflow'
-                ? 'bg-red-500/10 text-red-600 border-2 border-red-500'
-                : 'bg-muted text-muted-foreground border-2 border-transparent'
-            ]"
-          >
-            Expense
-          </button>
-          <button
-            @click="amountType = 'inflow'"
-            :class="[
-              'flex-1 py-3 rounded-md font-medium transition-colors',
-              amountType === 'inflow'
-                ? 'bg-emerald-500/10 text-emerald-600 border-2 border-emerald-500'
-                : 'bg-muted text-muted-foreground border-2 border-transparent'
-            ]"
-          >
-            Income
-          </button>
+          <!-- For scheduled: show only Expense button (highlighted) -->
+          <template v-if="transactionMode === 'scheduled'">
+            <div class="flex-1 py-3 rounded-md font-medium bg-red-500/10 text-red-600 border-2 border-red-500 text-center">
+              Expense
+            </div>
+          </template>
+          <!-- For standard: show both buttons -->
+          <template v-else>
+            <button
+              @click="amountType = 'outflow'"
+              :class="[
+                'flex-1 py-3 rounded-md font-medium transition-colors',
+                amountType === 'outflow'
+                  ? 'bg-red-500/10 text-red-600 border-2 border-red-500'
+                  : 'bg-muted text-muted-foreground border-2 border-transparent'
+              ]"
+            >
+              Expense
+            </button>
+            <button
+              @click="amountType = 'inflow'"
+              :class="[
+                'flex-1 py-3 rounded-md font-medium transition-colors',
+                amountType === 'inflow'
+                  ? 'bg-emerald-500/10 text-emerald-600 border-2 border-emerald-500'
+                  : 'bg-muted text-muted-foreground border-2 border-transparent'
+              ]"
+            >
+              Income
+            </button>
+          </template>
         </div>
 
         <!-- Account Selection -->
@@ -109,6 +144,86 @@
             class="w-full px-4 py-3 border border-input rounded-md bg-background"
           />
         </div>
+
+        <!-- Scheduled Transaction Fields -->
+        <template v-if="transactionMode === 'scheduled'">
+          <!-- Frequency -->
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Frequency</label>
+            <select
+              v-model="scheduledFrequency"
+              class="w-full px-4 py-3 border border-input rounded-md bg-background"
+            >
+              <option value="ONCE">Once</option>
+              <option value="MONTHLY">Monthly</option>
+              <option value="WEEKLY">Weekly</option>
+              <option value="BIWEEKLY">Bi-weekly</option>
+              <option value="YEARLY">Yearly</option>
+            </select>
+          </div>
+
+          <!-- Specific Date (for ONCE frequency) -->
+          <div v-if="scheduledFrequency === 'ONCE'" class="space-y-2">
+            <label class="text-sm font-medium">Date</label>
+            <input
+              v-model="specificDate"
+              type="date"
+              class="w-full px-4 py-3 border border-input rounded-md bg-background"
+            />
+          </div>
+
+          <!-- Day of Month (for MONTHLY and YEARLY) -->
+          <div v-if="scheduledFrequency === 'MONTHLY' || scheduledFrequency === 'YEARLY'" class="space-y-2">
+            <label class="text-sm font-medium">Day of Month</label>
+            <input
+              v-model.number="dayOfMonth"
+              type="number"
+              min="1"
+              max="31"
+              placeholder="1-31"
+              class="w-full px-4 py-3 border border-input rounded-md bg-background"
+            />
+          </div>
+
+          <!-- Day of Week (for WEEKLY and BIWEEKLY) -->
+          <div v-if="scheduledFrequency === 'WEEKLY' || scheduledFrequency === 'BIWEEKLY'" class="space-y-2">
+            <label class="text-sm font-medium">Day of Week</label>
+            <select
+              v-model.number="dayOfWeek"
+              class="w-full px-4 py-3 border border-input rounded-md bg-background"
+            >
+              <option :value="0">Sunday</option>
+              <option :value="1">Monday</option>
+              <option :value="2">Tuesday</option>
+              <option :value="3">Wednesday</option>
+              <option :value="4">Thursday</option>
+              <option :value="5">Friday</option>
+              <option :value="6">Saturday</option>
+            </select>
+          </div>
+
+          <!-- Month of Year (for YEARLY) -->
+          <div v-if="scheduledFrequency === 'YEARLY'" class="space-y-2">
+            <label class="text-sm font-medium">Month</label>
+            <select
+              v-model.number="monthOfYear"
+              class="w-full px-4 py-3 border border-input rounded-md bg-background"
+            >
+              <option :value="1">January</option>
+              <option :value="2">February</option>
+              <option :value="3">March</option>
+              <option :value="4">April</option>
+              <option :value="5">May</option>
+              <option :value="6">June</option>
+              <option :value="7">July</option>
+              <option :value="8">August</option>
+              <option :value="9">September</option>
+              <option :value="10">October</option>
+              <option :value="11">November</option>
+              <option :value="12">December</option>
+            </select>
+          </div>
+        </template>
 
         <!-- Save Button -->
         <div class="pt-4">
@@ -350,9 +465,12 @@ import { useAccountStore } from '@/stores/account.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { usePayeeStore } from '@/stores/payee.store'
 import { useBudgetStore } from '@/stores/budget.store'
+import { useScheduledTransactionOperations } from '@/composables/scheduled-transactions/useScheduledTransactionOperations'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
+import type { CreateScheduledTransactionDto } from '@/types/DTO/scheduled-transaction.dto'
 import type { AccountResponse } from '@/types/DTO/account.dto'
+import { useToast } from 'vue-toast-notification'
 
 const props = defineProps<{
   show: boolean
@@ -367,7 +485,10 @@ const accountStore = useAccountStore()
 const categoryStore = useCategoryStore()
 const payeeStore = usePayeeStore()
 const budgetStore = useBudgetStore()
+const { createScheduledTransaction } = useScheduledTransactionOperations()
+const $toast = useToast()
 
+const transactionMode = ref<'standard' | 'scheduled'>('standard')
 const selectedAccount = ref<AccountResponse | null>(null)
 const amountType = ref<'inflow' | 'outflow'>('outflow')
 const selectedCategory = ref<{ id: string; name: string } | null>(null)
@@ -380,6 +501,20 @@ const showPayeePicker = ref(false)
 const categorySearchQuery = ref('')
 const payeeSearchQuery = ref('')
 const isLoading = ref(false)
+
+// Scheduled transaction fields
+const scheduledFrequency = ref<'ONCE' | 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY' | 'YEARLY'>('MONTHLY')
+const specificDate = ref('')
+const dayOfMonth = ref(1)
+const dayOfWeek = ref(1)
+const monthOfYear = ref(1)
+
+// Watch transaction mode and force outflow for scheduled
+watch(transactionMode, (newMode) => {
+  if (newMode === 'scheduled') {
+    amountType.value = 'outflow'
+  }
+})
 
 const cashAccounts = computed(() => accountStore.getAccountsByType('CASH'))
 const creditAccounts = computed(() => accountStore.getAccountsByType('CREDIT'))
@@ -497,6 +632,7 @@ const selectCategory = (category: { id: string; name: string }) => {
 }
 
 const resetForm = () => {
+  transactionMode.value = 'standard'
   selectedAccount.value = null
   amountType.value = 'outflow'
   selectedCategory.value = null
@@ -509,6 +645,11 @@ const resetForm = () => {
   categorySearchQuery.value = ''
   payeeSearchQuery.value = ''
   isLoading.value = false
+  scheduledFrequency.value = 'MONTHLY'
+  specificDate.value = ''
+  dayOfMonth.value = 1
+  dayOfWeek.value = 1
+  monthOfYear.value = 1
 }
 
 // Watch for show prop changes to reset form when closed
@@ -528,22 +669,51 @@ const handleSubmit = async () => {
       ? -Math.abs(amount.value!)
       : Math.abs(amount.value!)
 
-    const date = new Date().toISOString().split('T')[0]
+    if (transactionMode.value === 'scheduled') {
+      // Create scheduled transaction
+      const budgetId = budgetStore.currentBudget?.id
+      if (!budgetId) {
+        $toast.error('No budget selected')
+        return
+      }
 
-    const transactionData: CreateTransactionDto = {
-      date,
-      amount: finalAmount,
-      account_id: selectedAccount.value!.id,
-      category_id: selectedCategory.value!.id === 'uncategorized' ? undefined : selectedCategory.value!.id,
-      memo: memo.value || undefined,
-      payee: selectedPayeeName.value || undefined,
-      is_cleared: false
+      const scheduledData: CreateScheduledTransactionDto = {
+        budget_id: budgetId,
+        account_id: selectedAccount.value!.id,
+        payee: selectedPayeeName.value || '',
+        amount: finalAmount,
+        category_id: selectedCategory.value!.id === 'uncategorized' ? undefined : selectedCategory.value!.id,
+        memo: memo.value || undefined,
+        frequency: scheduledFrequency.value,
+        specific_date: scheduledFrequency.value === 'ONCE' ? specificDate.value : undefined,
+        day_of_month: (scheduledFrequency.value === 'MONTHLY' || scheduledFrequency.value === 'YEARLY') ? dayOfMonth.value : undefined,
+        day_of_week: (scheduledFrequency.value === 'WEEKLY' || scheduledFrequency.value === 'BIWEEKLY') ? dayOfWeek.value : undefined,
+        month_of_year: scheduledFrequency.value === 'YEARLY' ? monthOfYear.value : undefined,
+        is_active: true
+      }
+
+      await createScheduledTransaction(scheduledData)
+      $toast.success('Scheduled transaction created')
+      emit('close')
+    } else {
+      // Create standard transaction
+      const date = new Date().toISOString().split('T')[0]
+
+      const transactionData: CreateTransactionDto = {
+        date,
+        amount: finalAmount,
+        account_id: selectedAccount.value!.id,
+        category_id: selectedCategory.value!.id === 'uncategorized' ? undefined : selectedCategory.value!.id,
+        memo: memo.value || undefined,
+        payee: selectedPayeeName.value || undefined,
+        is_cleared: false
+      }
+
+      emit('save', transactionData)
+
+      // Close immediately since we handle optimistic updates
+      emit('close')
     }
-
-    emit('save', transactionData)
-
-    // Close immediately since we handle optimistic updates
-    emit('close')
   } finally {
     isLoading.value = false
   }

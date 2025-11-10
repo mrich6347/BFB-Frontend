@@ -286,7 +286,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toast-notification'
-import { PlusIcon, XIcon, ChevronLeftIcon, DollarSignIcon, ArrowRightLeftIcon, CreditCardIcon } from 'lucide-vue-next'
+import { PlusIcon, XIcon, ChevronLeftIcon, DollarSignIcon, ArrowRightLeftIcon, CreditCardIcon, CalendarClockIcon } from 'lucide-vue-next'
 import { useAccountStore } from '@/stores/account.store'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'

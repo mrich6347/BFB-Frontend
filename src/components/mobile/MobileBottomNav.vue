@@ -32,6 +32,21 @@
         <span class="text-[10px] font-medium">Accounts</span>
       </button>
 
+       <!-- Calendar Tab -->
+      <button
+        @click="$emit('navigate', 'calendar')"
+        :class="[
+          'flex flex-col items-center justify-center py-2.5 transition-colors',
+          activeTab === 'calendar'
+            ? 'text-primary'
+            : 'text-muted-foreground hover:text-foreground'
+        ]"
+      >
+        <CalendarIcon :class="['h-5 w-5 mb-0.5', activeTab === 'calendar' ? 'fill-primary' : '']" />
+        <span class="text-[10px] font-medium">Calendar</span>
+      </button>
+
+      
       <!-- Goals Tab -->
       <button
         @click="$emit('navigate', 'goals')"
@@ -46,19 +61,7 @@
         <span class="text-[10px] font-medium">Goals</span>
       </button>
 
-      <!-- Calendar Tab -->
-      <button
-        @click="$emit('navigate', 'calendar')"
-        :class="[
-          'flex flex-col items-center justify-center py-2.5 transition-colors',
-          activeTab === 'calendar'
-            ? 'text-primary'
-            : 'text-muted-foreground hover:text-foreground'
-        ]"
-      >
-        <CalendarIcon :class="['h-5 w-5 mb-0.5', activeTab === 'calendar' ? 'fill-primary' : '']" />
-        <span class="text-[10px] font-medium">Calendar</span>
-      </button>
+    
 
       <!-- Retirement Tab -->
       <button
