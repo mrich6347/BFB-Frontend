@@ -13,7 +13,7 @@
         class="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] px-4 w-full max-w-sm"
         style="bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));"
       >
-        <div class="bg-card border border-border rounded-lg shadow-lg p-4">
+        <div class="bg-card border-2 border-white rounded-lg shadow-lg p-4">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-muted-foreground">{{ categoryName }}</span>
           </div>
