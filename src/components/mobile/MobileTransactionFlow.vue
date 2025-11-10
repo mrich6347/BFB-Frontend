@@ -137,6 +137,15 @@
                 <div class="text-sm text-muted-foreground">Pay off credit card balance</div>
               </div>
             </button>
+
+            <!-- Reconcile (for cash and credit accounts) -->
+            <button
+              v-if="!isTrackingAccount"
+              @click="selectAction('reconcile')"
+              class="w-full px-4 py-2 bg-card rounded-md border border-border hover:bg-accent transition-colors text-sm font-medium"
+            >
+              Reconcile
+            </button>
           </div>
 
           <!-- Recent Transactions Section (not for tracking accounts) -->
@@ -154,7 +163,7 @@
         v-else-if="currentStep === 'form' && selectedAction === 'transaction'"
         :account-id="selectedAccount!.id"
         :default-transaction-type="transactionType"
-        @close="closeFlow"
+        @close="currentStep = 'action'"
         @save="handleSaveTransaction"
       />
 
@@ -162,7 +171,7 @@
       <MobileTransferForm
         v-else-if="currentStep === 'form' && selectedAction === 'transfer'"
         :account-id="selectedAccount!.id"
-        @close="closeFlow"
+        @close="currentStep = 'action'"
         @save="handleSaveTransfer"
       />
 
@@ -171,7 +180,7 @@
         v-else-if="currentStep === 'form' && selectedAction === 'payment'"
         :account-id="selectedAccount!.id"
         :account-name="selectedAccount!.name"
-        @close="closeFlow"
+        @close="currentStep = 'action'"
         @save="handleSavePayment"
       />
 
@@ -200,16 +209,53 @@
         @navigate="handleNavigate"
       />
     </div>
+
+    <!-- Reconcile Confirmation Modal -->
+    <div
+      v-if="showReconcileConfirm"
+      class="fixed inset-0 z-[70] bg-black/50 flex items-center justify-center p-4"
+      @click="showReconcileConfirm = false"
+    >
+      <div
+        class="bg-background rounded-lg shadow-lg p-6 max-w-sm w-full"
+        @click.stop
+      >
+        <h3 class="text-lg font-semibold mb-4">Reconcile Account</h3>
+        <p class="text-sm text-muted-foreground mb-2">
+          Cleared balance: <span class="font-semibold text-foreground">{{ formatCurrency(selectedAccount?.cleared_balance || 0) }}</span>
+        </p>
+        <p class="text-sm text-muted-foreground mb-6">
+          Does this amount look correct?
+        </p>
+        <div class="flex gap-3">
+          <button
+            @click="showReconcileConfirm = false"
+            class="flex-1 px-4 py-2 border border-border rounded-md hover:bg-accent transition-colors"
+          >
+            No
+          </button>
+          <button
+            @click="handleReconcile"
+            :disabled="isReconciling"
+            class="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {{ isReconciling ? 'Reconciling...' : 'Yes' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from 'vue-toast-notification'
 import { PlusIcon, XIcon, ChevronLeftIcon, DollarSignIcon, ArrowRightLeftIcon, CreditCardIcon } from 'lucide-vue-next'
 import { useAccountStore } from '@/stores/account.store'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
+import { useReconcileAccount } from '@/composables/accounts/account-write/useReconcileAccount'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { AccountResponse } from '@/types/DTO/account.dto'
 import type { CreateTransactionDto, TransactionResponse, UpdateTransactionDto } from '@/types/DTO/transaction.dto'
@@ -234,13 +280,16 @@ const router = useRouter()
 const accountStore = useAccountStore()
 const budgetStore = useBudgetStore()
 const { deleteTransaction, updateTransaction } = useTransactionOperations()
+const { reconcileAccount, isLoading: isReconciling } = useReconcileAccount()
+const $toast = useToast()
 
 const showFlow = ref(false)
 const currentStep = ref<'account' | 'action' | 'form' | 'edit'>('account')
 const selectedAccount = ref<AccountResponse | null>(null)
-const selectedAction = ref<'transaction' | 'transfer' | 'payment' | null>(null)
+const selectedAction = ref<'transaction' | 'transfer' | 'payment' | 'reconcile' | null>(null)
 const transactionType = ref<'inflow' | 'outflow'>('outflow')
 const editingTransaction = ref<TransactionResponse | null>(null)
+const showReconcileConfirm = ref(false)
 
 const cashAccounts = computed(() => accountStore.getAccountsByType('CASH'))
 const creditAccounts = computed(() => accountStore.getAccountsByType('CREDIT'))
@@ -279,8 +328,14 @@ const selectAccount = (account: AccountResponse) => {
   currentStep.value = 'action'
 }
 
-const selectAction = (action: 'transaction' | 'transfer' | 'payment' | 'updateBalance') => {
+const selectAction = (action: 'transaction' | 'transfer' | 'payment' | 'updateBalance' | 'reconcile') => {
   selectedAction.value = action
+
+  // Handle reconcile action
+  if (action === 'reconcile') {
+    showReconcileConfirm.value = true
+    return
+  }
 
   // Set transaction type based on action
   if (action === 'transaction') {
@@ -292,18 +347,18 @@ const selectAction = (action: 'transaction' | 'transfer' | 'payment' | 'updateBa
 
 const handleSaveTransaction = (data: CreateTransactionDto) => {
   emit('saveTransaction', data)
-  closeFlow()
+  currentStep.value = 'action'
 }
 
 const handleSaveTransfer = (data: CreateTransactionDto) => {
   emit('saveTransfer', data)
-  closeFlow()
+  currentStep.value = 'action'
 }
 
 const handleSavePayment = (amount: number, fromAccountId: string, memo?: string) => {
   if (!selectedAccount.value) return
   emit('savePayment', selectedAccount.value.id, amount, fromAccountId, memo)
-  closeFlow()
+  currentStep.value = 'action'
 }
 
 const handleEditTransaction = (transaction: TransactionResponse) => {
@@ -314,7 +369,7 @@ const handleEditTransaction = (transaction: TransactionResponse) => {
 const handleUpdateTransaction = async (id: string, data: UpdateTransactionDto) => {
   try {
     await updateTransaction(id, data)
-    closeFlow()
+    currentStep.value = 'action'
   } catch (error) {
     console.error('Failed to update transaction:', error)
   }
@@ -323,7 +378,7 @@ const handleUpdateTransaction = async (id: string, data: UpdateTransactionDto) =
 const handleDeleteTransaction = async (transactionId: string) => {
   try {
     await deleteTransaction(transactionId)
-    closeFlow()
+    currentStep.value = 'action'
   } catch (error) {
     console.error('Failed to delete transaction:', error)
   }
@@ -332,6 +387,21 @@ const handleDeleteTransaction = async (transactionId: string) => {
 const handleUpdateBalance = (accountId: string, newBalance: number) => {
   emit('updateBalance', accountId, newBalance)
   currentStep.value = 'account'
+}
+
+const handleReconcile = async () => {
+  if (!selectedAccount.value) return
+
+  try {
+    const clearedBalance = selectedAccount.value.cleared_balance
+    await reconcileAccount(selectedAccount.value.id, clearedBalance)
+    $toast.success('Account reconciled successfully')
+    showReconcileConfirm.value = false
+    closeFlow()
+  } catch (error) {
+    console.error('Failed to reconcile account:', error)
+    $toast.error('Failed to reconcile account')
+  }
 }
 
 const handleNavigate = async (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'networth') => {
