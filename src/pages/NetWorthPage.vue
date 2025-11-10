@@ -54,6 +54,11 @@
             </div>
           </section>
 
+          <!-- Net Worth History Chart (Web Only) -->
+          <section>
+            <NetWorthHistoryChart />
+          </section>
+
           <section class="space-y-4">
             <div class="flex items-center gap-2 text-sm text-muted-foreground">
               <InfoIcon class="h-4 w-4" />
@@ -125,6 +130,7 @@ import { useRouter } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import MobileNetWorthView from '@/components/mobile/MobileNetWorthView.vue'
+import NetWorthHistoryChart from '@/components/NetWorthHistoryChart.vue'
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useAccountStore } from '@/stores/account.store'
