@@ -13,7 +13,7 @@
         <div class="mb-6">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h1 class="text-3xl font-bold text-foreground">Scheduled Transactions</h1>
+              <h1 class="text-3xl font-bold text-foreground">Upcoming Bill Reminders</h1>
               <p class="text-muted-foreground mt-1">View your upcoming bills and income</p>
             </div>
             <div class="flex items-center gap-3">

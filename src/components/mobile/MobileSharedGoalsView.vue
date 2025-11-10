@@ -183,7 +183,7 @@
             <!-- Participant Contributions -->
             <div v-if="goal.participants && goal.participants.length > 0" class="pt-3 border-t border-border">
               <p class="text-xs text-muted-foreground mb-2">Contributions</p>
-              <div class="space-y-1.5">
+              <div class="space-y-1.5 pb-2">
                 <div
                   v-for="participant in getSortedParticipants(goal.participants)"
                   :key="participant.id"
@@ -200,6 +200,17 @@
                       ({{ formatProgressPercentage(participant.contribution_percentage || 0) }}%)
                     </span>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estimated Completion Date -->
+            <div v-if="getProjectedDate(goal)" class="pt-3 border-t border-border">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-muted-foreground">Estimated Completion</span>
+                <div class="flex items-center gap-1">
+                  <span class="mr-0.5">🔮</span>
+                  <span class="font-medium text-foreground">{{ formatDate(getProjectedDate(goal)) }}</span>
                 </div>
               </div>
             </div>
@@ -312,6 +323,49 @@ const getSortedParticipants = (participants: GoalParticipantResponse[]) => {
     const aContribution = a.current_contribution || 0
     const bContribution = b.current_contribution || 0
     return bContribution - aContribution // Sort descending (highest first)
+  })
+}
+
+const getProjectedDate = (goal: SharedGoalResponse): Date | null => {
+  // If goal is already completed, don't show projection
+  if (goal.status === 'COMPLETED') {
+    return null
+  }
+
+  const currentAmount = goal.current_amount || 0
+  const targetAmount = goal.target_amount
+
+  // If already at or above target, no projection needed
+  if (currentAmount >= targetAmount) {
+    return null
+  }
+
+  // Calculate total monthly contributions from all participants
+  const totalMonthlyContribution = (goal.participants || []).reduce((sum, participant) => {
+    return sum + (participant.monthly_contribution || 0)
+  }, 0)
+
+  // If no monthly contributions set, can't project
+  if (totalMonthlyContribution <= 0) {
+    return null
+  }
+
+  const remainingAmount = targetAmount - currentAmount
+  const monthsToCompletion = Math.ceil(remainingAmount / totalMonthlyContribution)
+
+  const projectedDate = new Date()
+  projectedDate.setMonth(projectedDate.getMonth() + monthsToCompletion)
+
+  return projectedDate
+}
+
+const formatDate = (date: Date | null): string => {
+  if (!date) return ''
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
   })
 }
 const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'retirement' | 'calendar') => {

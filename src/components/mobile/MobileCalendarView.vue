@@ -5,11 +5,11 @@
       <div class="px-4 pb-4 space-y-3">
         <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary/80">
           <CalendarIcon class="h-3.5 w-3.5" />
-          <span>Scheduled Transactions</span>
+          <span>Bill Reminders</span>
         </div>
         <div>
           <h1 class="text-2xl font-bold text-foreground">
-            Upcoming Bills & Income
+            Upcoming Bill Reminders
           </h1>
           <p v-if="currentBudget?.name" class="text-sm text-muted-foreground mt-1">
             {{ currentBudget.name }}
