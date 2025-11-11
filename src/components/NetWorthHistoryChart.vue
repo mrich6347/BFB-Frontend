@@ -81,13 +81,6 @@
             class="hidden"
             @change="handleFileUpload"
           />
-          <button
-            @click="handleDeleteHistory"
-            class="inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-destructive/50 text-destructive rounded-lg hover:bg-destructive/10 transition-colors"
-          >
-            <TrashIcon class="h-3.5 w-3.5" />
-            <span>Clear History</span>
-          </button>
         </div>
       </div>
 
@@ -164,7 +157,7 @@ import {
   Filler,
   type ChartOptions
 } from 'chart.js'
-import { TrendingUpIcon, UploadIcon, TrashIcon } from 'lucide-vue-next'
+import { TrendingUpIcon, UploadIcon } from 'lucide-vue-next'
 import { NetWorthHistoryService } from '@/services/net-worth-history.service'
 import type { NetWorthChartResponse, NetWorthChartDataPoint } from '@/types/DTO/net-worth-history.dto'
 import { useBudgetStore } from '@/stores/budget.store'
@@ -653,25 +646,6 @@ const handleFileUpload = async (event: Event) => {
     isLoading.value = false
     // Reset file input
     target.value = ''
-  }
-}
-
-const handleDeleteHistory = async () => {
-  if (!currentBudget.value) return
-
-  if (!confirm('Are you sure you want to delete all net worth history? This cannot be undone.')) {
-    return
-  }
-
-  isLoading.value = true
-  try {
-    await NetWorthHistoryService.deleteHistory(currentBudget.value.id)
-    chartResponse.value = { has_data: false, data_points: [] }
-  } catch (error) {
-    console.error('Failed to delete history:', error)
-    $toast.error('Failed to delete net worth history')
-  } finally {
-    isLoading.value = false
   }
 }
 
