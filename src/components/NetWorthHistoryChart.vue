@@ -59,6 +59,14 @@
           <span>Net Worth History</span>
         </div>
         <div class="flex gap-2">
+          <button
+            v-if="hasNotes"
+            @click="showNotesOnChart = !showNotesOnChart"
+            class="inline-flex items-center gap-2 px-3 py-1.5 text-sm border rounded-lg transition-colors"
+            :class="showNotesOnChart ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:bg-accent'"
+          >
+            <span>{{ showNotesOnChart ? 'Hide Notes' : 'Show Notes' }}</span>
+          </button>
           <label
             for="csv-upload-replace"
             class="inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-border rounded-lg hover:bg-accent cursor-pointer transition-colors"
@@ -84,14 +92,62 @@
       </div>
 
       <div class="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <Chart type="bar" :data="chartData" :options="chartOptions" />
+        <Chart ref="chartRef" type="bar" :data="chartData" :options="chartOptions" />
       </div>
     </div>
+
+    <!-- Note Modal -->
+    <Dialog :open="showNoteModal" @update:open="(value) => !value && closeNoteModal()">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{{ selectedDataPoint?.note ? 'Edit Note' : 'Add Note' }}</DialogTitle>
+          <DialogDescription>
+            Add a note to explain changes in your net worth for {{ selectedDataPoint ? formatDate(selectedDataPoint.month_date) : '' }}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-4">
+          <div>
+            <label class="text-sm font-medium text-foreground mb-2 block">Note</label>
+            <textarea
+              v-model="noteText"
+              class="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+              rows="4"
+              placeholder="e.g., Bought a new car, Got a raise, Paid off student loans..."
+            ></textarea>
+          </div>
+
+          <div class="flex gap-2 justify-end">
+            <button
+              @click="closeNoteModal"
+              class="px-4 py-2 text-sm border border-border rounded-lg hover:bg-accent transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              v-if="selectedDataPoint?.note"
+              @click="handleDeleteNote"
+              :disabled="isSavingNote"
+              class="px-4 py-2 text-sm border border-destructive/50 text-destructive rounded-lg hover:bg-destructive/10 transition-colors disabled:opacity-50"
+            >
+              Delete Note
+            </button>
+            <button
+              @click="handleSaveNote"
+              :disabled="isSavingNote"
+              class="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              {{ isSavingNote ? 'Saving...' : 'Save Note' }}
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { Chart } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -110,12 +166,146 @@ import {
 } from 'chart.js'
 import { TrendingUpIcon, UploadIcon, TrashIcon } from 'lucide-vue-next'
 import { NetWorthHistoryService } from '@/services/net-worth-history.service'
-import type { NetWorthChartResponse } from '@/types/DTO/net-worth-history.dto'
+import type { NetWorthChartResponse, NetWorthChartDataPoint } from '@/types/DTO/net-worth-history.dto'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useAccountStore } from '@/stores/account.store'
 import { useToast } from 'vue-toast-notification'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { AccountType } from '@/types/DTO/account.dto'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shadcn-ui'
+
+// Helper function to wrap text
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(' ')
+  const lines: string[] = []
+  let currentLine = ''
+
+  words.forEach(word => {
+    const testLine = currentLine ? `${currentLine} ${word}` : word
+    const metrics = ctx.measureText(testLine)
+
+    if (metrics.width > maxWidth && currentLine) {
+      lines.push(currentLine)
+      currentLine = word
+    } else {
+      currentLine = testLine
+    }
+  })
+
+  if (currentLine) {
+    lines.push(currentLine)
+  }
+
+  return lines
+}
+
+// Create a reactive reference for the plugin to access
+let showNotesRef: any = null
+let chartResponseRef: any = null
+
+// Custom plugin to display notes on the chart
+const notesPlugin = {
+  id: 'notesPlugin',
+  afterDatasetsDraw(chart: any) {
+    if (!showNotesRef?.value) return
+
+    const ctx = chart.ctx
+    const dataPoints = chartResponseRef?.value?.data_points
+    if (!dataPoints) return
+
+    // Get the Net Worth dataset (index 2)
+    const meta = chart.getDatasetMeta(2)
+    if (!meta) return
+
+    ctx.save()
+    ctx.font = 'bold 11px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'bottom'
+
+    // Track used positions to avoid overlaps
+    const usedPositions: { x: number; y: number; width: number; height: number }[] = []
+
+    dataPoints.forEach((point: any, index: number) => {
+      if (!point.note) return
+
+      const dataPoint = meta.data[index]
+      if (!dataPoint) return
+
+      const x = dataPoint.x
+      let y = dataPoint.y - 15 // Start above the point
+
+      // Measure text
+      const maxWidth = 150
+      const lines = wrapText(ctx, point.note, maxWidth)
+      const lineHeight = 14
+      const padding = 6
+      const boxWidth = Math.min(maxWidth, Math.max(...lines.map(line => ctx.measureText(line).width))) + padding * 2
+      const boxHeight = lines.length * lineHeight + padding * 2
+
+      // Adjust position to avoid overlaps
+      let attempts = 0
+      while (attempts < 10) {
+        const overlaps = usedPositions.some(pos => {
+          return !(x + boxWidth / 2 < pos.x - pos.width / 2 ||
+                   x - boxWidth / 2 > pos.x + pos.width / 2 ||
+                   y < pos.y + pos.height ||
+                   y - boxHeight > pos.y)
+        })
+
+        if (!overlaps) break
+
+        y -= boxHeight + 5 // Move up if overlapping
+        attempts++
+      }
+
+      // Keep within chart bounds vertically
+      if (y - boxHeight < chart.chartArea.top) {
+        y = dataPoint.y + boxHeight + 15 // Place below if too high
+      }
+
+      // Calculate box position
+      let boxX = x - boxWidth / 2
+      const boxY = y - boxHeight
+
+      // Keep within chart bounds horizontally
+      if (boxX < chart.chartArea.left) {
+        boxX = chart.chartArea.left + 5 // Add small padding from left edge
+      } else if (boxX + boxWidth > chart.chartArea.right) {
+        boxX = chart.chartArea.right - boxWidth - 5 // Add small padding from right edge
+      }
+
+      // Draw background box
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.95)' // Yellow background
+      ctx.strokeStyle = 'rgba(234, 179, 8, 1)'
+      ctx.lineWidth = 2
+
+      ctx.beginPath()
+      ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 4)
+      ctx.fill()
+      ctx.stroke()
+
+      // Draw text (centered in the box)
+      ctx.fillStyle = '#000'
+      const textX = boxX + boxWidth / 2
+      lines.forEach((line, lineIndex) => {
+        ctx.fillText(line, textX, boxY + padding + (lineIndex + 1) * lineHeight)
+      })
+
+      // Draw connector line to point
+      ctx.strokeStyle = 'rgba(234, 179, 8, 0.6)'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(x, dataPoint.y)
+      ctx.lineTo(x, y)
+      ctx.stroke()
+
+      // Track this position
+      usedPositions.push({ x, y: boxY, width: boxWidth, height: boxHeight })
+    })
+
+    ctx.restore()
+  }
+}
 
 // Register Chart.js components
 ChartJS.register(
@@ -129,7 +319,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  notesPlugin
 )
 
 const budgetStore = useBudgetStore()
@@ -138,8 +329,29 @@ const $toast = useToast()
 
 const isLoading = ref(false)
 const chartResponse = ref<NetWorthChartResponse | null>(null)
+const showNoteModal = ref(false)
+const selectedDataPoint = ref<NetWorthChartDataPoint | null>(null)
+const noteText = ref('')
+const isSavingNote = ref(false)
+const showNotesOnChart = ref(false)
+const chartRef = ref<any>(null)
+
+// Set refs for plugin access
+showNotesRef = showNotesOnChart
+chartResponseRef = chartResponse
+
+// Watch for toggle changes and force chart update
+watch(showNotesOnChart, () => {
+  if (chartRef.value?.chart) {
+    chartRef.value.chart.update()
+  }
+})
 
 const currentBudget = computed(() => budgetStore.currentBudget)
+
+const hasNotes = computed(() => {
+  return chartResponse.value?.data_points.some(point => point.note) ?? false
+})
 
 // Helper function to get balance (same as NetWorthPage)
 const getNetWorthBalance = (account: any) => {
@@ -257,9 +469,9 @@ const chartData = computed(() => {
         borderWidth: 3,
         fill: false,
         tension: 0.4,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        pointBackgroundColor: 'rgb(16, 185, 129)',
+        pointRadius: dataPoints.map(point => point.note ? 6 : 5),
+        pointHoverRadius: dataPoints.map(point => point.note ? 8 : 7),
+        pointBackgroundColor: dataPoints.map(point => point.note ? 'rgb(234, 179, 8)' : 'rgb(16, 185, 129)'), // Yellow for notes, emerald otherwise
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         order: 1
@@ -272,6 +484,19 @@ const chartOptions = computed<ChartOptions<'bar'>>(() => ({
   responsive: true,
   maintainAspectRatio: true,
   aspectRatio: 2.5,
+  onClick: (_event, elements) => {
+    if (elements.length > 0) {
+      const element = elements[0]
+      // Only handle clicks on the Net Worth line (dataset index 2)
+      if (element.datasetIndex === 2) {
+        const dataIndex = element.index
+        const dataPoints = chartResponse.value?.data_points
+        if (dataPoints && dataPoints[dataIndex]) {
+          openNoteModal(dataPoints[dataIndex])
+        }
+      }
+    }
+  },
   plugins: {
     legend: {
       display: true,
@@ -300,8 +525,25 @@ const chartOptions = computed<ChartOptions<'bar'>>(() => ({
           const label = context.dataset.label || ''
           const value = formatCurrency(context.parsed.y)
           return `${label}: ${value}`
+        },
+        footer: (tooltipItems) => {
+          // Add note to tooltip if it exists
+          const dataIndex = tooltipItems[0]?.dataIndex
+          if (dataIndex !== undefined) {
+            const dataPoints = chartResponse.value?.data_points
+            const note = dataPoints?.[dataIndex]?.note
+            if (note) {
+              return '💡 ' + note
+            }
+          }
+          return ''
         }
-      }
+      },
+      footerFont: {
+        size: 13,
+        weight: 'bold'
+      },
+      footerColor: 'rgb(234, 179, 8)' // Yellow to match the point color
     }
   },
   scales: {
@@ -424,13 +666,84 @@ const handleDeleteHistory = async () => {
   isLoading.value = true
   try {
     await NetWorthHistoryService.deleteHistory(currentBudget.value.id)
-    $toast.success('Net worth history deleted successfully')
     chartResponse.value = { has_data: false, data_points: [] }
   } catch (error) {
     console.error('Failed to delete history:', error)
     $toast.error('Failed to delete net worth history')
   } finally {
     isLoading.value = false
+  }
+}
+
+const openNoteModal = (dataPoint: NetWorthChartDataPoint) => {
+  selectedDataPoint.value = dataPoint
+  noteText.value = dataPoint.note || ''
+  showNoteModal.value = true
+}
+
+const closeNoteModal = () => {
+  showNoteModal.value = false
+  selectedDataPoint.value = null
+  noteText.value = ''
+}
+
+const handleSaveNote = async () => {
+  if (!currentBudget.value || !selectedDataPoint.value) return
+
+  isSavingNote.value = true
+  try {
+    await NetWorthHistoryService.updateNote({
+      budget_id: currentBudget.value.id,
+      month_date: selectedDataPoint.value.month_date,
+      note: noteText.value || undefined
+    })
+
+    // Update the local data
+    if (chartResponse.value) {
+      const dataPoint = chartResponse.value.data_points.find(
+        p => p.month_date === selectedDataPoint.value!.month_date
+      )
+      if (dataPoint) {
+        dataPoint.note = noteText.value || undefined
+      }
+    }
+
+    closeNoteModal()
+  } catch (error) {
+    console.error('Failed to save note:', error)
+    $toast.error('Failed to save note')
+  } finally {
+    isSavingNote.value = false
+  }
+}
+
+const handleDeleteNote = async () => {
+  if (!currentBudget.value || !selectedDataPoint.value) return
+
+  isSavingNote.value = true
+  try {
+    await NetWorthHistoryService.updateNote({
+      budget_id: currentBudget.value.id,
+      month_date: selectedDataPoint.value.month_date,
+      note: undefined
+    })
+
+    // Update the local data
+    if (chartResponse.value) {
+      const dataPoint = chartResponse.value.data_points.find(
+        p => p.month_date === selectedDataPoint.value!.month_date
+      )
+      if (dataPoint) {
+        dataPoint.note = undefined
+      }
+    }
+
+    closeNoteModal()
+  } catch (error) {
+    console.error('Failed to delete note:', error)
+    $toast.error('Failed to delete note')
+  } finally {
+    isSavingNote.value = false
   }
 }
 

@@ -1,8 +1,9 @@
-import type { 
-    NetWorthChartResponse, 
-    CreateNetWorthSnapshotDto, 
+import type {
+    NetWorthChartResponse,
+    CreateNetWorthSnapshotDto,
     UploadYNABNetWorthDto,
-    NetWorthHistoryResponse
+    NetWorthHistoryResponse,
+    UpdateNetWorthNoteDto
 } from "../types/DTO/net-worth-history.dto"
 import api from "./common/api"
 
@@ -26,6 +27,11 @@ export class NetWorthHistoryService {
 
     static async deleteHistory(budgetId: string): Promise<{ message: string }> {
         const response = await api.delete(`${this.BASE_PATH}/budget/${budgetId}`)
+        return response.data
+    }
+
+    static async updateNote(request: UpdateNetWorthNoteDto): Promise<NetWorthHistoryResponse> {
+        const response = await api.patch(`${this.BASE_PATH}/note`, request)
         return response.data
     }
 }
