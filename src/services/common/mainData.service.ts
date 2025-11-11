@@ -17,4 +17,9 @@ export class MainDataService {
         })
         return response.data
     }
+
+    static async getLastUpdateTimestamp(budgetId: string): Promise<{ lastUpdate: string }> {
+        const response = await api.get(`/main-data/${budgetId}/last-update`)
+        return response.data
+    }
 }

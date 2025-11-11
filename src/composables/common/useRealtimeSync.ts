@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { useMainDataOperations } from './useMainDataOperations'
 import { useBudgetStore } from '@/stores/budget.store'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { MainDataService } from '@/services/common/mainData.service'
 
 // Global state to track sync status
 const isSyncActive = ref(false)
@@ -164,7 +165,7 @@ export function useRealtimeSync() {
   }
 
   // Handle page visibility changes (when user switches apps or tabs)
-  const handleVisibilityChange = () => {
+  const handleVisibilityChange = async () => {
     if (document.hidden) {
       // Page is now hidden (user switched to another app/tab)
       pageHiddenTime = Date.now()
@@ -174,11 +175,32 @@ export function useRealtimeSync() {
       const hiddenDuration = pageHiddenTime ? Date.now() - pageHiddenTime : 0
       console.log('[RealtimeSync] 📱 Page visible again after', hiddenDuration, 'ms')
 
-      // If changes happened while the page was hidden, refresh now
+      // If changes were detected while hidden, refresh immediately
       if (changesWhileHidden) {
-        console.log('[RealtimeSync] 🔄 Changes detected while hidden, refreshing now...')
+        console.log('[RealtimeSync] 🔄 Refreshing (changes detected while hidden)...')
         changesWhileHidden = false
         triggerRefresh()
+        pageHiddenTime = null
+        return
+      }
+
+      // Otherwise, check if data has changed on the server
+      const currentBudgetId = budgetStore.currentBudget?.id
+      if (currentBudgetId && lastSyncTime.value) {
+        try {
+          const { lastUpdate } = await MainDataService.getLastUpdateTimestamp(currentBudgetId)
+          const serverUpdateTime = new Date(lastUpdate).getTime()
+          const localSyncTime = lastSyncTime.value.getTime()
+
+          if (serverUpdateTime > localSyncTime) {
+            console.log('[RealtimeSync] 🔄 Refreshing (server data changed while away)...')
+            triggerRefresh()
+          } else {
+            console.log('[RealtimeSync] ✅ No refresh needed (data is up to date)')
+          }
+        } catch (error) {
+          console.error('[RealtimeSync] Failed to check for updates:', error)
+        }
       }
 
       pageHiddenTime = null
