@@ -78,7 +78,7 @@
             <!-- Swipeable category content -->
             <button
               :ref="el => setCategoryRef(category.id, el)"
-              class="w-full flex items-center justify-between px-4 py-3 pl-10 bg-background hover:bg-muted/20 transition-colors text-left touch-pan-y"
+              class="w-full flex items-center justify-between gap-3 px-4 py-3 pl-10 bg-background hover:bg-muted/20 transition-colors text-left touch-pan-y"
               :class="{ 'transition-transform duration-200 ease-out': !isSwiping(category.id) }"
               :style="{ transform: `translateX(${getSwipeOffset(category.id)}px)` }"
               @touchstart="handleTouchStart($event, category.id)"
@@ -86,9 +86,9 @@
               @touchend="handleTouchEnd(category.id)"
               @click.stop="handleCategoryClick(category)"
             >
-              <span class="text-sm text-foreground">{{ category.name }}</span>
+              <span class="text-sm text-foreground truncate">{{ category.name }}</span>
               <span
-                class="text-xs font-semibold px-3 py-1 rounded-full"
+                class="text-sm font-semibold px-3 py-1 rounded-full flex-shrink-0"
                 :class="getAvailableBadgeClass(category.available)"
               >
                 {{ formatCurrency(category.available) }}
@@ -359,7 +359,7 @@ const isGroupCollapsed = (groupId: string) => {
 // Get badge class based on available amount (YNAB-style)
 const getAvailableBadgeClass = (amount: number) => {
   if (amount > 0) {
-    return 'bg-emerald-500 dark:bg-emerald-600 text-white'
+    return 'bg-emerald-400 dark:bg-emerald-500 text-black dark:text-black'
   } else if (amount < 0) {
     return 'bg-red-500 dark:bg-red-600 text-white'
   }
