@@ -109,6 +109,8 @@ import type { TransactionResponse } from '@/types/DTO/transaction.dto'
 const props = defineProps<{
   transaction: TransactionResponse
   isSelected?: boolean
+  accountName?: string
+  accountType?: string
 }>()
 
 const emit = defineEmits<{
@@ -132,6 +134,19 @@ const toggleMemoExpansion = () => {
 }
 
 const getCategoryName = (categoryId?: string | null) => {
+  // Special handling for credit card payment transfers
+  // When viewing a credit card account, payment transfers show as "Ready to Assign" (null category)
+  // but we want to display the payment category name instead
+  if (
+    categoryId === null &&
+    props.accountType === 'CREDIT' &&
+    props.accountName &&
+    props.transaction.payee?.startsWith('Transfer : ') &&
+    props.transaction.amount > 0 // Inflow to credit card (payment)
+  ) {
+    return `${props.accountName} Payment`
+  }
+
   if (categoryId === null) return 'Ready to Assign'
   if (!categoryId) return 'Uncategorized'
   const category = categoryStore.categories.find(cat => cat.id === categoryId)

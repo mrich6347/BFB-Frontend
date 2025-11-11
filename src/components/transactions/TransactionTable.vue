@@ -129,6 +129,8 @@
               :key="transaction.id"
               :transaction="transaction"
               :is-selected="selectedTransactionIds.includes(transaction.id)"
+              :account-name="currentAccount?.name"
+              :account-type="currentAccount?.account_type"
               @select="handleRowSelect"
               @edit="handleRowEdit"
               @toggle-cleared="toggleClearedHandler"
