@@ -400,7 +400,8 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'n
       router.push(`/budget/${budgetId}`)
     }
   } else if (tab === 'accounts') {
-    router.push('/net-worth')
+    // Open transaction flow for account selection
+    transactionFlowRef.value?.openFlow()
   } else if (tab === 'networth') {
     router.push('/net-worth')
   } else if (tab === 'goals') {

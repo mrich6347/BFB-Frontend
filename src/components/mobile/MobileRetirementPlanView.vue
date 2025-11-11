@@ -217,24 +217,46 @@
       active-tab="retirement"
       @navigate="handleNavigate"
     />
+
+    <!-- Mobile Transaction Flow -->
+    <MobileTransactionFlow
+      ref="transactionFlowRef"
+      @save-transaction="handleSaveTransaction"
+      @save-transfer="handleSaveTransfer"
+      @save-payment="handleSavePayment"
+      @update-balance="handleUpdateBalance"
+      @category-balance-change="handleCategoryBalanceChange"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from 'vue-toast-notification'
 import { PiggyBankIcon } from 'lucide-vue-next'
 import { useAccountStore } from '../../stores/account.store'
 import { useBudgetStore } from '../../stores/budget.store'
 import { useUserProfileStore } from '../../stores/user-profile.store'
+import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
+import { useMakeCreditCardPayment } from '@/composables/accounts/account-write/useMakeCreditCardPayment'
+import { TrackingAccountService } from '@/services/tracking-account.service'
+import { AccountService } from '@/services/account.service'
 import { AccountType } from '../../types/DTO/account.dto'
+import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import { formatCurrency } from '../../utils/currencyUtil'
 import MobileBottomNav from './MobileBottomNav.vue'
+import MobileTransactionFlow from './MobileTransactionFlow.vue'
 
 const router = useRouter()
 const accountStore = useAccountStore()
 const budgetStore = useBudgetStore()
 const userProfileStore = useUserProfileStore()
+const { createTransaction } = useTransactionOperations()
+const { makeCreditCardPayment } = useMakeCreditCardPayment()
+const $toast = useToast()
+
+const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
 
 // Helper function to calculate age from birthdate
 const calculateAgeFromBirthdate = (birthdate: string): number => {
@@ -351,7 +373,8 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'ret
       router.push(`/budget/${budgetId}`)
     }
   } else if (tab === 'accounts') {
-    router.push('/net-worth')
+    // Open transaction flow for account selection
+    transactionFlowRef.value?.openFlow()
   } else if (tab === 'networth') {
     router.push('/net-worth')
   } else if (tab === 'goals') {
@@ -360,6 +383,70 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'ret
     router.push('/calendar')
   }
   // Retirement tab is already the current view
+}
+
+// Transaction handlers
+const handleSaveTransaction = async (data: CreateTransactionDto) => {
+  try {
+    const result = createTransaction(data)
+    // Wait for the server response in the background
+    await result.promise
+    // Optimistic update provides instant feedback, no need to reload
+  } catch (error) {
+    console.error('Failed to create transaction:', error)
+    $toast.error('Failed to create transaction')
+  }
+}
+
+const handleSaveTransfer = async (data: CreateTransactionDto) => {
+  try {
+    const result = createTransaction(data)
+    // Wait for the server response in the background
+    await result.promise
+    // Optimistic update provides instant feedback, no need to reload
+  } catch (error) {
+    console.error('Failed to create transfer:', error)
+    $toast.error('Failed to create transfer')
+  }
+}
+
+const handleSavePayment = async (creditCardAccountId: string, amount: number, fromAccountId: string, memo?: string) => {
+  try {
+    await makeCreditCardPayment(creditCardAccountId, amount, fromAccountId, memo)
+    // Optimistic update provides instant feedback, no need to show toast
+  } catch (error) {
+    console.error('Failed to create payment:', error)
+    $toast.error('Failed to create payment')
+  }
+}
+
+const handleCategoryBalanceChange = (categoryName: string, oldBalance: number, newBalance: number) => {
+  // No toast on this page, but handler is required by MobileTransactionFlow
+}
+
+const handleUpdateBalance = async (accountId: string, newBalance: number) => {
+  try {
+    const account = accountStore.accounts.find(a => a.id === accountId)
+    if (!account) {
+      throw new Error('Account not found')
+    }
+
+    if (account.account_type === 'TRACKING') {
+      await TrackingAccountService.updateBalance(accountId, {
+        new_balance: newBalance,
+        memo: 'Balance update'
+      })
+    } else {
+      // For non-tracking accounts, use reconcile
+      await AccountService.reconcileAccount(accountId, newBalance)
+    }
+
+    // Refresh account data
+    await accountStore.loadAccounts(currentBudget.value!.id)
+  } catch (error) {
+    console.error('Failed to update balance:', error)
+    $toast.error('Failed to update balance')
+  }
 }
 
 // Initialize starting balance with tracking accounts total
