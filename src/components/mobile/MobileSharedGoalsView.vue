@@ -317,6 +317,16 @@
       @close="closeEditGoal"
       @updated="handleGoalUpdated"
     />
+
+    <!-- Mobile Transaction Flow -->
+    <MobileTransactionFlow
+      ref="transactionFlowRef"
+      @save-transaction="handleSaveTransaction"
+      @save-transfer="handleSaveTransfer"
+      @save-payment="handleSavePayment"
+      @update-balance="handleUpdateBalance"
+      @category-balance-change="handleCategoryBalanceChange"
+    />
   </div>
 </template>
 
@@ -334,7 +344,12 @@ import MobileBottomNav from './MobileBottomNav.vue'
 import GoalOnboardingModal from '../shared-goals/GoalOnboardingModal.vue'
 import MobileEditGoalModal from './MobileEditGoalModal.vue'
 import GoalActivityTimeline from '../shared-goals/GoalActivityTimeline.vue'
+import MobileTransactionFlow from './MobileTransactionFlow.vue'
 import type { SharedGoalResponse, InvitationResponse, InvitationStatus, GoalParticipantResponse } from '../../types/DTO/shared-goal.dto'
+import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
+import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
+import { useMakeCreditCardPayment } from '@/composables/accounts/account-write/useMakeCreditCardPayment'
+import { useToast } from 'vue-toast-notification'
 
 const router = useRouter()
 const sharedGoalsStore = useSharedGoalsStore()
@@ -343,6 +358,11 @@ const userProfileStore = useUserProfileStore()
 const { refreshPageData, isRefreshing, refreshError } = useSharedGoalsPageData()
 const { acceptInvitation, declineInvitation } = useGoalInvitations()
 const { formatProgressPercentage, formatCurrency, getProgressBarColor } = useGoalProgress()
+const { createTransaction } = useTransactionOperations()
+const { makeCreditCardPayment } = useMakeCreditCardPayment()
+const $toast = useToast()
+
+const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
 
 // State
 const showOnboarding = ref(false)
@@ -584,6 +604,47 @@ const handleOnboardingComplete = async (data: { categoryId: string; monthlyContr
 const closeOnboarding = () => {
   showOnboarding.value = false
   selectedInvitationGoal.value = null
+}
+
+// Transaction handlers
+const handleSaveTransaction = async (data: CreateTransactionDto) => {
+  try {
+    await createTransaction(data)
+    // Optimistic update provides instant feedback, no need to show toast
+  } catch (error) {
+    console.error('Failed to create transaction:', error)
+    $toast.error('Failed to create transaction')
+  }
+}
+
+const handleSaveTransfer = async (data: CreateTransactionDto) => {
+  try {
+    await createTransaction(data)
+    // Optimistic update provides instant feedback, no need to show toast
+  } catch (error) {
+    console.error('Failed to create transfer:', error)
+    $toast.error('Failed to create transfer')
+  }
+}
+
+const handleSavePayment = async (creditCardAccountId: string, amount: number, fromAccountId: string, memo?: string) => {
+  try {
+    await makeCreditCardPayment(creditCardAccountId, amount, fromAccountId, memo)
+    // Optimistic update provides instant feedback, no need to show toast
+  } catch (error) {
+    console.error('Failed to create payment:', error)
+    $toast.error('Failed to create payment')
+  }
+}
+
+const handleUpdateBalance = async (accountId: string, newBalance: number) => {
+  // This handler is required by MobileTransactionFlow but not used on this page
+  console.log('Update balance:', accountId, newBalance)
+}
+
+const handleCategoryBalanceChange = (categoryName: string, oldBalance: number, newBalance: number) => {
+  // This handler is required by MobileTransactionFlow but not used on this page
+  console.log('Category balance change:', categoryName, oldBalance, newBalance)
 }
 
 // Load data on mount
