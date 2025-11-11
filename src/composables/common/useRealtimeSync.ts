@@ -123,6 +123,14 @@ export function useRealtimeSync() {
 
     console.log('[RealtimeSync] Starting real-time sync...')
 
+    // Initialize the last sync time in localStorage if not already set
+    const currentBudgetId = budgetStore.currentBudget?.id
+    if (currentBudgetId && !getStoredLastSyncTime(currentBudgetId)) {
+      const now = new Date().toISOString()
+      storeLastSyncTime(currentBudgetId, now)
+      console.log('[RealtimeSync] Initialized last sync time:', now)
+    }
+
     // Create a channel for all monitored tables
     channel = supabase.channel('db-changes')
 
