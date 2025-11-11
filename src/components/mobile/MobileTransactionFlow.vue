@@ -279,6 +279,13 @@
         </div>
       </div>
     </div>
+
+    <!-- Success Toast -->
+    <SuccessToast
+      :show="showSuccessToast"
+      :message="successMessage"
+      @hidden="showSuccessToast = false"
+    />
   </Teleport>
 </template>
 
@@ -301,6 +308,7 @@ import MobileRecentTransactions from './MobileRecentTransactions.vue'
 import MobileEditTransactionForm from './MobileEditTransactionForm.vue'
 import MobileUpdateBalanceForm from './MobileUpdateBalanceForm.vue'
 import MobileBottomNav from './MobileBottomNav.vue'
+import SuccessToast from '@/components/common/SuccessToast.vue'
 
 const emit = defineEmits<{
   saveTransaction: [data: CreateTransactionDto]
@@ -327,6 +335,8 @@ const transactionType = ref<'inflow' | 'outflow'>('outflow')
 const editingTransaction = ref<TransactionResponse | null>(null)
 const showReconcileConfirm = ref(false)
 const recentTransactionsRef = ref<InstanceType<typeof MobileRecentTransactions> | null>(null)
+const showSuccessToast = ref(false)
+const successMessage = ref('')
 
 const cashAccounts = computed(() => accountStore.getAccountsByType('CASH'))
 const creditAccounts = computed(() => accountStore.getAccountsByType('CREDIT'))
@@ -479,6 +489,11 @@ const handleReconcile = async () => {
     const clearedBalance = selectedAccount.value.cleared_balance
     await reconcileAccount(selectedAccount.value.id, clearedBalance)
     showReconcileConfirm.value = false
+
+    // Show success toast
+    successMessage.value = 'Reconciled'
+    showSuccessToast.value = true
+
     // Go back to account page instead of closing
     currentStep.value = 'action'
   } catch (error) {
