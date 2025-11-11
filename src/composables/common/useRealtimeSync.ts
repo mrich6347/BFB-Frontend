@@ -12,6 +12,10 @@ const lastSyncTime = ref<Date | null>(null)
 let lastLocalMutationTime = 0
 const MUTATION_IGNORE_WINDOW_MS = 5000 // Ignore realtime changes for 5 seconds after a local mutation
 
+// Track if changes happened while page was hidden
+let changesWhileHidden = false
+let pageHiddenTime: number | null = null
+
 // Tables to monitor for changes
 const MONITORED_TABLES = [
   'transactions',
@@ -114,6 +118,14 @@ export function useRealtimeSync() {
             }
 
             console.log(`[RealtimeSync] External change detected in ${table}:`, payload.eventType)
+
+            // If page is currently hidden, mark that changes happened instead of refreshing immediately
+            if (document.hidden) {
+              changesWhileHidden = true
+              console.log(`[RealtimeSync] Page is hidden, marking changes for refresh on return`)
+              return
+            }
+
             triggerRefresh()
           }
         )
@@ -151,13 +163,43 @@ export function useRealtimeSync() {
     }
   }
 
+  // Handle page visibility changes (when user switches apps or tabs)
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      // Page is now hidden (user switched to another app/tab)
+      pageHiddenTime = Date.now()
+      console.log('[RealtimeSync] 📱 Page hidden at', new Date(pageHiddenTime).toISOString())
+    } else {
+      // Page is now visible again (user came back)
+      const hiddenDuration = pageHiddenTime ? Date.now() - pageHiddenTime : 0
+      console.log('[RealtimeSync] 📱 Page visible again after', hiddenDuration, 'ms')
+
+      // If changes happened while the page was hidden, refresh now
+      if (changesWhileHidden) {
+        console.log('[RealtimeSync] 🔄 Changes detected while hidden, refreshing now...')
+        changesWhileHidden = false
+        triggerRefresh()
+      }
+
+      pageHiddenTime = null
+    }
+  }
+
   // Auto-start on mount, auto-stop on unmount
   onMounted(() => {
     startSync()
+
+    // Listen for page visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    console.log('[RealtimeSync] 👁️ Visibility change listener added')
   })
 
   onUnmounted(() => {
     stopSync()
+
+    // Clean up visibility listener
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+    console.log('[RealtimeSync] 👁️ Visibility change listener removed')
   })
 
   return {
