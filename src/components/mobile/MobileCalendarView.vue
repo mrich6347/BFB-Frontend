@@ -171,7 +171,7 @@ import { useScheduledTransactionStore } from '@/stores/scheduled-transaction.sto
 import { useCategoryStore } from '@/stores/category.store'
 import { useAccountStore } from '@/stores/account.store'
 import { formatCurrency } from '@/utils/currencyUtil'
-import type { ScheduledTransactionResponse } from '@/types/DTO/scheduled-transaction.dto'
+import type { ScheduledTransactionResponse, UpdateScheduledTransactionDto } from '@/types/DTO/scheduled-transaction.dto'
 import { useSwipeToReveal } from '@/composables/mobile/useSwipeToReveal'
 import { useScheduledTransactionOperations } from '@/composables/scheduled-transactions/useScheduledTransactionOperations'
 
@@ -192,6 +192,7 @@ const {
   setTransactionRef,
   getSwipeOffset,
   isSwiping,
+  closeSwipe,
   handleTouchStart,
   handleTouchMove,
   handleTouchEnd
@@ -391,15 +392,17 @@ const handleEdit = (transaction: ScheduledTransactionResponse) => {
 }
 
 const closeEditModal = () => {
+  // Close the swipe for the selected transaction
+  if (selectedTransaction.value) {
+    closeSwipe(selectedTransaction.value.id)
+  }
   isEditModalOpen.value = false
   selectedTransaction.value = null
 }
 
-const handleSaveEdit = async (updates: Partial<ScheduledTransactionResponse>) => {
-  if (!selectedTransaction.value) return
-
+const handleSaveEdit = async (id: string, updates: UpdateScheduledTransactionDto) => {
   try {
-    await updateScheduledTransaction(selectedTransaction.value.id, updates)
+    await updateScheduledTransaction(id, updates)
     closeEditModal()
   } catch (error) {
     console.error('Failed to update scheduled transaction:', error)
