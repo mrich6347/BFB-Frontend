@@ -2,111 +2,92 @@
   <div class="h-screen flex flex-col bg-background">
     <!-- Header -->
     <div class="sticky top-0 z-10 bg-background border-b border-border" style="padding-top: max(3rem, env(safe-area-inset-top));">
-      <div class="px-4 pb-4">
+      <div class="px-4 pb-4 space-y-3">
         <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary/80">
           <TrendingUpIcon class="h-3.5 w-3.5" />
           <span>Net Worth</span>
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold text-foreground">
+            {{ formatCurrency(netWorth) }}
+          </h1>
+          <p v-if="currentBudget?.name" class="text-sm text-muted-foreground mt-1">
+            {{ currentBudget.name }}
+          </p>
         </div>
       </div>
     </div>
 
     <!-- Content -->
     <div class="flex-1 overflow-y-auto px-4 pt-4 space-y-4 pb-24">
-      <!-- Net Worth Hero Card -->
-      <div class="rounded-lg border-2 bg-gradient-to-br p-5 shadow-lg"
-        :class="netWorth >= 0
-          ? 'border-green-500/30 from-green-500/10 to-emerald-500/10'
-          : 'border-red-500/30 from-red-500/10 to-rose-500/10'"
-      >
-        <div class="text-xs font-medium text-muted-foreground mb-1">Total Net Worth</div>
-        <div class="text-4xl font-bold mb-2"
-          :class="netWorth >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
-        >
-          {{ formatCurrency(netWorth) }}
-        </div>
-        <div class="text-sm text-muted-foreground">
-          {{ currentBudget?.name || 'Current Budget' }}
-        </div>
-      </div>
 
       <!-- Assets & Liabilities Summary Cards -->
       <div class="grid grid-cols-2 gap-3">
         <!-- Total Assets Card -->
-        <div class="rounded-lg border border-border bg-green-500/10 p-4">
-          <div class="text-xs text-muted-foreground mb-1">Total Assets</div>
-          <div class="text-lg font-bold text-green-600 dark:text-green-400">
+        <div class="rounded-lg border border-border bg-card p-4 shadow-sm">
+          <div class="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+            <WalletIcon class="h-4 w-4 text-primary" />
+            <span>Assets</span>
+          </div>
+          <div class="text-xl font-semibold text-foreground">
             {{ formatCurrency(totalAssets) }}
           </div>
         </div>
 
         <!-- Total Liabilities Card -->
-        <div class="rounded-lg border border-border bg-red-500/10 p-4">
-          <div class="text-xs text-muted-foreground mb-1">Total Debt</div>
-          <div class="text-lg font-bold text-red-600 dark:text-red-400">
+        <div class="rounded-lg border border-border bg-card p-4 shadow-sm">
+          <div class="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+            <CreditCardIcon class="h-4 w-4 text-destructive" />
+            <span>Debt</span>
+          </div>
+          <div class="text-xl font-semibold text-foreground">
             {{ formatCurrency(totalLiabilitiesDisplay) }}
           </div>
         </div>
       </div>
 
-      <!-- Account Groups (Collapsible) -->
+      <!-- Account Groups -->
       <div v-if="hasActiveAccounts" class="space-y-3">
         <div
           v-for="group in accountGroups"
           :key="group.type"
           class="rounded-lg border border-border bg-card shadow-sm overflow-hidden"
         >
-          <!-- Group Header (Clickable) -->
-          <button
-            @click="toggleGroup(group.type)"
-            class="w-full px-4 py-3 bg-muted/30 hover:bg-muted/50 transition-colors flex items-center justify-between"
-          >
-            <div class="flex items-center gap-2">
-              <svg
-                class="w-4 h-4 text-muted-foreground transition-transform"
-                :class="{ 'rotate-90': expandedGroups[group.type] }"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-              <h2 class="text-sm font-semibold text-foreground">{{ group.title }}</h2>
-              <span class="text-xs text-muted-foreground">({{ group.accounts.length }})</span>
-            </div>
+          <!-- Group Header -->
+          <div class="px-4 py-3 bg-muted/30 border-b border-border flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-foreground">{{ group.title }}</h2>
             <span
-              class="text-sm font-bold tabular-nums"
-              :class="group.total < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'"
+              class="text-sm font-medium tabular-nums"
+              :class="group.total < 0 ? 'text-destructive' : 'text-foreground'"
             >
               {{ formatCurrency(group.total) }}
             </span>
-          </button>
+          </div>
 
-          <!-- Accounts List (Expandable) -->
-          <div v-show="expandedGroups[group.type]">
-            <div v-if="group.accounts.length" class="divide-y divide-border">
-              <div
-                v-for="account in group.accounts"
-                :key="account.id"
-                class="px-4 py-3 flex items-center justify-between bg-background"
+          <!-- Accounts List -->
+          <div v-if="group.accounts.length" class="divide-y divide-border">
+            <div
+              v-for="account in group.accounts"
+              :key="account.id"
+              class="px-4 py-3 flex items-center justify-between"
+            >
+              <span class="text-sm text-foreground truncate pr-4">
+                {{ account.name }}
+              </span>
+              <span
+                class="text-sm font-medium tabular-nums"
+                :class="getNetWorthBalance(account) < 0 ? 'text-destructive' : 'text-foreground'"
               >
-                <span class="text-sm text-foreground truncate pr-4">
-                  {{ account.name }}
-                </span>
-                <span
-                  class="text-sm font-medium tabular-nums"
-                  :class="getNetWorthBalance(account) < 0 ? 'text-red-600 dark:text-red-400' : 'text-foreground'"
-                >
-                  {{ formatCurrency(getNetWorthBalance(account)) }}
-                </span>
-              </div>
+                {{ formatCurrency(getNetWorthBalance(account)) }}
+              </span>
             </div>
+          </div>
 
-            <!-- Empty State -->
-            <div v-else class="px-4 py-6 text-center bg-background">
-              <p class="text-sm text-muted-foreground italic">
-                No accounts in this group yet.
-              </p>
-            </div>
+          <!-- Empty State -->
+          <div v-else class="px-4 py-6 text-center">
+            <p class="text-sm text-muted-foreground italic">
+              No accounts in this group yet.
+            </p>
           </div>
         </div>
       </div>
@@ -168,17 +149,6 @@ const $toast = useToast()
 
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
 const categoryBalanceToastRef = ref<InstanceType<typeof MobileCategoryBalanceToast> | null>(null)
-
-// Expanded groups state (all start expanded)
-const expandedGroups = ref<Record<string, boolean>>({
-  [AccountType.CASH]: true,
-  [AccountType.TRACKING]: true,
-  [AccountType.CREDIT]: true
-})
-
-const toggleGroup = (groupType: AccountType) => {
-  expandedGroups.value[groupType] = !expandedGroups.value[groupType]
-}
 
 const { currentBudget } = storeToRefs(budgetStore)
 const { activeAccounts } = storeToRefs(accountStore)

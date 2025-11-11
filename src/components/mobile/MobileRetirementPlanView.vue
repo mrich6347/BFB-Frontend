@@ -2,186 +2,209 @@
   <div class="h-screen flex flex-col bg-background">
     <!-- Header -->
     <div class="sticky top-0 z-10 bg-background border-b border-border" style="padding-top: max(3rem, env(safe-area-inset-top));">
-      <div class="px-4 pb-4">
+      <div class="px-4 pb-4 space-y-3">
         <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary/80">
           <PiggyBankIcon class="h-3.5 w-3.5" />
           <span>Retirement Plan</span>
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold text-foreground">
+            {{ isValidInput ? formatCurrency(finalBalance) : '$0' }}
+          </h1>
+          <p class="text-sm text-muted-foreground mt-1">
+            {{ isValidInput ? `At age ${retirementAge}` : 'Enter your details' }}
+          </p>
         </div>
       </div>
     </div>
 
     <!-- Content -->
     <div class="flex-1 overflow-y-auto px-4 pt-4 space-y-4 pb-24">
-      <!-- Key Projections Section (Top Priority) -->
-      <div v-if="isValidInput" class="space-y-3">
-        <!-- Projected Balance - Hero Card -->
-        <div class="rounded-lg border-2 border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-5 shadow-lg">
-          <div class="text-xs font-medium text-muted-foreground mb-1">Projected Balance at Retirement</div>
-          <div class="text-4xl font-bold text-green-600 dark:text-green-400 mb-2">
-            {{ formatCurrency(finalBalance) }}
+      <!-- Input Section -->
+      <div class="rounded-lg border border-border bg-card shadow-sm p-4 space-y-4">
+        <h2 class="text-sm font-semibold text-foreground uppercase tracking-wide">Your Information</h2>
+        
+        <!-- Starting Balance -->
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1.5">
+            Starting Balance
+          </label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+            <input
+              type="number"
+              v-model.number="startingBalance"
+              @blur="handleStartingBalanceBlur"
+              class="w-full pl-8 pr-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+            />
           </div>
-          <div class="text-sm text-muted-foreground">
-            In {{ yearsToRetirement }} years (age {{ retirementAge }})
+          <p class="mt-1 text-xs text-muted-foreground">
+            Tracking accounts: {{ formatCurrency(trackingAccountsTotal) }}
+          </p>
+        </div>
+
+        <!-- Age Inputs -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">
+              Current Age
+            </label>
+            <input
+              type="number"
+              v-model.number="currentAge"
+              class="w-full px-3 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              :class="{ 'bg-muted/30': isAgeAutoPopulated }"
+              placeholder="30"
+              min="18"
+              max="100"
+              :disabled="isAgeAutoPopulated"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1.5">
+              Retirement Age
+            </label>
+            <input
+              type="number"
+              v-model.number="retirementAge"
+              class="w-full px-3 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              placeholder="60"
+              :min="currentAge + 1"
+              max="100"
+            />
           </div>
         </div>
 
-        <!-- Quick Stats Grid -->
-        <div class="grid grid-cols-2 gap-3">
-          <!-- Total Contributions -->
-          <div class="rounded-lg border border-border bg-blue-500/10 p-4">
-            <div class="text-xs text-muted-foreground mb-1">You'll Contribute</div>
-            <div class="text-lg font-bold text-blue-600 dark:text-blue-400">
-              {{ formatCurrency(totalContributions) }}
-            </div>
-            <div class="text-xs text-muted-foreground mt-1">
-              {{ contributionPercentage.toFixed(0) }}% of total
-            </div>
-          </div>
+        <!-- Birthdate Message -->
+        <div v-if="!userProfileStore.currentProfile?.birthdate" class="text-xs text-muted-foreground">
+          <router-link
+            to="/profile-settings"
+            class="text-primary hover:underline"
+          >
+            Set your birthdate on your profile
+          </router-link>
+          to auto-populate your age
+        </div>
+        <div v-else class="text-xs text-muted-foreground">
+          Age auto-populated from your profile
+        </div>
 
-          <!-- Interest Earned -->
-          <div class="rounded-lg border border-border bg-green-500/10 p-4">
-            <div class="text-xs text-muted-foreground mb-1">Interest Earned</div>
-            <div class="text-lg font-bold text-green-600 dark:text-green-400">
-              {{ formatCurrency(totalInterest) }}
-            </div>
-            <div class="text-xs text-muted-foreground mt-1">
-              {{ interestPercentage.toFixed(0) }}% of total
-            </div>
+        <!-- Monthly Contribution -->
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1.5">
+            Monthly Contribution
+          </label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+            <input
+              type="number"
+              v-model.number="monthlyContribution"
+              class="w-full pl-8 pr-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              placeholder="2500.00"
+              step="0.01"
+              min="0"
+            />
           </div>
+        </div>
+
+        <!-- Annual Return -->
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1.5">
+            Expected Annual Return
+          </label>
+          <div class="relative">
+            <input
+              type="number"
+              v-model.number="annualReturnPercent"
+              class="w-full pr-8 pl-3 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              placeholder="8"
+              step="0.1"
+              min="0"
+              max="20"
+            />
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
+          </div>
+          <p class="mt-1 text-xs text-muted-foreground">
+            Historical average: ~8-10%
+          </p>
         </div>
       </div>
 
-      <!-- Input Section (Collapsible) -->
-      <div class="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
-        <button
-          @click="showInputs = !showInputs"
-          class="w-full px-4 py-3 flex items-center justify-between bg-muted/30 hover:bg-muted/50 transition-colors"
-        >
-          <h2 class="text-sm font-semibold text-foreground uppercase tracking-wide">Adjust Your Plan</h2>
-          <svg
-            class="w-5 h-5 text-muted-foreground transition-transform"
-            :class="{ 'rotate-180': showInputs }"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+      <!-- Results Section -->
+      <div v-if="isValidInput" class="space-y-3">
+    
 
-        <div v-show="showInputs" class="p-4 space-y-4">
-          <!-- Age Inputs -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-muted-foreground mb-1.5">
-                Current Age
-              </label>
-              <input
-                type="number"
-                v-model.number="currentAge"
-                class="w-full px-3 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                :class="{ 'bg-muted/30': isAgeAutoPopulated }"
-                placeholder="30"
-                min="18"
-                max="100"
-                :disabled="isAgeAutoPopulated"
-              />
+        <!-- Breakdown -->
+        <div class="rounded-lg border border-border bg-card shadow-sm p-4 space-y-3">
+          <h3 class="text-sm font-semibold text-foreground">Breakdown</h3>
+          
+          <div class="space-y-2">
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-muted-foreground">Starting Balance</span>
+              <span class="font-medium text-foreground">{{ formatCurrency(startingBalance) }}</span>
             </div>
-            <div>
-              <label class="block text-xs font-medium text-muted-foreground mb-1.5">
-                Retirement Age
-              </label>
-              <input
-                type="number"
-                v-model.number="retirementAge"
-                class="w-full px-3 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                placeholder="60"
-                :min="currentAge + 1"
-                max="100"
-              />
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-muted-foreground">Total Contributions</span>
+              <span class="font-medium text-foreground">{{ formatCurrency(totalContributionsOnly) }}</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-muted-foreground">Interest Earned</span>
+              <span class="font-medium text-green-600 dark:text-green-400">{{ formatCurrency(totalInterest) }}</span>
+            </div>
+            <div class="pt-2 border-t border-border flex justify-between items-center">
+              <span class="text-sm font-semibold text-foreground">Total</span>
+              <span class="text-sm font-bold text-foreground">{{ formatCurrency(finalBalance) }}</span>
             </div>
           </div>
+        </div>
 
-          <!-- Birthdate Message -->
-          <div v-if="!userProfileStore.currentProfile?.birthdate" class="text-xs text-muted-foreground bg-muted/30 p-2 rounded">
-            <router-link
-              to="/profile-settings"
-              class="text-primary hover:underline font-medium"
-            >
-              Set your birthdate
-            </router-link>
-            to auto-populate age
-          </div>
-          <div v-else class="text-xs text-green-600 dark:text-green-400 bg-green-500/10 p-2 rounded">
-            ✓ Age auto-populated from profile
-          </div>
-
-          <!-- Starting Balance -->
-          <div>
-            <label class="block text-xs font-medium text-muted-foreground mb-1.5">
-              Starting Balance
-            </label>
-            <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-              <input
-                type="number"
-                v-model.number="startingBalance"
-                @blur="handleStartingBalanceBlur"
-                class="w-full pl-8 pr-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                placeholder="0.00"
-                step="0.01"
-                min="0"
-              />
+        <!-- Visual Chart -->
+        <div class="rounded-lg border border-border bg-card shadow-sm p-4">
+          <h3 class="text-sm font-semibold text-foreground mb-4">Contributions vs Interest</h3>
+          
+          <!-- Stacked Bar Chart -->
+          <div class="space-y-2">
+            <div class="h-12 flex rounded-lg overflow-hidden">
+              <div
+                class="bg-blue-500 flex items-center justify-center text-white text-xs font-medium"
+                :style="{ width: `${contributionPercentage}%` }"
+              >
+                <span v-if="contributionPercentage > 15">{{ contributionPercentage.toFixed(0) }}%</span>
+              </div>
+              <div
+                class="bg-green-500 flex items-center justify-center text-white text-xs font-medium"
+                :style="{ width: `${interestPercentage}%` }"
+              >
+                <span v-if="interestPercentage > 15">{{ interestPercentage.toFixed(0) }}%</span>
+              </div>
             </div>
-            <p class="mt-1 text-xs text-muted-foreground">
-              Tracking accounts: {{ formatCurrency(trackingAccountsTotal) }}
-            </p>
-          </div>
-
-          <!-- Monthly Contribution -->
-          <div>
-            <label class="block text-xs font-medium text-muted-foreground mb-1.5">
-              Monthly Contribution
-            </label>
-            <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-              <input
-                type="number"
-                v-model.number="monthlyContribution"
-                class="w-full pl-8 pr-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                placeholder="2500.00"
-                step="0.01"
-                min="0"
-              />
+            
+            <!-- Legend -->
+            <div class="flex items-center justify-center gap-4 text-xs">
+              <div class="flex items-center gap-1.5">
+                <div class="w-3 h-3 bg-blue-500 rounded"></div>
+                <span class="text-muted-foreground">Contributions</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <div class="w-3 h-3 bg-green-500 rounded"></div>
+                <span class="text-muted-foreground">Interest</span>
+              </div>
             </div>
           </div>
 
-          <!-- Annual Return -->
-          <div>
-            <label class="block text-xs font-medium text-muted-foreground mb-1.5">
-              Expected Annual Return
-            </label>
-            <div class="relative">
-              <input
-                type="number"
-                v-model.number="annualReturnPercent"
-                class="w-full pr-8 pl-3 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                placeholder="8"
-                step="0.1"
-                min="0"
-                max="20"
-              />
-              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
-            </div>
-            <p class="mt-1 text-xs text-muted-foreground">
-              Historical average: ~8-10%
+          <div class="mt-4 text-center">
+            <p class="text-xs text-muted-foreground">
+              Interest makes up <span class="font-semibold text-foreground">{{ interestPercentage.toFixed(1) }}%</span> of your total!
             </p>
           </div>
         </div>
       </div>
 
       <!-- Empty State -->
-      <div v-if="!isValidInput" class="flex flex-col items-center justify-center min-h-[200px] p-4">
+      <div v-else class="flex flex-col items-center justify-center min-h-[200px] p-4">
         <PiggyBankIcon class="h-16 w-16 text-muted-foreground/50 mb-4" />
         <p class="text-muted-foreground text-center text-sm">
           Fill in your information above<br />to see your retirement projections
@@ -247,8 +270,6 @@ const retirementAge = ref(60)
 const monthlyContribution = ref(2000)
 const annualReturnPercent = ref(8)
 const startingBalance = ref(0)
-const showInputs = ref(true)
-const showBreakdown = ref(false)
 
 // Computed values
 const currentBudget = computed(() => budgetStore.currentBudget)
@@ -330,7 +351,6 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'ret
       router.push(`/budget/${budgetId}`)
     }
   } else if (tab === 'accounts') {
-    // Navigate to net worth page which shows accounts
     router.push('/net-worth')
   } else if (tab === 'networth') {
     router.push('/net-worth')

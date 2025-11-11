@@ -400,7 +400,6 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'n
       router.push(`/budget/${budgetId}`)
     }
   } else if (tab === 'accounts') {
-    // Navigate to net worth page which shows accounts
     router.push('/net-worth')
   } else if (tab === 'networth') {
     router.push('/net-worth')
