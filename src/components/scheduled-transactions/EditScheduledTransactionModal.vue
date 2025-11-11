@@ -6,6 +6,8 @@
       </DialogHeader>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
+        <!-- Hidden element to receive initial focus instead of payee field -->
+        <div tabindex="0" class="sr-only" ref="focusTrapRef" @focus="() => {}"></div>
         <!-- Outflow Toggle (always outflow for scheduled transactions) -->
         <div>
           <label class="text-sm font-medium text-foreground mb-2 block">Type</label>
@@ -222,6 +224,7 @@ const selectedCategoryId = ref<string | null>(null)
 const amountValue = ref<number>(0)
 const categorySelectorRef = ref<InstanceType<typeof CategorySelector> | null>(null)
 const amountFieldRef = ref<HTMLDivElement | null>(null)
+const focusTrapRef = ref<HTMLDivElement | null>(null)
 const isDeleting = ref(false)
 
 // Mobile detection
@@ -319,6 +322,12 @@ watch(() => props.transaction, (transaction) => {
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen && props.transaction) {
     populateForm(props.transaction)
+
+    // Focus the hidden trap element to prevent auto-focusing payee field
+    // Use setTimeout to ensure it happens after Dialog's auto-focus
+    setTimeout(() => {
+      focusTrapRef.value?.focus()
+    }, 50)
   }
 })
 
