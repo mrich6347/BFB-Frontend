@@ -55,6 +55,8 @@
             >
               <PlusIcon class="h-4 w-4 text-muted-foreground" />
             </button>
+            <!-- Spacer to maintain alignment when no + button -->
+            <div v-else class="w-6 h-6"></div>
           </div>
         </button>
 
