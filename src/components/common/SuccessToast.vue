@@ -10,7 +10,8 @@
     >
       <div
         v-if="isVisible"
-        class="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] pointer-events-none"
+        class="fixed left-1/2 -translate-x-1/2 z-[100] pointer-events-none"
+        style="bottom: max(6rem, calc(6rem + env(safe-area-inset-bottom)));"
       >
         <div class="bg-green-600 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 min-w-[200px] justify-center">
           <CheckCircle class="w-5 h-5" />
