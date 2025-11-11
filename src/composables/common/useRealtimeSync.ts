@@ -238,14 +238,21 @@ export function useRealtimeSync() {
             const serverUpdateTime = new Date(lastUpdate).getTime()
             const localSyncTime = new Date(storedLastSync).getTime()
 
+            // Add a 2-second tolerance to account for database trigger delays
+            // This prevents unnecessary refreshes when the server timestamp is only slightly newer
+            // due to the time it takes for the database to update after a local mutation
+            const TOLERANCE_MS = 2000
+            const timeDifference = serverUpdateTime - localSyncTime
+
             console.log('[RealtimeSync] Server last update:', new Date(serverUpdateTime).toISOString())
             console.log('[RealtimeSync] Local last sync:', new Date(localSyncTime).toISOString())
+            console.log('[RealtimeSync] Time difference:', timeDifference, 'ms')
 
-            if (serverUpdateTime > localSyncTime) {
+            if (timeDifference > TOLERANCE_MS) {
               console.log('[RealtimeSync] 🔄 Refreshing (server data changed while away)...')
               triggerRefresh()
             } else {
-              console.log('[RealtimeSync] ✅ No refresh needed (data is up to date)')
+              console.log('[RealtimeSync] ✅ No refresh needed (within tolerance window)')
             }
           } catch (error) {
             console.error('[RealtimeSync] Failed to check for updates:', error)
