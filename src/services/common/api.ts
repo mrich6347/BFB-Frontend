@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
+import { useBudgetStore } from '@/stores/budget.store';
 import { useToast } from 'vue-toast-notification';
 import 'vue-toast-notification/dist/theme-sugar.css';
 import { markLocalMutation } from '@/composables/common/useRealtimeSync';
@@ -29,7 +30,10 @@ api.interceptors.request.use(async (config) => {
         // Mark mutations BEFORE they happen (so realtime changes are ignored)
         const method = config.method?.toUpperCase();
         if (method && ['POST', 'PATCH', 'PUT', 'DELETE'].includes(method)) {
-            markLocalMutation();
+            // Get the current budget ID to update the stored sync time
+            const budgetStore = useBudgetStore();
+            const budgetId = budgetStore.currentBudget?.id;
+            markLocalMutation(budgetId);
         }
     } catch (error) {
         console.error('Error in API interceptor:', error);

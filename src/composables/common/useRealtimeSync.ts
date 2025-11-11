@@ -55,10 +55,19 @@ const MONITORED_TABLES = [
 /**
  * Mark that a local mutation just happened
  * This prevents the realtime listener from triggering a refresh for our own changes
+ * Also updates the stored sync time to prevent unnecessary refreshes when returning from background
  */
-export function markLocalMutation() {
+export function markLocalMutation(budgetId?: string) {
   lastLocalMutationTime = Date.now()
   console.log('[RealtimeSync] 🔒 Local mutation marked at', new Date(lastLocalMutationTime).toISOString(), '- ignoring realtime changes for', MUTATION_IGNORE_WINDOW_MS, 'ms')
+
+  // Update the stored sync time to account for this local change
+  // This prevents the app from refreshing when returning from background after making a local change
+  if (budgetId) {
+    const now = new Date().toISOString()
+    storeLastSyncTime(budgetId, now)
+    console.log('[RealtimeSync] 📝 Updated stored sync time after local mutation')
+  }
 }
 
 /**
