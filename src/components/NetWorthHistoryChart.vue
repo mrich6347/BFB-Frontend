@@ -162,6 +162,7 @@ import { NetWorthHistoryService } from '@/services/net-worth-history.service'
 import type { NetWorthChartResponse, NetWorthChartDataPoint } from '@/types/DTO/net-worth-history.dto'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useAccountStore } from '@/stores/account.store'
+import { useUserProfileStore } from '@/stores/user-profile.store'
 import { useToast } from 'vue-toast-notification'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { AccountType } from '@/types/DTO/account.dto'
@@ -316,6 +317,7 @@ ChartJS.register(
 
 const budgetStore = useBudgetStore()
 const accountStore = useAccountStore()
+const userProfileStore = useUserProfileStore()
 const $toast = useToast()
 
 const isLoading = ref(false)
@@ -347,6 +349,21 @@ watch(chartResponse, () => {
 })
 
 const currentBudget = computed(() => budgetStore.currentBudget)
+
+// Helper function to calculate age at a specific date
+const calculateAgeAtDate = (birthdate: string, targetDate: string): number => {
+  const birthDate = new Date(birthdate)
+  const target = new Date(targetDate)
+  let age = target.getFullYear() - birthDate.getFullYear()
+  const monthDiff = target.getMonth() - birthDate.getMonth()
+
+  // Adjust age if birthday hasn't occurred yet in the target year
+  if (monthDiff < 0 || (monthDiff === 0 && target.getDate() < birthDate.getDate())) {
+    age--
+  }
+
+  return age
+}
 
 const hasNotes = computed(() => {
   return chartResponse.value?.data_points.some(point => point.note) ?? false
@@ -524,6 +541,27 @@ const chartOptions = computed<ChartOptions<'bar'>>(() => ({
         size: 12
       },
       callbacks: {
+        title: (tooltipItems) => {
+          // Customize title to include age if birthdate is set
+          if (tooltipItems.length > 0) {
+            const dataIndex = tooltipItems[0].dataIndex
+            const dataPoints = chartResponse.value?.data_points
+            const monthDate = dataPoints?.[dataIndex]?.month_date
+
+            if (monthDate) {
+              const formattedDate = formatDate(monthDate)
+              const birthdate = userProfileStore.currentProfile?.birthdate
+
+              if (birthdate) {
+                const age = calculateAgeAtDate(birthdate, monthDate)
+                return `${formattedDate} | Age ${age}`
+              }
+
+              return formattedDate
+            }
+          }
+          return ''
+        },
         label: (context) => {
           const label = context.dataset.label || ''
           const value = formatCurrency(context.parsed.y)

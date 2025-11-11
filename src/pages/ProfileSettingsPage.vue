@@ -94,6 +94,29 @@
             </div>
           </div>
 
+          <!-- Birthdate Field -->
+          <div>
+            <label for="birthdate" class="block text-sm font-medium text-foreground">
+              Birthdate <span class="text-muted-foreground text-xs">(Optional)</span>
+            </label>
+            <div class="mt-1">
+              <input
+                id="birthdate"
+                v-model="formData.birthdate"
+                type="date"
+                class="block w-full px-3 py-2 border border-input rounded-md shadow-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-colors"
+                :class="{ 'border-destructive': errors.birthdate }"
+                @input="validateBirthdate"
+              />
+              <p v-if="errors.birthdate" class="mt-2 text-sm text-destructive">
+                {{ errors.birthdate }}
+              </p>
+              <p class="mt-2 text-sm text-muted-foreground">
+                Set your birthdate to get more personalized statistics and insights
+              </p>
+            </div>
+          </div>
+
           <!-- Error Display -->
           <div v-if="error" class="rounded-md bg-destructive/10 border border-destructive/20 p-4">
             <div class="flex">
@@ -150,6 +173,12 @@
               <dd class="mt-1 text-sm text-card-foreground">{{ currentProfile?.display_name }}</dd>
             </div>
             <div>
+              <dt class="text-sm font-medium text-muted-foreground">Birthdate</dt>
+              <dd class="mt-1 text-sm text-card-foreground">
+                {{ currentProfile?.birthdate ? new Date(currentProfile.birthdate).toLocaleDateString() : 'Not set' }}
+              </dd>
+            </div>
+            <div>
               <dt class="text-sm font-medium text-muted-foreground">Created</dt>
               <dd class="mt-1 text-sm text-card-foreground">
                 {{ currentProfile?.created_at ? new Date(currentProfile.created_at).toLocaleDateString() : '' }}
@@ -189,12 +218,14 @@ const isSubmitting = ref(false)
 
 const formData = ref<CreateUserProfileDto>({
   username: '',
-  display_name: ''
+  display_name: '',
+  birthdate: undefined
 })
 
 const errors = ref({
   username: '',
-  display_name: ''
+  display_name: '',
+  birthdate: ''
 })
 
 const originalUsername = ref<string>('')
@@ -206,7 +237,8 @@ const loadProfile = () => {
   if (profile) {
     formData.value = {
       username: profile.username,
-      display_name: profile.display_name
+      display_name: profile.display_name,
+      birthdate: profile.birthdate || undefined
     }
     originalUsername.value = profile.username
   }
@@ -273,6 +305,35 @@ const validateDisplayName = () => {
   errors.value.display_name = ''
 }
 
+const validateBirthdate = () => {
+  const birthdate = formData.value.birthdate
+
+  if (!birthdate) {
+    errors.value.birthdate = ''
+    return
+  }
+
+  const selectedDate = new Date(birthdate)
+  const today = new Date()
+
+  // Check if date is in the future
+  if (selectedDate > today) {
+    errors.value.birthdate = 'Birthdate cannot be in the future'
+    return
+  }
+
+  // Check if date is too far in the past (e.g., more than 120 years ago)
+  const minDate = new Date()
+  minDate.setFullYear(today.getFullYear() - 120)
+
+  if (selectedDate < minDate) {
+    errors.value.birthdate = 'Please enter a valid birthdate'
+    return
+  }
+
+  errors.value.birthdate = ''
+}
+
 const handleSubmit = async () => {
   try {
     isSubmitting.value = true
@@ -281,6 +342,7 @@ const handleSubmit = async () => {
     // Final validation
     validateUsername()
     validateDisplayName()
+    validateBirthdate()
 
     if (!isFormValid.value) {
       return
@@ -298,6 +360,10 @@ const handleSubmit = async () => {
         updateData.display_name = formData.value.display_name
       }
 
+      if (formData.value.birthdate !== currentProfile.value.birthdate) {
+        updateData.birthdate = formData.value.birthdate || undefined
+      }
+
       if (Object.keys(updateData).length > 0) {
         await updateProfileOp(updateData)
         originalUsername.value = formData.value.username
@@ -310,7 +376,8 @@ const handleSubmit = async () => {
       if (createdProfile) {
         formData.value = {
           username: createdProfile.username,
-          display_name: createdProfile.display_name
+          display_name: createdProfile.display_name,
+          birthdate: createdProfile.birthdate || undefined
         }
         originalUsername.value = createdProfile.username
       }

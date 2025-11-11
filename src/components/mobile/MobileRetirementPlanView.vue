@@ -56,9 +56,11 @@
               type="number"
               v-model.number="currentAge"
               class="w-full px-3 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              :class="{ 'bg-muted/30': isAgeAutoPopulated }"
               placeholder="30"
               min="18"
               max="100"
+              :disabled="isAgeAutoPopulated"
             />
           </div>
           <div>
@@ -74,6 +76,20 @@
               max="100"
             />
           </div>
+        </div>
+
+        <!-- Birthdate Message -->
+        <div v-if="!userProfileStore.currentProfile?.birthdate" class="text-xs text-muted-foreground">
+          <router-link
+            to="/profile-settings"
+            class="text-primary hover:underline"
+          >
+            Set your birthdate on your profile
+          </router-link>
+          to auto-populate your age
+        </div>
+        <div v-else class="text-xs text-muted-foreground">
+          Age auto-populated from your profile
         </div>
 
         <!-- Monthly Contribution -->
@@ -224,6 +240,7 @@ import { useRouter } from 'vue-router'
 import { PiggyBankIcon } from 'lucide-vue-next'
 import { useAccountStore } from '../../stores/account.store'
 import { useBudgetStore } from '../../stores/budget.store'
+import { useUserProfileStore } from '../../stores/user-profile.store'
 import { AccountType } from '../../types/DTO/account.dto'
 import { formatCurrency } from '../../utils/currencyUtil'
 import MobileBottomNav from './MobileBottomNav.vue'
@@ -231,6 +248,35 @@ import MobileBottomNav from './MobileBottomNav.vue'
 const router = useRouter()
 const accountStore = useAccountStore()
 const budgetStore = useBudgetStore()
+const userProfileStore = useUserProfileStore()
+
+// Helper function to calculate age from birthdate
+const calculateAgeFromBirthdate = (birthdate: string): number => {
+  const today = new Date()
+  const birthDate = new Date(birthdate)
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+
+  // Adjust age if birthday hasn't occurred yet this year
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+
+  return age
+}
+
+// Computed value to check if age is auto-populated from profile
+const isAgeAutoPopulated = computed(() => {
+  return !!userProfileStore.currentProfile?.birthdate
+})
+
+// Computed value for age from profile
+const ageFromProfile = computed(() => {
+  if (userProfileStore.currentProfile?.birthdate) {
+    return calculateAgeFromBirthdate(userProfileStore.currentProfile.birthdate)
+  }
+  return null
+})
 
 // Reactive state
 const currentAge = ref(27)
@@ -333,6 +379,11 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'ret
 // Initialize starting balance with tracking accounts total
 onMounted(() => {
   startingBalance.value = trackingAccountsTotal.value
+
+  // Auto-populate age from profile if available
+  if (ageFromProfile.value !== null) {
+    currentAge.value = ageFromProfile.value
+  }
 })
 </script>
 

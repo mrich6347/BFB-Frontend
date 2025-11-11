@@ -1,11 +1,13 @@
 export interface CreateUserProfileDto {
   username: string;
   display_name: string;
+  birthdate?: string;
 }
 
 export interface UpdateUserProfileDto {
   username?: string;
   display_name?: string;
+  birthdate?: string;
 }
 
 export interface SearchUserProfileDto {
@@ -17,6 +19,7 @@ export interface UserProfileResponse {
   user_id: string;
   username: string;
   display_name: string;
+  birthdate?: string;
   created_at: Date;
   updated_at: Date;
 }
