@@ -41,18 +41,10 @@
       </div>
 
       <!-- Amount -->
-      <div class="space-y-2">
-        <label class="text-sm font-medium">Amount</label>
-        <input
-          v-model="amount"
-          type="number"
-          inputmode="decimal"
-          step="0.01"
-          min="0.01"
-          placeholder="0.00"
-          class="w-full px-4 py-3 border border-input rounded-md bg-background text-lg"
-        />
-      </div>
+      <MobileCurrencyInput
+        v-model="amount"
+        label="Amount"
+      />
 
       <!-- Memo -->
       <div class="space-y-2">
@@ -184,6 +176,7 @@ import { TransferService } from '@/services/transfer.service'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { AccountResponse } from '@/types/DTO/account.dto'
+import MobileCurrencyInput from './MobileCurrencyInput.vue'
 
 const props = defineProps<{
   accountId: string

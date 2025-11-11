@@ -48,21 +48,10 @@
           </div>
 
           <!-- Target Amount Input -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Target Amount</label>
-            <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <input
-                v-model="targetAmountInput"
-                type="number"
-                step="0.01"
-                min="0.01"
-                placeholder="0.00"
-                class="w-full pl-8 pr-4 py-3 border border-input rounded-md bg-background text-lg"
-                @input="handleTargetAmountInput"
-              />
-            </div>
-          </div>
+          <MobileCurrencyInput
+            v-model="formData.target_amount"
+            label="Target Amount"
+          />
 
           <!-- Target Date Input -->
           <div class="space-y-2">
@@ -128,6 +117,7 @@ import { useSharedGoalOperations } from '../../composables/shared-goals/useShare
 import { useUserProfileStore } from '../../stores/user-profile.store'
 import { SharedGoalsService } from '../../services/shared-goals.service'
 import type { SharedGoalResponse, UpdateSharedGoalDto } from '../../types/DTO/shared-goal.dto'
+import MobileCurrencyInput from './MobileCurrencyInput.vue'
 
 const props = defineProps<{
   show: boolean
@@ -144,7 +134,6 @@ const userProfileStore = useUserProfileStore()
 
 const isLoading = ref(false)
 const isClosing = ref(false)
-const targetAmountInput = ref('')
 const participantContributions = ref<Record<string, string>>({})
 
 const formData = ref<{
@@ -182,7 +171,6 @@ watch(() => props.goal, (goal) => {
       target_amount: goal.target_amount,
       target_date: targetDateString
     }
-    targetAmountInput.value = goal.target_amount.toString()
 
     // Initialize participant contributions
     if (goal.participants) {
@@ -201,13 +189,6 @@ watch(() => props.show, (newValue) => {
     isClosing.value = false
   }
 })
-
-const handleTargetAmountInput = () => {
-  const value = parseFloat(targetAmountInput.value)
-  if (!isNaN(value) && value > 0) {
-    formData.value.target_amount = value
-  }
-}
 
 const handleClose = () => {
   if (isLoading.value) return

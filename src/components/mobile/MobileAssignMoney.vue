@@ -84,20 +84,10 @@
             </div>
 
             <!-- Amount Input -->
-            <div class="space-y-2">
-              <label class="text-sm font-medium">
-                {{ mode === 'add' ? 'Amount to Add' : 'Amount to Subtract' }}
-              </label>
-              <input
-                v-model="amount"
-                type="number"
-                inputmode="decimal"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                class="w-full px-4 py-3 border border-input rounded-md bg-background text-lg"
-              />
-            </div>
+            <MobileCurrencyInput
+              v-model="amount"
+              :label="mode === 'add' ? 'Amount to Add' : 'Amount to Subtract'"
+            />
 
             <!-- Save Button -->
             <button
@@ -350,17 +340,10 @@
 
             <!-- Amount Input -->
             <div class="space-y-2">
-              <label class="text-sm font-medium">Amount to Move</label>
-              <input
+              <MobileCurrencyInput
                 v-model="moveAmount"
-                type="number"
-                inputmode="decimal"
-                step="0.01"
-                min="0"
-                :max="category?.available || 0"
-                placeholder="0.00"
-                class="w-full px-4 py-3 border border-input rounded-md bg-background text-lg"
-                autofocus
+                label="Amount to Move"
+                :autofocus="true"
               />
               <div class="text-xs text-muted-foreground">
                 Maximum: {{ formatCurrency(category?.available || 0) }}
@@ -389,6 +372,7 @@ import { formatCurrency } from '@/utils/currencyUtil'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
+import MobileCurrencyInput from './MobileCurrencyInput.vue'
 
 const props = defineProps<{
   show: boolean

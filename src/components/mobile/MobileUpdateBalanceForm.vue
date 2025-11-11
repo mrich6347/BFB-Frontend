@@ -19,18 +19,11 @@
       </div>
 
       <!-- New Balance -->
-      <div class="space-y-2">
-        <label class="text-sm font-medium">New Balance</label>
-        <input
-          v-model="newBalance"
-          type="number"
-          inputmode="decimal"
-          step="0.01"
-          placeholder="0.00"
-          class="w-full px-4 py-3 border border-input rounded-md bg-background text-lg"
-          autofocus
-        />
-      </div>
+      <MobileCurrencyInput
+        v-model="newBalance"
+        label="New Balance"
+        :autofocus="true"
+      />
 
       <!-- Info -->
       <div class="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
@@ -56,6 +49,7 @@
 import { ref, computed } from 'vue'
 import { ChevronLeftIcon } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
+import MobileCurrencyInput from './MobileCurrencyInput.vue'
 
 const props = defineProps<{
   accountId: string

@@ -34,16 +34,10 @@
       </div>
 
       <!-- Amount -->
-      <div class="space-y-2">
-        <label class="text-sm font-medium">Amount</label>
-        <input
-          v-model="amount"
-          type="text"
-          inputmode="decimal"
-          placeholder="0.00"
-          class="w-full px-4 py-3 border border-input rounded-md bg-background text-lg"
-        />
-      </div>
+      <MobileCurrencyInput
+        v-model="amountNumber"
+        label="Amount"
+      />
 
       <!-- Memo -->
       <div class="space-y-2">
@@ -109,6 +103,7 @@ import { XIcon, ChevronRightIcon, ChevronLeftIcon } from 'lucide-vue-next'
 import { useAccountStore } from '@/stores/account.store'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { AccountResponse } from '@/types/DTO/account.dto'
+import MobileCurrencyInput from './MobileCurrencyInput.vue'
 
 const props = defineProps<{
   accountId: string
@@ -123,7 +118,7 @@ const emit = defineEmits<{
 const accountStore = useAccountStore()
 
 const selectedFromAccount = ref<AccountResponse | null>(null)
-const amount = ref<string>('')
+const amountNumber = ref<number | null>(null)
 const memo = ref('')
 const showAccountPicker = ref(false)
 const isLoading = ref(false)
@@ -139,7 +134,7 @@ const creditCardAccount = computed(() => {
 onMounted(() => {
   if (creditCardAccount.value) {
     // Credit card cleared balance is negative (money owed), so we take absolute value for payment
-    amount.value = Math.abs(creditCardAccount.value.cleared_balance).toFixed(2)
+    amountNumber.value = Math.abs(creditCardAccount.value.cleared_balance)
   }
 })
 
@@ -148,8 +143,7 @@ const paymentCategoryName = computed(() => {
 })
 
 const isValid = computed(() => {
-  const amountNum = parseFloat(amount.value)
-  return selectedFromAccount.value && amount.value && !isNaN(amountNum) && amountNum > 0
+  return selectedFromAccount.value && amountNumber.value !== null && amountNumber.value > 0
 })
 
 const selectAccount = (account: AccountResponse) => {
@@ -163,8 +157,7 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    const amountNum = parseFloat(amount.value)
-    emit('save', amountNum, selectedFromAccount.value.id, memo.value || undefined)
+    emit('save', amountNumber.value!, selectedFromAccount.value.id, memo.value || undefined)
 
     // Keep loading state until parent closes the form
     await new Promise(resolve => setTimeout(resolve, 500))
