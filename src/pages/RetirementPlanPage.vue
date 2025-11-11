@@ -140,21 +140,22 @@
           <!-- Results Card -->
           <div class="bg-card rounded-lg border border-border shadow-sm p-6">
             <h2 class="text-xl font-semibold text-foreground mb-6">Projection Results</h2>
-            
-            <div v-if="isValidInput" class="space-y-6">
-              <!-- Years to Retirement -->
-              <div class="bg-primary/10 rounded-lg p-4">
-                <div class="text-sm text-muted-foreground mb-1">Years to Retirement</div>
-                <div class="text-3xl font-bold text-primary">
-                  {{ yearsToRetirement }} years
-                </div>
-              </div>
+
 
               <!-- Final Balance -->
               <div class="bg-green-500/10 rounded-lg p-4">
                 <div class="text-sm text-muted-foreground mb-1">Projected Balance at Age {{ retirementAge }}</div>
                 <div class="text-3xl font-bold text-green-600 dark:text-green-400">
                   {{ formatCurrency(finalBalance) }}
+                </div>
+              </div>
+            
+            <div v-if="isValidInput" class="space-y-6 mt-4">
+              <!-- Years to Retirement -->
+              <div class="bg-primary/10 rounded-lg p-4">
+                <div class="text-sm text-muted-foreground mb-1">Years to Retirement</div>
+                <div class="text-3xl font-bold text-primary">
+                  {{ yearsToRetirement }} years
                 </div>
               </div>
 
