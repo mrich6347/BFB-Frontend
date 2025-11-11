@@ -397,9 +397,9 @@ const isGroupCollapsed = (groupId: string) => {
 // Get badge class based on available amount (YNAB-style)
 const getAvailableBadgeClass = (amount: number) => {
   if (amount > 0) {
-    return 'bg-emerald-400 dark:bg-emerald-500 text-black dark:text-black'
+    return 'bg-emerald-400 dark:bg-emerald-400 text-black dark:text-black font-semibold shadow-md'
   } else if (amount < 0) {
-    return 'bg-red-500 dark:bg-red-600 text-white'
+    return 'bg-red-500 dark:bg-red-600 text-white font-semibold shadow-sm'
   }
   return 'bg-muted text-muted-foreground'
 }
