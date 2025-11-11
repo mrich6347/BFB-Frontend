@@ -501,8 +501,8 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'ret
       router.push(`/budget/${budgetId}`)
     }
   } else if (tab === 'accounts') {
-    // For now, navigate to net worth and let them access accounts from there
-    router.push('/net-worth')
+    // Open transaction flow for account selection
+    transactionFlowRef.value?.openFlow()
   } else if (tab === 'networth') {
     router.push('/net-worth')
   } else if (tab === 'retirement') {
