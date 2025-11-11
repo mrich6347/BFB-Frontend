@@ -6,6 +6,20 @@
       </DialogHeader>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
+        <!-- Outflow Toggle (always outflow for scheduled transactions) -->
+        <div>
+          <label class="text-sm font-medium text-foreground mb-2 block">Type</label>
+          <div class="inline-flex rounded-md border border-input bg-background p-1">
+            <button
+              type="button"
+              disabled
+              class="px-4 py-2 text-sm font-medium rounded transition-colors bg-destructive text-destructive-foreground shadow-sm cursor-default"
+            >
+              Outflow
+            </button>
+          </div>
+        </div>
+
         <!-- Payee -->
         <div>
           <PayeeSelector
@@ -30,20 +44,6 @@
             :show-group-headers="false"
             @select="handleCategorySelect"
           />
-        </div>
-
-        <!-- Outflow Toggle (always outflow for scheduled transactions) -->
-        <div>
-          <label class="text-sm font-medium text-foreground mb-2 block">Type</label>
-          <div class="inline-flex rounded-md border border-input bg-background p-1">
-            <button
-              type="button"
-              disabled
-              class="px-4 py-2 text-sm font-medium rounded transition-colors bg-destructive text-destructive-foreground shadow-sm cursor-default"
-            >
-              Outflow
-            </button>
-          </div>
         </div>
 
         <!-- Amount -->

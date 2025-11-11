@@ -45,7 +45,7 @@
         <!-- For scheduled: show only Expense button (highlighted) -->
         <template v-if="transactionMode === 'scheduled'">
           <div class="flex-1 py-3 rounded-md font-medium bg-red-500/10 text-red-600 border-2 border-red-500 text-center">
-            Expense
+            Outflow
           </div>
         </template>
         <!-- For standard: show both buttons -->
@@ -59,7 +59,7 @@
                 : 'bg-muted text-muted-foreground border-2 border-transparent'
             ]"
           >
-            Expense
+            Outflow
           </button>
           <button
             @click="amountType = 'inflow'"
@@ -70,7 +70,7 @@
                 : 'bg-muted text-muted-foreground border-2 border-transparent'
             ]"
           >
-            Income
+            Inflow
           </button>
         </template>
       </div>
