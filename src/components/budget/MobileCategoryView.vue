@@ -25,31 +25,45 @@
     </div>
 
     <!-- Category List - scrollable area with bottom nav padding + floating button padding -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-6 pb-40" @click="closeAllSwipes">
+    <div class="flex-1 overflow-y-auto pb-40" @click="closeAllSwipes">
       <div
         v-for="group in visibleGroupsWithCategories"
         :key="group.id"
-        class="space-y-2"
+        class="border-b border-border"
       >
-        <!-- Group Header -->
-        <div class="px-3 py-2 bg-muted/50 rounded-md flex items-center justify-between">
-          <h2 class="text-sm font-medium text-muted-foreground">{{ group.name }}</h2>
-          <button
-            v-if="!group.is_system_group"
-            @click.stop="openCreateCategory(group.id)"
-            class="p-1 rounded-md hover:bg-muted transition-colors"
-            :aria-label="`Add category to ${group.name}`"
-          >
-            <PlusIcon class="h-4 w-4 text-muted-foreground" />
-          </button>
-        </div>
+        <!-- Group Header - Collapsible -->
+        <button
+          @click.stop="toggleGroupCollapse(group.id)"
+          class="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors"
+        >
+          <div class="flex items-center gap-2">
+            <ChevronDownIcon
+              class="h-4 w-4 text-muted-foreground transition-transform duration-200"
+              :class="{ '-rotate-90': isGroupCollapsed(group.id) }"
+            />
+            <h2 class="text-sm font-medium text-muted-foreground">{{ group.name }}</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-muted-foreground">
+              {{ formatCurrency(getGroupTotal(group.id)) }}
+            </span>
+            <button
+              v-if="!group.is_system_group"
+              @click.stop="openCreateCategory(group.id)"
+              class="p-1 rounded-md hover:bg-muted transition-colors"
+              :aria-label="`Add category to ${group.name}`"
+            >
+              <PlusIcon class="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+        </button>
 
         <!-- Categories in Group -->
-        <div class="space-y-1">
+        <div v-if="!isGroupCollapsed(group.id)">
           <div
             v-for="category in getCategoriesForGroup(group.id)"
             :key="category.id"
-            class="relative overflow-hidden rounded-md"
+            class="relative overflow-hidden border-b border-border/50 last:border-b-0"
           >
             <!-- Edit button (revealed on swipe) -->
             <div class="absolute inset-y-0 right-0 flex items-center">
@@ -64,7 +78,7 @@
             <!-- Swipeable category content -->
             <button
               :ref="el => setCategoryRef(category.id, el)"
-              class="w-full flex items-center justify-between px-4 py-3 bg-card border border-border hover:bg-accent transition-colors text-left touch-pan-y"
+              class="w-full flex items-center justify-between px-4 py-3 pl-10 bg-background hover:bg-muted/20 transition-colors text-left touch-pan-y"
               :class="{ 'transition-transform duration-200 ease-out': !isSwiping(category.id) }"
               :style="{ transform: `translateX(${getSwipeOffset(category.id)}px)` }"
               @touchstart="handleTouchStart($event, category.id)"
@@ -73,7 +87,10 @@
               @click.stop="handleCategoryClick(category)"
             >
               <span class="text-sm text-foreground">{{ category.name }}</span>
-              <span class="text-sm font-semibold" :class="getAvailableColorClass(category.available)">
+              <span
+                class="text-xs font-semibold px-3 py-1 rounded-full"
+                :class="getAvailableBadgeClass(category.available)"
+              >
                 {{ formatCurrency(category.available) }}
               </span>
             </button>
@@ -174,7 +191,7 @@ import MobileBottomNav from '@/components/mobile/MobileBottomNav.vue'
 import MobileCreateCategoryModal from '@/components/mobile/MobileCreateCategoryModal.vue'
 import MobileEditCategoryModal from '@/components/mobile/MobileEditCategoryModal.vue'
 import MobileCategoryBalanceToast from '@/components/mobile/MobileCategoryBalanceToast.vue'
-import { PlusIcon } from 'lucide-vue-next'
+import { PlusIcon, ChevronDownIcon } from 'lucide-vue-next'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 
@@ -199,6 +216,9 @@ const editingCategory = ref<CategoryResponse | null>(null)
 const showStandaloneTransaction = ref(false)
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
 const categoryBalanceToastRef = ref<InstanceType<typeof MobileCategoryBalanceToast> | null>(null)
+
+// Group collapse state management
+const collapsedGroups = ref<Set<string>>(new Set())
 
 // Swipe state management
 const swipeStates = ref<Record<string, { offset: number, startX: number, startTime: number, isSwiping: boolean }>>({})
@@ -323,14 +343,27 @@ const getGroupTotal = (groupId: string) => {
   return categories.reduce((sum, cat) => sum + cat.available, 0)
 }
 
-// Get color class based on available amount
-const getAvailableColorClass = (amount: number) => {
-  if (amount > 0) {
-    return 'text-emerald-600 dark:text-emerald-400'
-  } else if (amount < 0) {
-    return 'text-red-600 dark:text-red-400'
+// Group collapse functions
+const toggleGroupCollapse = (groupId: string) => {
+  if (collapsedGroups.value.has(groupId)) {
+    collapsedGroups.value.delete(groupId)
+  } else {
+    collapsedGroups.value.add(groupId)
   }
-  return 'text-muted-foreground'
+}
+
+const isGroupCollapsed = (groupId: string) => {
+  return collapsedGroups.value.has(groupId)
+}
+
+// Get badge class based on available amount (YNAB-style)
+const getAvailableBadgeClass = (amount: number) => {
+  if (amount > 0) {
+    return 'bg-emerald-500 dark:bg-emerald-600 text-white'
+  } else if (amount < 0) {
+    return 'bg-red-500 dark:bg-red-600 text-white'
+  }
+  return 'bg-muted text-muted-foreground'
 }
 
 // Get background class for Ready to Assign banner
@@ -452,7 +485,7 @@ const closeCreateCategory = () => {
   selectedGroupId.value = ''
 }
 
-const handleCategoryCreated = (category: CategoryResponse) => {
+const handleCategoryCreated = (_category: CategoryResponse) => {
   // Category is already added to store by the composable
   // Just close the modal
   closeCreateCategory()
@@ -471,13 +504,13 @@ const closeEditCategory = () => {
   editingCategory.value = null
 }
 
-const handleCategoryUpdated = (category: CategoryResponse) => {
+const handleCategoryUpdated = (_category: CategoryResponse) => {
   // Category is already updated in store by the composable
   // Just close the modal
   closeEditCategory()
 }
 
-const handleCategoryHidden = (categoryId: string) => {
+const handleCategoryHidden = (_categoryId: string) => {
   // Category is already hidden in store by the composable
   // Just close the modal
   closeEditCategory()
