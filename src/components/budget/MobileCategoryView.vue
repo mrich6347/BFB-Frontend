@@ -170,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toast-notification'
 import { useBudgetStore } from '@/stores/budget.store'
@@ -217,8 +217,42 @@ const showStandaloneTransaction = ref(false)
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
 const categoryBalanceToastRef = ref<InstanceType<typeof MobileCategoryBalanceToast> | null>(null)
 
-// Group collapse state management
+// Group collapse state management with localStorage persistence
+const COLLAPSED_GROUPS_KEY = 'bfb-mobile-collapsed-category-groups'
+
+// Load collapsed groups from localStorage on mount
+const loadCollapsedGroups = (): Set<string> => {
+  try {
+    const stored = localStorage.getItem(COLLAPSED_GROUPS_KEY)
+    if (stored) {
+      return new Set(JSON.parse(stored))
+    }
+  } catch (error) {
+    console.error('Failed to load collapsed groups from localStorage:', error)
+  }
+  return new Set()
+}
+
+// Save collapsed groups to localStorage
+const saveCollapsedGroups = (groups: Set<string>) => {
+  try {
+    localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify(Array.from(groups)))
+  } catch (error) {
+    console.error('Failed to save collapsed groups to localStorage:', error)
+  }
+}
+
 const collapsedGroups = ref<Set<string>>(new Set())
+
+// Load collapsed groups on mount
+onMounted(() => {
+  collapsedGroups.value = loadCollapsedGroups()
+})
+
+// Watch for changes and save to localStorage
+watch(collapsedGroups, (newGroups) => {
+  saveCollapsedGroups(newGroups)
+}, { deep: true })
 
 // Swipe state management
 const swipeStates = ref<Record<string, { offset: number, startX: number, startTime: number, isSwiping: boolean }>>({})
@@ -345,11 +379,13 @@ const getGroupTotal = (groupId: string) => {
 
 // Group collapse functions
 const toggleGroupCollapse = (groupId: string) => {
-  if (collapsedGroups.value.has(groupId)) {
-    collapsedGroups.value.delete(groupId)
+  const newSet = new Set(collapsedGroups.value)
+  if (newSet.has(groupId)) {
+    newSet.delete(groupId)
   } else {
-    collapsedGroups.value.add(groupId)
+    newSet.add(groupId)
   }
+  collapsedGroups.value = newSet
 }
 
 const isGroupCollapsed = (groupId: string) => {
