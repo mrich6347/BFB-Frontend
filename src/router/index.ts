@@ -12,6 +12,7 @@ import ProfileSettingsPage from '../pages/ProfileSettingsPage.vue'
 import SharedGoalsPage from '../pages/SharedGoalsPage.vue'
 import RetirementPlanPage from '../pages/RetirementPlanPage.vue'
 import CalendarPage from '../pages/CalendarPage.vue'
+import MobileAccountsPage from '../pages/MobileAccountsPage.vue'
 import { supabase } from '../lib/supabaseClient'
 
 
@@ -92,6 +93,14 @@ const routes = [
     path: '/calendar',
     name: 'Calendar',
     component: CalendarPage,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/accounts',
+    name: 'Accounts',
+    component: MobileAccountsPage,
     meta: {
       requiresAuth: true
     }
