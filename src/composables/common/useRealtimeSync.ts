@@ -17,6 +17,28 @@ const MUTATION_IGNORE_WINDOW_MS = 5000 // Ignore realtime changes for 5 seconds 
 let changesWhileHidden = false
 let pageHiddenTime: number | null = null
 
+// LocalStorage key for last sync timestamp
+const getLastSyncKey = (budgetId: string) => `bfb_last_sync_${budgetId}`
+
+// Store last sync timestamp in localStorage
+const storeLastSyncTime = (budgetId: string, timestamp: string) => {
+  try {
+    localStorage.setItem(getLastSyncKey(budgetId), timestamp)
+  } catch (error) {
+    console.error('[RealtimeSync] Failed to store last sync time:', error)
+  }
+}
+
+// Get last sync timestamp from localStorage
+const getStoredLastSyncTime = (budgetId: string): string | null => {
+  try {
+    return localStorage.getItem(getLastSyncKey(budgetId))
+  } catch (error) {
+    console.error('[RealtimeSync] Failed to get stored last sync time:', error)
+    return null
+  }
+}
+
 // Tables to monitor for changes
 const MONITORED_TABLES = [
   'transactions',
@@ -82,8 +104,11 @@ export function useRealtimeSync() {
       console.log('[RealtimeSync] Triggering data refresh...')
       try {
         await refreshMainData(currentBudgetId)
-        lastSyncTime.value = new Date()
-        console.log('[RealtimeSync] Data refreshed successfully')
+        const now = new Date()
+        lastSyncTime.value = now
+        // Store the sync time in localStorage for comparison when returning from background
+        storeLastSyncTime(currentBudgetId, now.toISOString())
+        console.log('[RealtimeSync] Data refreshed successfully at', now.toISOString())
       } catch (error) {
         console.error('[RealtimeSync] Failed to refresh data:', error)
       }
@@ -184,22 +209,32 @@ export function useRealtimeSync() {
         return
       }
 
-      // Otherwise, check if data has changed on the server
+      // Check if data has changed on the server by comparing timestamps
       const currentBudgetId = budgetStore.currentBudget?.id
-      if (currentBudgetId && lastSyncTime.value) {
-        try {
-          const { lastUpdate } = await MainDataService.getLastUpdateTimestamp(currentBudgetId)
-          const serverUpdateTime = new Date(lastUpdate).getTime()
-          const localSyncTime = lastSyncTime.value.getTime()
+      if (currentBudgetId) {
+        const storedLastSync = getStoredLastSyncTime(currentBudgetId)
 
-          if (serverUpdateTime > localSyncTime) {
-            console.log('[RealtimeSync] 🔄 Refreshing (server data changed while away)...')
-            triggerRefresh()
-          } else {
-            console.log('[RealtimeSync] ✅ No refresh needed (data is up to date)')
+        if (storedLastSync) {
+          try {
+            console.log('[RealtimeSync] 🔍 Checking for server updates...')
+            const { lastUpdate } = await MainDataService.getLastUpdateTimestamp(currentBudgetId)
+            const serverUpdateTime = new Date(lastUpdate).getTime()
+            const localSyncTime = new Date(storedLastSync).getTime()
+
+            console.log('[RealtimeSync] Server last update:', new Date(serverUpdateTime).toISOString())
+            console.log('[RealtimeSync] Local last sync:', new Date(localSyncTime).toISOString())
+
+            if (serverUpdateTime > localSyncTime) {
+              console.log('[RealtimeSync] 🔄 Refreshing (server data changed while away)...')
+              triggerRefresh()
+            } else {
+              console.log('[RealtimeSync] ✅ No refresh needed (data is up to date)')
+            }
+          } catch (error) {
+            console.error('[RealtimeSync] Failed to check for updates:', error)
           }
-        } catch (error) {
-          console.error('[RealtimeSync] Failed to check for updates:', error)
+        } else {
+          console.log('[RealtimeSync] No stored sync time, skipping update check')
         }
       }
 
