@@ -29,9 +29,15 @@
       <div v-else-if="groupedTransactions.length > 0" class="space-y-4">
         <div v-for="group in groupedTransactions" :key="group.date" class="space-y-2">
           <!-- Date Header -->
-          <div class="flex items-center justify-between px-2 py-1">
+          <div
+            class="flex items-center justify-between px-2 py-1 rounded-md"
+            :class="isToday(group.date) ? 'bg-orange-100 dark:bg-orange-950/30' : ''"
+          >
             <div class="flex items-center gap-2">
-              <h3 class="text-sm font-semibold text-foreground">
+              <h3
+                class="text-sm font-semibold"
+                :class="isToday(group.date) ? 'text-orange-700 dark:text-orange-400' : 'text-foreground'"
+              >
                 {{ group.dateLabel }}
               </h3>
               <span class="text-xs text-muted-foreground">
@@ -63,8 +69,13 @@
               <!-- Swipeable transaction content -->
               <div
                 :ref="el => setTransactionRef(transaction.id, el)"
-                class="w-full bg-card border border-border touch-pan-y"
-                :class="{ 'transition-transform duration-200 ease-out': !isSwiping(transaction.id) }"
+                class="w-full bg-card touch-pan-y"
+                :class="[
+                  isToday(group.date)
+                    ? 'border-2 border-orange-400 dark:border-orange-600 shadow-md'
+                    : 'border border-border',
+                  { 'transition-transform duration-200 ease-out': !isSwiping(transaction.id) }
+                ]"
                 :style="{ transform: `translateX(${getSwipeOffset(transaction.id)}px)` }"
                 @touchstart="handleTouchStart($event, transaction.id)"
                 @touchmove="handleTouchMove($event, transaction.id)"
@@ -198,6 +209,7 @@ const allScheduledTransactions = computed(() => {
 // Calculate next date for a scheduled transaction
 const calculateNextDate = (transaction: ScheduledTransactionResponse): Date => {
   const today = new Date()
+  today.setHours(0, 0, 0, 0)
   const year = today.getFullYear()
   const month = today.getMonth()
 
@@ -313,6 +325,16 @@ const weeklyGroups = computed(() => {
 
   return weeks.sort((a, b) => a.weekNumber - b.weekNumber)
 })
+
+const isToday = (date: Date): boolean => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const targetDate = new Date(date)
+  targetDate.setHours(0, 0, 0, 0)
+
+  return targetDate.getTime() === today.getTime()
+}
 
 const formatDateLabel = (date: Date): string => {
   const today = new Date()
