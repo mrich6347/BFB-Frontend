@@ -199,6 +199,12 @@
               </div>
             </div>
 
+            <!-- Recent Activity -->
+            <div class="pt-3 border-t border-border">
+              <p class="text-xs text-muted-foreground mb-2">Recent Activity</p>
+              <GoalActivityTimeline :goal-id="goal.id" :days-back="7" />
+            </div>
+
             <!-- Participant Contributions -->
             <div v-if="goal.participants && goal.participants.length > 0" class="pt-3 border-t border-border">
               <p class="text-xs text-muted-foreground mb-2">Contributions</p>
@@ -327,6 +333,7 @@ import { useGoalProgress } from '../../composables/shared-goals/useGoalProgress'
 import MobileBottomNav from './MobileBottomNav.vue'
 import GoalOnboardingModal from '../shared-goals/GoalOnboardingModal.vue'
 import MobileEditGoalModal from './MobileEditGoalModal.vue'
+import GoalActivityTimeline from '../shared-goals/GoalActivityTimeline.vue'
 import type { SharedGoalResponse, InvitationResponse, InvitationStatus, GoalParticipantResponse } from '../../types/DTO/shared-goal.dto'
 
 const router = useRouter()

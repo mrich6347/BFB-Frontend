@@ -27,6 +27,12 @@
         <!-- Progress Section -->
         <GoalProgressChart :goal="displayGoal" />
 
+        <!-- Activity Timeline Section -->
+        <div class="bg-card rounded-lg p-4 border">
+          <h4 class="text-sm font-semibold text-foreground mb-3">Recent Activity</h4>
+          <GoalActivityTimeline :goal-id="displayGoal.id" :days-back="7" ref="activityTimelineRef" />
+        </div>
+
         <!-- Participant Settings Section (for current user) -->
         <div v-if="currentUserParticipant && showParticipantSettings" class="space-y-3">
           <div class="border border-border rounded-lg p-4 bg-muted/30">
@@ -144,6 +150,7 @@ import ParticipantSettings from './ParticipantSettings.vue'
 import InviteUserModal from './InviteUserModal.vue'
 import EditGoalModal from './EditGoalModal.vue'
 import GoalProgressChart from './GoalProgressChart.vue'
+import GoalActivityTimeline from './GoalActivityTimeline.vue'
 import { useGoalInvitations } from '../../composables/shared-goals/useGoalInvitations'
 import { useSharedGoalOperations } from '../../composables/shared-goals/useSharedGoalOperations'
 import { useAuthStore } from '../../stores/auth.store'
@@ -176,6 +183,7 @@ const isInviteModalOpen = ref(false)
 const isEditModalOpen = ref(false)
 const showParticipantSettings = ref(false)
 const showParticipantsList = ref(false)
+const activityTimelineRef = ref<InstanceType<typeof GoalActivityTimeline> | null>(null)
 
 // Reactive goal data that updates from store
 const reactiveGoal = ref<SharedGoalResponse | null>(null)

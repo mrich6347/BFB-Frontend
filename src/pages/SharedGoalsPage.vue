@@ -223,15 +223,42 @@
               </div>
             </div>
 
-            <!-- Goal Info -->
-            <div class="mt-4 flex items-center justify-between text-sm text-muted-foreground cursor-pointer" @click="handleGoalClick(goal)">
-              <div class="flex items-center">
-                <UsersIcon class="h-4 w-4 mr-1" />
-                {{ goal.participants?.length || 0 }} participant{{ (goal.participants?.length || 0) !== 1 ? 's' : '' }}
+            <!-- Recent Activity -->
+            <div class="mt-4 pt-4 border-t border-border">
+              <p class="text-xs font-semibold text-muted-foreground mb-2">Recent Activity</p>
+              <GoalActivityTimeline :goal-id="goal.id" :days-back="7" />
+            </div>
+
+            <!-- Participant Contributions -->
+            <div v-if="goal.participants && goal.participants.length > 0" class="mt-4 pt-4 border-t border-border">
+              <p class="text-xs font-semibold text-muted-foreground mb-2">Contributions</p>
+              <div class="space-y-2">
+                <div
+                  v-for="participant in getSortedParticipants(goal.participants)"
+                  :key="participant.id"
+                  class="flex items-center justify-between text-sm"
+                >
+                  <span class="text-muted-foreground truncate pr-2">
+                    {{ participant.user_profile?.display_name || participant.user_profile?.username || 'Unknown' }}
+                    <span v-if="participant.monthly_contribution" class="text-xs text-muted-foreground/70">
+                      ({{ formatCurrency(participant.monthly_contribution) }}/mo)
+                    </span>
+                  </span>
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    <span class="font-semibold text-green-600">
+                      {{ formatCurrency(participant.current_contribution || 0) }}
+                    </span>
+                    <span class="text-xs text-muted-foreground">
+                      {{ Math.round(participant.contribution_percentage || 0) }}%
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div v-if="getProjectedDate(goal)" class="flex items-center">
-                <span class="mr-1">🔮</span>
-                {{ formatDate(getProjectedDate(goal)) }}
+
+              <!-- Projected Completion -->
+              <div v-if="getProjectedDate(goal)" class="mt-3 pt-3 border-t border-border/50 flex items-center justify-between text-xs">
+                <span class="text-muted-foreground">Estimated completion:</span>
+                <span class="font-medium text-foreground">{{ formatDate(getProjectedDate(goal)) }}</span>
               </div>
             </div>
 
@@ -454,7 +481,8 @@ import InviteUserModal from '../components/shared-goals/InviteUserModal.vue'
 import InvitationManager from '../components/shared-goals/InvitationManager.vue'
 import UserProfileSetup from '../components/shared-goals/UserProfileSetup.vue'
 import GoalOnboardingModal from '../components/shared-goals/GoalOnboardingModal.vue'
-import type { SharedGoalResponse, GoalStatus, InvitationResponse } from '../types/DTO/shared-goal.dto'
+import GoalActivityTimeline from '../components/shared-goals/GoalActivityTimeline.vue'
+import type { SharedGoalResponse, GoalStatus, InvitationResponse, GoalParticipantResponse } from '../types/DTO/shared-goal.dto'
 
 const router = useRouter()
 const { isLoading, error, deleteGoal } = useSharedGoalOperations()
@@ -598,6 +626,14 @@ const getStatusClasses = (status: GoalStatus): string => {
 
 const isGoalCreator = (goal: any): boolean => {
   return goal.created_by === userProfileStore.currentProfile?.id
+}
+
+const getSortedParticipants = (participants: GoalParticipantResponse[]) => {
+  return [...participants].sort((a, b) => {
+    const aContribution = a.current_contribution || 0
+    const bContribution = b.current_contribution || 0
+    return bContribution - aContribution
+  })
 }
 
 const handleGoalClick = (goal: any) => {
