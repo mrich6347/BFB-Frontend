@@ -10,7 +10,7 @@
   <div v-else class="flex h-screen">
     <Sidebar :budgetId="currentBudgetId" />
     <div class="flex-1 bg-background overflow-auto">
-      <div class="max-w-6xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <div class="space-y-10">
           <section class="space-y-3">
             <div class="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-primary/80">
