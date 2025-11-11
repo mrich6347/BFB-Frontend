@@ -76,6 +76,27 @@
       </div>
     </div>
 
+    <!-- Search Bar (Web only) -->
+    <div v-if="!isMobile" class="relative">
+      <div class="relative">
+        <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search transactions by payee, category, or memo..."
+          class="w-full pl-10 pr-10 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+        />
+        <button
+          v-if="searchQuery"
+          @click="searchQuery = ''"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          title="Clear search"
+        >
+          <XIcon class="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+
     <div class="flex items-center justify-between text-xs text-muted-foreground">
       <div class="flex items-center gap-2">
         <input
@@ -108,7 +129,12 @@
       </div>
 
       <div v-else-if="transactions.length === 0" class="text-center py-10 text-sm text-muted-foreground">
-        No transactions yet. Add your first transaction to get started.
+        <template v-if="searchQuery.trim()">
+          No transactions found matching "{{ searchQuery }}".
+        </template>
+        <template v-else>
+          No transactions yet. Add your first transaction to get started.
+        </template>
       </div>
 
       <div v-else class="overflow-x-auto">
@@ -193,7 +219,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { PlusIcon, TrashIcon, ArrowRightLeftIcon, CreditCard as CreditCardIcon, CalendarClock as CalendarClockIcon } from 'lucide-vue-next'
+import { PlusIcon, TrashIcon, ArrowRightLeftIcon, CreditCard as CreditCardIcon, CalendarClock as CalendarClockIcon, Search as SearchIcon, X as XIcon } from 'lucide-vue-next'
 import Button from '@/components/shadcn-ui/button.vue'
 import TransactionRow from './TransactionRow.vue'
 import TransactionModal from './TransactionModal.vue'
@@ -252,6 +278,7 @@ const selectedTransactionIds = ref<string[]>([])
 const selectedScheduledTransactionIds = ref<string[]>([])
 const lastSelectedId = ref<string | null>(null)
 const isSubmittingScheduled = ref(false)
+const searchQuery = ref('')
 
 // Get scheduled transactions from store for this account
 const accountScheduledTransactions = computed(() =>
@@ -293,14 +320,50 @@ const isCreditAccount = computed(() => {
 })
 
 const transactions = computed(() => {
-  const allTransactions = transactionStore.getTransactionsByAccount(props.accountId)
+  let allTransactions = transactionStore.getTransactionsByAccount(props.accountId)
 
-  if (showReconciled.value) {
-    return allTransactions
+  // Filter by search query first
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim()
+    allTransactions = allTransactions.filter(transaction => {
+      // Search in payee
+      const payeeMatch = transaction.payee?.toLowerCase().includes(query)
+
+      // Search in memo
+      const memoMatch = transaction.memo?.toLowerCase().includes(query)
+
+      // Search in category name
+      let categoryMatch = false
+      if (transaction.category_id === null) {
+        // Special handling for credit card payment transfers
+        if (
+          currentAccount.value?.account_type === 'CREDIT' &&
+          currentAccount.value?.name &&
+          transaction.payee?.startsWith('Transfer : ') &&
+          transaction.amount > 0
+        ) {
+          const paymentCategoryName = `${currentAccount.value.name} Payment`.toLowerCase()
+          categoryMatch = paymentCategoryName.includes(query)
+        } else {
+          categoryMatch = 'ready to assign'.includes(query)
+        }
+      } else if (!transaction.category_id) {
+        categoryMatch = 'uncategorized'.includes(query)
+      } else {
+        const category = categoryStore.categories.find(cat => cat.id === transaction.category_id)
+        categoryMatch = category?.name.toLowerCase().includes(query) || false
+      }
+
+      return payeeMatch || memoMatch || categoryMatch
+    })
   } else {
-    // Hide reconciled transactions by default
-    return allTransactions.filter(transaction => !transaction.is_reconciled)
+    // Only filter by reconciled status when NOT searching
+    if (!showReconciled.value) {
+      allTransactions = allTransactions.filter(transaction => !transaction.is_reconciled)
+    }
   }
+
+  return allTransactions
 })
 
 const selectedTransactions = computed(() => {
