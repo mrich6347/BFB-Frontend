@@ -192,18 +192,16 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   return lines
 }
 
-// Create a reactive reference for the plugin to access
-let showNotesRef: any = null
-let chartResponseRef: any = null
-
 // Custom plugin to display notes on the chart
 const notesPlugin = {
   id: 'notesPlugin',
   afterDatasetsDraw(chart: any) {
-    if (!showNotesRef?.value) return
+    // Access the show notes state from the chart's config
+    const showNotes = chart.config.options.plugins?.notesPlugin?.showNotes
+    if (!showNotes) return
 
     const ctx = chart.ctx
-    const dataPoints = chartResponseRef?.value?.data_points
+    const dataPoints = chart.config.options.plugins?.notesPlugin?.dataPoints
     if (!dataPoints) return
 
     // Get the Net Worth dataset (index 2)
@@ -329,15 +327,23 @@ const isSavingNote = ref(false)
 const showNotesOnChart = ref(false)
 const chartRef = ref<any>(null)
 
-// Set refs for plugin access
-showNotesRef = showNotesOnChart
-chartResponseRef = chartResponse
-
 // Watch for toggle changes and force chart update
 watch(showNotesOnChart, () => {
-  if (chartRef.value?.chart) {
-    chartRef.value.chart.update()
-  }
+  // Use setTimeout to ensure chart is ready
+  setTimeout(() => {
+    if (chartRef.value?.chart) {
+      chartRef.value.chart.update('none') // 'none' mode for immediate update without animation
+    }
+  }, 0)
+})
+
+// Watch for chart data changes and ensure chart is updated
+watch(chartResponse, () => {
+  setTimeout(() => {
+    if (chartRef.value?.chart) {
+      chartRef.value.chart.update()
+    }
+  }, 100) // Small delay to ensure chart is fully rendered
 })
 
 const currentBudget = computed(() => budgetStore.currentBudget)
@@ -491,6 +497,10 @@ const chartOptions = computed<ChartOptions<'bar'>>(() => ({
     }
   },
   plugins: {
+    notesPlugin: {
+      showNotes: showNotesOnChart.value,
+      dataPoints: chartResponse.value?.data_points || []
+    },
     legend: {
       display: true,
       position: 'top',
