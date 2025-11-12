@@ -14,14 +14,15 @@
           <p class="text-muted-foreground max-w-2xl">Track your spending patterns and financial trends over time</p>
         </div>
 
-        <!-- Date Range Selector -->
-        <div class="mb-8 flex items-center gap-4">
+        <!-- Date Range Selector and View Toggle -->
+        <div class="mb-8 flex items-center gap-6">
           <div class="flex items-center gap-2">
             <label class="text-sm font-medium text-foreground">Time Period:</label>
             <select
               v-model="selectedPeriod"
               @change="loadAllReports"
-              class="px-3 py-2 border border-border rounded-lg bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              class="px-3 py-2 pr-8 border border-border rounded-lg bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary appearance-none bg-no-repeat bg-right"
+              style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23ffffff%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e'); background-position: right 0.5rem center; background-size: 1.25rem;"
             >
               <option value="1">Last Month</option>
               <option value="3">Last 3 Months</option>
@@ -29,6 +30,32 @@
               <option value="12">Last Year</option>
               <option value="24">Last 2 Years</option>
             </select>
+          </div>
+
+          <!-- View Toggle -->
+          <div class="flex items-center gap-2 bg-card border border-border rounded-lg p-1">
+            <button
+              @click="viewMode = 'category'"
+              :class="[
+                'px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                viewMode === 'category'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              ]"
+            >
+              By Category
+            </button>
+            <button
+              @click="viewMode = 'group'"
+              :class="[
+                'px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                viewMode === 'group'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              ]"
+            >
+              By Category Group
+            </button>
           </div>
         </div>
 
@@ -54,13 +81,13 @@
               <div class="flex items-center justify-between mb-4">
                 <h2 class="text-xl font-semibold text-foreground flex items-center gap-2">
                   <BarChart3Icon class="w-5 h-5 text-primary" />
-                  Top Spending Categories
+                  {{ viewMode === 'group' ? 'Top Spending Category Groups' : 'Top Spending Categories' }}
                 </h2>
               </div>
               <div class="h-80">
                 <Bar v-if="topCategoriesData" :data="topCategoriesData" :options="topCategoriesOptions" />
                 <div v-else class="flex items-center justify-center h-full text-muted-foreground">
-                  No category data available
+                  No data available
                 </div>
               </div>
             </div>
@@ -70,7 +97,7 @@
               <div class="flex items-center justify-between mb-4">
                 <h2 class="text-xl font-semibold text-foreground flex items-center gap-2">
                   <PieChartIcon class="w-5 h-5 text-primary" />
-                  Spending by Category
+                  {{ viewMode === 'group' ? 'Spending by Category Group' : 'Spending by Category' }}
                 </h2>
               </div>
               <div class="h-80 flex items-center justify-center">
@@ -90,7 +117,7 @@
               <div class="text-xs text-muted-foreground mt-2">For selected period</div>
             </div>
             <div class="bg-card border border-border rounded-xl p-6 shadow-sm">
-              <div class="text-sm text-muted-foreground mb-1">Top SpendingCategory</div>
+              <div class="text-sm text-muted-foreground mb-1">{{ viewMode === 'group' ? 'Top Category Group' : 'Top Category' }}</div>
               <div class="text-2xl font-bold text-foreground">{{ topCategory?.category_name || 'N/A' }}</div>
               <div class="text-xs text-muted-foreground mt-2">{{ topCategory ? formatCurrency(topCategory.total_spent) : '' }}</div>
             </div>
@@ -132,6 +159,7 @@ import { ReportsService } from '@/services/reports.service';
 import { useMainDataOperations } from '@/composables/common/useMainDataOperations';
 import type {
   CategorySpendingResponse,
+  CategoryGroupSpendingResponse,
   CategoryBreakdownResponse
 } from '@/types/DTO/reports.dto';
 
@@ -151,6 +179,7 @@ const budgetStore = useBudgetStore();
 const { ensureDataLoaded } = useMainDataOperations();
 
 const selectedPeriod = ref(1); // Default to this month
+const viewMode = ref<'category' | 'group'>('category'); // Default to category view
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const currentBudgetId = computed(() => budgetStore.currentBudget?.id || '');
@@ -158,6 +187,8 @@ const currentBudgetId = computed(() => budgetStore.currentBudget?.id || '');
 // Data refs
 const topCategoriesResponse = ref<CategorySpendingResponse | null>(null);
 const categoryBreakdownResponse = ref<CategoryBreakdownResponse | null>(null);
+const topCategoryGroupsResponse = ref<CategoryGroupSpendingResponse | null>(null);
+const categoryGroupBreakdownResponse = ref<any | null>(null);
 
 // Color palette for charts
 const chartColors = [
@@ -192,15 +223,19 @@ const loadAllReports = async () => {
 
     console.log('Loading reports with params:', params);
 
-    const [categories, breakdown] = await Promise.all([
+    const [categories, breakdown, categoryGroups, groupBreakdown] = await Promise.all([
       ReportsService.getTopSpendingCategories(params),
-      ReportsService.getCategoryBreakdown(params)
+      ReportsService.getCategoryBreakdown(params),
+      ReportsService.getTopSpendingCategoryGroups(params),
+      ReportsService.getCategoryGroupBreakdown(params)
     ]);
 
-    console.log('Reports loaded:', { categories, breakdown });
+    console.log('Reports loaded:', { categories, breakdown, categoryGroups, groupBreakdown });
 
     topCategoriesResponse.value = categories;
     categoryBreakdownResponse.value = breakdown;
+    topCategoryGroupsResponse.value = categoryGroups;
+    categoryGroupBreakdownResponse.value = groupBreakdown;
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load reports';
     console.error('Error loading reports:', err);
@@ -211,17 +246,29 @@ const loadAllReports = async () => {
 
 // Chart data computeds
 const topCategoriesData = computed(() => {
-  if (!topCategoriesResponse.value) return null;
-
-  return {
-    labels: topCategoriesResponse.value.categories.map(c => c.category_name),
-    datasets: [{
-      label: 'Total Spent',
-      data: topCategoriesResponse.value.categories.map(c => c.total_spent),
-      backgroundColor: chartColors,
-      borderWidth: 0
-    }]
-  };
+  if (viewMode.value === 'group') {
+    if (!topCategoryGroupsResponse.value) return null;
+    return {
+      labels: topCategoryGroupsResponse.value.category_groups.map(g => g.category_group_name),
+      datasets: [{
+        label: 'Total Spent',
+        data: topCategoryGroupsResponse.value.category_groups.map(g => g.total_spent),
+        backgroundColor: chartColors,
+        borderWidth: 0
+      }]
+    };
+  } else {
+    if (!topCategoriesResponse.value) return null;
+    return {
+      labels: topCategoriesResponse.value.categories.map(c => c.category_name),
+      datasets: [{
+        label: 'Total Spent',
+        data: topCategoriesResponse.value.categories.map(c => c.total_spent),
+        backgroundColor: chartColors,
+        borderWidth: 0
+      }]
+    };
+  }
 });
 
 const topCategoriesOptions = computed<ChartOptions<'bar'>>(() => ({
@@ -246,31 +293,58 @@ const topCategoriesOptions = computed<ChartOptions<'bar'>>(() => ({
 }));
 
 const categoryBreakdownData = computed(() => {
-  if (!categoryBreakdownResponse.value) return null;
+  if (viewMode.value === 'group') {
+    if (!categoryGroupBreakdownResponse.value) return null;
 
-  // Take top 8 categories and group the rest as "Other"
-  const breakdown = categoryBreakdownResponse.value.breakdown;
-  const top8 = breakdown.slice(0, 8);
-  const others = breakdown.slice(8);
-  
-  const labels = top8.map(c => c.category_name);
-  const data = top8.map(c => c.amount);
-  
-  if (others.length > 0) {
-    const otherTotal = others.reduce((sum, c) => sum + c.amount, 0);
-    labels.push('Other');
-    data.push(otherTotal);
+    const breakdown = categoryGroupBreakdownResponse.value.breakdown;
+    const top8 = breakdown.slice(0, 8);
+    const others = breakdown.slice(8);
+
+    const labels = top8.map((g: any) => g.category_group_name);
+    const data = top8.map((g: any) => g.amount);
+
+    if (others.length > 0) {
+      const otherTotal = others.reduce((sum: number, g: any) => sum + g.amount, 0);
+      labels.push('Other');
+      data.push(otherTotal);
+    }
+
+    return {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: chartColors,
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    };
+  } else {
+    if (!categoryBreakdownResponse.value) return null;
+
+    // Take top 8 categories and group the rest as "Other"
+    const breakdown = categoryBreakdownResponse.value.breakdown;
+    const top8 = breakdown.slice(0, 8);
+    const others = breakdown.slice(8);
+
+    const labels = top8.map(c => c.category_name);
+    const data = top8.map(c => c.amount);
+
+    if (others.length > 0) {
+      const otherTotal = others.reduce((sum, c) => sum + c.amount, 0);
+      labels.push('Other');
+      data.push(otherTotal);
+    }
+
+    return {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: chartColors,
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    };
   }
-
-  return {
-    labels,
-    datasets: [{
-      data,
-      backgroundColor: chartColors,
-      borderWidth: 2,
-      borderColor: '#fff'
-    }]
-  };
 });
 
 const categoryBreakdownOptions = computed<ChartOptions<'doughnut'>>(() => ({
@@ -302,13 +376,26 @@ const categoryBreakdownOptions = computed<ChartOptions<'doughnut'>>(() => ({
 
 // Summary stats
 const totalExpenses = computed(() => {
-  if (!categoryBreakdownResponse.value) return 0;
-  return categoryBreakdownResponse.value.total_expenses;
+  if (viewMode.value === 'group') {
+    if (!categoryGroupBreakdownResponse.value) return 0;
+    return categoryGroupBreakdownResponse.value.total_expenses;
+  } else {
+    if (!categoryBreakdownResponse.value) return 0;
+    return categoryBreakdownResponse.value.total_expenses;
+  }
 });
 
 const topCategory = computed(() => {
-  if (!topCategoriesResponse.value || topCategoriesResponse.value.categories.length === 0) return null;
-  return topCategoriesResponse.value.categories[0];
+  if (viewMode.value === 'group') {
+    if (!topCategoryGroupsResponse.value || topCategoryGroupsResponse.value.category_groups.length === 0) return null;
+    return {
+      category_name: topCategoryGroupsResponse.value.category_groups[0].category_group_name,
+      total_spent: topCategoryGroupsResponse.value.category_groups[0].total_spent
+    };
+  } else {
+    if (!topCategoriesResponse.value || topCategoriesResponse.value.categories.length === 0) return null;
+    return topCategoriesResponse.value.categories[0];
+  }
 });
 
 const largestTransaction = computed(() => {

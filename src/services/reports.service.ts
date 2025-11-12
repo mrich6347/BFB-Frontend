@@ -1,6 +1,7 @@
 import api from './common/api';
 import type {
   CategorySpendingResponse,
+  CategoryGroupSpendingResponse,
   SpendingOverTimeResponse,
   TopPayeesResponse,
   CategoryBreakdownResponse,
@@ -37,6 +38,22 @@ export class ReportsService {
   static async getCategoryBreakdown(params: ReportsQueryParams): Promise<CategoryBreakdownResponse> {
     const response = await api.get<CategoryBreakdownResponse>(
       `${this.BASE_PATH}/category-breakdown`,
+      { params }
+    );
+    return response.data;
+  }
+
+  static async getTopSpendingCategoryGroups(params: ReportsQueryParams): Promise<CategoryGroupSpendingResponse> {
+    const response = await api.get<CategoryGroupSpendingResponse>(
+      `${this.BASE_PATH}/top-spending-category-groups`,
+      { params }
+    );
+    return response.data;
+  }
+
+  static async getCategoryGroupBreakdown(params: ReportsQueryParams): Promise<any> {
+    const response = await api.get<any>(
+      `${this.BASE_PATH}/category-group-breakdown`,
       { params }
     );
     return response.data;
