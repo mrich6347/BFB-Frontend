@@ -71,7 +71,10 @@ const handleSavePayment = async (creditCardAccountId: string, amount: number, fr
 
 const handleUpdateBalance = async (accountId: string, newBalance: number) => {
   try {
-    await TrackingAccountService.updateBalance(accountId, newBalance, '')
+    await TrackingAccountService.updateBalance(accountId, {
+      new_balance: newBalance,
+      memo: 'Balance update'
+    })
     $toast.success('Balance updated successfully')
   } catch (error) {
     console.error('Failed to update balance:', error)
