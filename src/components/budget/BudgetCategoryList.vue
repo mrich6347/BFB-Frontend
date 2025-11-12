@@ -230,10 +230,14 @@
       <div class="border-t-2 border-border mt-4 pt-2">
         <div class="grid grid-cols-[minmax(0,3fr)_minmax(0,130px)_minmax(0,130px)_minmax(0,130px)] gap-6 px-2 py-1.5">
           <div class="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Total Available
+            Totals
           </div>
-          <div></div>
-          <div></div>
+          <div class="text-right text-sm font-semibold">
+            {{ formatCurrency(totalAssigned) }}
+          </div>
+          <div class="text-right text-sm font-semibold">
+            {{ formatCurrency(totalActivity) }}
+          </div>
           <div class="text-right text-sm font-semibold">
             {{ formatCurrency(totalAvailable) }}
           </div>
@@ -298,7 +302,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ChevronRightIcon, ChevronDownIcon, PlusIcon, Edit, GripVertical } from 'lucide-vue-next'
+import { ChevronRightIcon, ChevronDownIcon, PlusIcon, GripVertical } from 'lucide-vue-next'
 import { formatCurrency } from '@/utils/currencyUtil'
 import Badge from '@/components/shadcn-ui/Badge.vue'
 import { useBudgetStore } from '@/stores/budget.store'
@@ -394,6 +398,20 @@ const {
 } = useMoneyMovement()
 
 const { flashCategoriesWithMoney, getBadgeVariant } = useCategoryAnimations()
+
+// Compute total assigned across all categories
+const totalAssigned = computed(() => {
+  return sortedCategoryGroups.value.reduce((total, group) => {
+    return total + getGroupTotals(group.id).assigned
+  }, 0)
+})
+
+// Compute total activity across all categories
+const totalActivity = computed(() => {
+  return sortedCategoryGroups.value.reduce((total, group) => {
+    return total + getGroupTotals(group.id).activity
+  }, 0)
+})
 
 // Compute total available across all categories plus ready to assign
 const totalAvailable = computed(() => {
