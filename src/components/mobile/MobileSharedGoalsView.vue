@@ -174,12 +174,28 @@
                   {{ formatProgressPercentage(goal.progress_percentage || 0) }}%
                 </span>
               </div>
-              <div class="h-2 bg-muted rounded-full overflow-hidden">
+              <div class="relative bg-secondary rounded-full h-3 overflow-hidden">
                 <div
-                  class="h-full transition-all duration-300 rounded-full"
-                  :class="getProgressBarColor(goal.progress_percentage || 0)"
-                  :style="{ width: `${Math.min(goal.progress_percentage || 0, 100)}%` }"
-                ></div>
+                  :class="[
+                    'h-3 rounded-full transition-all duration-1000 ease-out overflow-hidden relative',
+                    goal.status === 'COMPLETED' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                    (goal.progress_percentage || 0) >= 80 ? 'bg-gradient-to-r from-primary to-blue-500 animate-pulse' :
+                    'bg-gradient-to-r from-primary to-blue-400'
+                  ]"
+                  :style="{ width: `${Math.min((goal.progress_percentage || 0), 100)}%` }"
+                >
+                  <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+                </div>
+              </div>
+
+              <!-- Status Message -->
+              <div class="mt-2">
+                <span v-if="goal.status === 'COMPLETED'" class="text-green-600 font-bold text-xs animate-bounce">
+                  🎉 Complete!
+                </span>
+                <span v-else-if="(goal.progress_percentage || 0) >= 80" class="text-primary font-bold text-xs">
+                  Almost there! 🚀
+                </span>
               </div>
             </div>
 
