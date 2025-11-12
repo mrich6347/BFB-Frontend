@@ -61,9 +61,21 @@ export function useCategoryListState(activeFilter?: Ref<string | undefined> | st
     return hiddenCategories.length > 0
   })
 
+  // Helper function to check if a category is a credit card payment category
+  // Credit card payment categories are identified by their name ending with "CC Payment"
+  const isCreditCardPaymentCategory = (category: CategoryResponse): boolean => {
+    return category.name.endsWith('CC Payment')
+  }
+
   // Get categories for a specific group with filtering applied
   const getCategoriesForGroup = (groupId: string) => {
-    const categories = categoryStore.getCategoriesByGroupWithBalances(groupId)
+    let categories = categoryStore.getCategoriesByGroupWithBalances(groupId)
+
+    // For Hidden Categories group, filter out credit card payment categories
+    const group = categoryStore.getCategoryGroupById(groupId)
+    if (group?.name === 'Hidden Categories' && group?.is_system_group) {
+      categories = categories.filter(category => !isCreditCardPaymentCategory(category))
+    }
 
     // Apply filter if specified
     if (!filterRef.value || filterRef.value === 'all') {
