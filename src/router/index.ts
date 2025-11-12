@@ -14,6 +14,7 @@ import SharedGoalsPage from '../pages/SharedGoalsPage.vue'
 import RetirementPlanPage from '../pages/RetirementPlanPage.vue'
 import CalendarPage from '../pages/CalendarPage.vue'
 import MobileAccountsPage from '../pages/MobileAccountsPage.vue'
+import ReportsPage from '../pages/ReportsPage.vue'
 import { supabase } from '../lib/supabaseClient'
 
 
@@ -110,6 +111,14 @@ const routes = [
     path: '/accounts',
     name: 'Accounts',
     component: MobileAccountsPage,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/reports',
+    name: 'Reports',
+    component: ReportsPage,
     meta: {
       requiresAuth: true
     }

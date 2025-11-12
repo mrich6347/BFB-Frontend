@@ -221,7 +221,8 @@ import {
   TargetIcon,
   GripVertical,
   PiggyBankIcon,
-  CalendarIcon
+  CalendarIcon,
+  LineChartIcon
 } from 'lucide-vue-next'
 import { authService } from '../services/common/auth.service'
 import { formatCurrency } from '@/utils/currencyUtil'
@@ -255,6 +256,7 @@ const mainNavItems = computed(() => {
 
   items.push(
     { name: 'Calendar', to: '/calendar', icon: CalendarIcon },
+    { name: 'Reports', to: '/reports', icon: LineChartIcon },
     { name: 'Shared Goals', to: '/shared-goals', icon: TargetIcon },
     { name: 'Retirement Plan', to: '/retirement-plan', icon: PiggyBankIcon },
     { name: 'Net Worth', to: '/net-worth', icon: TrendingUpIcon }
