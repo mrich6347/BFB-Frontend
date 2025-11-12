@@ -26,42 +26,81 @@
           <p v-if="nameError" class="text-sm text-destructive mt-1">{{ nameError }}</p>
         </div>
 
-        <!-- Categories Section -->
+        <!-- Add Category Section (Inline) -->
         <div class="mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <label class="block text-sm font-medium">Categories</label>
-            <Button @click="showAddCategoryModal = true" variant="outline" size="sm">
-              <Plus class="h-4 w-4 mr-2" />
-              Add Category
-            </Button>
+          <label class="block text-sm font-medium mb-3">Add Categories</label>
+
+          <div class="relative">
+            <!-- Category Search Input -->
+            <div class="relative">
+              <input
+                ref="categorySearchInput"
+                v-model="categorySearchQuery"
+                type="text"
+                placeholder="Search and select a category..."
+                class="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                @focus="showCategoryDropdown = true"
+                @blur="handleCategoryBlur"
+                @keydown.down.prevent="navigateDropdown(1)"
+                @keydown.up.prevent="navigateDropdown(-1)"
+                @keydown.enter.prevent="selectHighlightedCategory"
+                @keydown.escape="showCategoryDropdown = false"
+              />
+            </div>
+
+            <!-- Category Dropdown -->
+            <div
+              v-if="showCategoryDropdown && filteredAvailableCategories.length > 0"
+              class="absolute z-10 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto"
+            >
+              <div
+                v-for="(category, index) in filteredAvailableCategories"
+                :key="category.id"
+                @mousedown.prevent="selectCategory(category)"
+                @mouseenter="highlightedIndex = index"
+                class="p-3 cursor-pointer transition-colors"
+                :class="{
+                  'bg-muted': highlightedIndex === index,
+                  'hover:bg-muted/50': highlightedIndex !== index
+                }"
+              >
+                <p class="font-medium text-sm">{{ category.name }}</p>
+                <p class="text-xs text-muted-foreground">{{ getCategoryGroupName(category.id) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Categories List -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium mb-3">Selected Categories</label>
+
+          <div v-if="selectedCategories.length === 0" class="text-center py-8 border border-dashed border-border rounded-lg text-muted-foreground">
+            <p class="text-sm">No categories added yet</p>
+            <p class="text-xs mt-1">Search and select categories above to get started</p>
           </div>
 
-          <!-- Selected Categories List -->
-          <div v-if="selectedCategories.length === 0" class="text-center py-8 text-muted-foreground">
-            <p>No categories selected yet.</p>
-            <p class="text-sm">Click "Add Category" to get started.</p>
-          </div>
-
-          <div v-else class="space-y-3">
+          <div v-else class="space-y-2">
             <div
               v-for="(item, index) in selectedCategories"
               :key="item.category_id"
-              class="flex items-center justify-between p-3 border border-border rounded-lg"
+              class="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors"
             >
-              <div class="flex-1">
-                <p class="font-medium text-sm">{{ getCategoryName(item.category_id) }}</p>
-                <p class="text-xs text-muted-foreground">{{ getCategoryGroupName(item.category_id) }}</p>
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-sm truncate">{{ getCategoryName(item.category_id) }}</p>
+                <p class="text-xs text-muted-foreground truncate">{{ getCategoryGroupName(item.category_id) }}</p>
               </div>
 
-              <div class="flex items-center space-x-2">
+              <div class="flex items-center gap-2 flex-shrink-0">
                 <div class="flex items-center">
-                  <span class="text-sm mr-2">$</span>
+                  <span class="text-sm text-muted-foreground mr-1">$</span>
                   <input
                     v-model.number="item.amount"
                     type="number"
                     step="0.01"
                     min="0.01"
-                    class="w-24 px-2 py-1 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="0.00"
+                    class="w-24 px-2 py-1.5 text-sm border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary text-right"
                   />
                 </div>
 
@@ -69,19 +108,19 @@
                   variant="ghost"
                   size="icon"
                   @click="removeCategory(index)"
-                  class="h-8 w-8 text-destructive hover:text-destructive"
+                  class="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
                 >
-                  <Trash2 class="h-3 w-3" />
+                  <Trash2 class="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
           </div>
 
           <!-- Total Amount -->
-          <div v-if="selectedCategories.length > 0" class="mt-4 p-3 bg-muted rounded-lg">
+          <div v-if="selectedCategories.length > 0" class="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
             <div class="flex justify-between items-center">
-              <span class="font-medium">Total Amount:</span>
-              <span class="font-semibold">{{ formatCurrency(totalAmount) }}</span>
+              <span class="font-medium text-sm">Total Amount:</span>
+              <span class="font-semibold text-lg">{{ formatCurrency(totalAmount) }}</span>
             </div>
           </div>
         </div>
@@ -95,50 +134,13 @@
         </Button>
       </div>
     </div>
-
-    <!-- Add Category Modal -->
-    <div v-if="showAddCategoryModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-60">
-      <div class="bg-background border border-border rounded-lg shadow-lg w-full max-w-md max-h-[60vh] flex flex-col">
-        <div class="flex items-center justify-between p-4 border-b border-border">
-          <h3 class="text-lg font-semibold">Add Category</h3>
-          <Button variant="ghost" size="icon" @click="showAddCategoryModal = false">
-            <X class="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div class="flex-1 overflow-auto p-4">
-          <input
-            v-model="categorySearchQuery"
-            type="text"
-            placeholder="Search categories..."
-            class="w-full px-3 py-2 border border-border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-
-          <div class="space-y-2">
-            <div
-              v-for="category in filteredAvailableCategories"
-              :key="category.id"
-              @click="addCategory(category)"
-              class="p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-            >
-              <p class="font-medium text-sm">{{ category.name }}</p>
-              <p class="text-xs text-muted-foreground">{{ getCategoryGroupName(category.id) }}</p>
-            </div>
-          </div>
-
-          <div v-if="filteredAvailableCategories.length === 0" class="text-center py-8 text-muted-foreground">
-            <p>No available categories found.</p>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import Button from '@/components/shadcn-ui/button.vue'
-import { X, Plus, Trash2 } from 'lucide-vue-next'
+import { X, Trash2 } from 'lucide-vue-next'
 import { useCategoryStore } from '@/stores/category.store'
 import { useAutoAssignStore } from '@/stores/auto-assign.store'
 import { useFetchAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-read/useFetchAutoAssignConfiguration'
@@ -166,8 +168,10 @@ const { fetchConfiguration } = useFetchAutoAssignConfiguration()
 const configName = ref('')
 const selectedCategories = ref<AutoAssignConfigurationItem[]>([])
 const nameError = ref('')
-const showAddCategoryModal = ref(false)
 const categorySearchQuery = ref('')
+const showCategoryDropdown = ref(false)
+const highlightedIndex = ref(0)
+const categorySearchInput = ref<HTMLInputElement | null>(null)
 
 const totalAmount = computed(() => {
   return selectedCategories.value.reduce((sum, item) => sum + (item.amount || 0), 0)
@@ -193,11 +197,13 @@ const availableCategories = computed(() => {
 })
 
 const filteredAvailableCategories = computed(() => {
-  if (!categorySearchQuery.value.trim()) {
-    return availableCategories.value
+  const query = categorySearchQuery.value.toLowerCase().trim()
+
+  if (!query) {
+    // Show all available categories when no search query
+    return availableCategories.value.slice(0, 50) // Limit to 50 for performance
   }
 
-  const query = categorySearchQuery.value.toLowerCase()
   return availableCategories.value.filter(category =>
     category.name.toLowerCase().includes(query) ||
     getCategoryGroupName(category.id).toLowerCase().includes(query)
@@ -217,18 +223,59 @@ const getCategoryGroupName = (categoryId: string) => {
   return group?.name || 'Unknown Group'
 }
 
-const addCategory = (category: CategoryResponse) => {
+const selectCategory = (category: CategoryResponse) => {
   selectedCategories.value.push({
     category_id: category.id,
     amount: 0
   })
-  showAddCategoryModal.value = false
   categorySearchQuery.value = ''
+  showCategoryDropdown.value = false
+  highlightedIndex.value = 0
+
+  // Focus back on the search input
+  nextTick(() => {
+    categorySearchInput.value?.focus()
+  })
+}
+
+const selectHighlightedCategory = () => {
+  if (filteredAvailableCategories.value.length > 0 && highlightedIndex.value >= 0) {
+    const category = filteredAvailableCategories.value[highlightedIndex.value]
+    if (category) {
+      selectCategory(category)
+    }
+  }
+}
+
+const navigateDropdown = (direction: number) => {
+  if (!showCategoryDropdown.value) {
+    showCategoryDropdown.value = true
+    return
+  }
+
+  const maxIndex = filteredAvailableCategories.value.length - 1
+  highlightedIndex.value = Math.max(0, Math.min(maxIndex, highlightedIndex.value + direction))
+}
+
+const handleCategoryBlur = () => {
+  // Delay to allow click events to fire
+  setTimeout(() => {
+    showCategoryDropdown.value = false
+    highlightedIndex.value = 0
+  }, 200)
 }
 
 const removeCategory = (index: number) => {
   selectedCategories.value.splice(index, 1)
 }
+
+// Reset highlighted index when search query changes
+watch(categorySearchQuery, () => {
+  highlightedIndex.value = 0
+  if (categorySearchQuery.value.trim()) {
+    showCategoryDropdown.value = true
+  }
+})
 
 const validateName = () => {
   nameError.value = ''

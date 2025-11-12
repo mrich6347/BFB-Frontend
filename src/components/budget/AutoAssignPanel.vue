@@ -1,8 +1,11 @@
 <template>
   <div class="auto-assign-panel bg-background border-l border-border h-full flex flex-col">
     <!-- Header -->
-    <div class="flex items-center justify-center p-4 border-b border-border">
-      <h3 class="text-lg font-semibold">Auto-Assign</h3>
+    <div class="p-4 border-b border-border">
+      <h3 class="text-lg font-semibold text-center">Auto-Assign</h3>
+      <p class="text-xs text-muted-foreground text-center mt-1">
+        Save category presets to quickly assign money with one click
+      </p>
     </div>
 
     <!-- Content -->
