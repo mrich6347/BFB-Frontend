@@ -60,11 +60,9 @@
                   type="number"
                   v-model.number="currentAge"
                   class="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  :class="{ 'bg-muted/30': isAgeAutoPopulated }"
                   placeholder="30"
                   min="18"
                   max="100"
-                  :disabled="isAgeAutoPopulated"
                 />
                 <p v-if="!userProfileStore.currentProfile?.birthdate" class="mt-2 text-xs text-muted-foreground">
                   <router-link
@@ -73,10 +71,10 @@
                   >
                     Set your birthdate on your profile
                   </router-link>
-                  to have this auto-populated
+                  to auto-populate your age
                 </p>
                 <p v-else class="mt-2 text-xs text-muted-foreground">
-                  Auto-populated from your profile birthdate
+                  Age auto-populated from your profile (editable for different predictions)
                 </p>
               </div>
 
@@ -255,11 +253,6 @@ const calculateAgeFromBirthdate = (birthdate: string): number => {
 
   return age
 }
-
-// Computed value to check if age is auto-populated from profile
-const isAgeAutoPopulated = computed(() => {
-  return !!userProfileStore.currentProfile?.birthdate
-})
 
 // Computed value for age from profile
 const ageFromProfile = computed(() => {
