@@ -3,12 +3,11 @@
     'h-screen bg-background dark:bg-background border-r border-border dark:border-border flex flex-col transition-all duration-300 ease-in-out overflow-hidden',
     isCollapsed ? 'w-16' : 'w-80'
   ]">
-    <!-- Header with Theme Toggle -->
-    <div class="p-4 flex items-center justify-between border-b border-border dark:border-border">
-      <ThemeToggle size="sm" :class="['text-muted-foreground', isCollapsed ? 'mx-auto' : '']" />
+    <!-- Header -->
+    <div class="p-4 flex items-center justify-center border-b border-border dark:border-border">
       <h1
         v-if="!isCollapsed"
-        class="ml-2.5 text-lg font-semibold text-foreground transition-opacity duration-300 ease-in-out text-ellipsis overflow-hidden w-full text-nowrap"
+        class="text-lg font-semibold text-foreground transition-opacity duration-300 ease-in-out text-ellipsis overflow-hidden w-full text-nowrap text-center"
         :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
       >
        {{ budgetStore?.currentBudget?.name }}
@@ -159,6 +158,11 @@
         >
           Profile Settings
         </button>
+        <button @click="router.push('/theme-settings')"
+          class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground bg-background dark:bg-background rounded-lg border border-border dark:border-border mb-2"
+        >
+          Theme Settings
+        </button>
         <button @click="router.push('/dashboard')"
           class="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground bg-background dark:bg-background rounded-lg border border-border dark:border-border mb-2"
         >
@@ -204,7 +208,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import ThemeToggle from './common/ThemeToggle.vue'
 import {
   BarChart2Icon,
   TrendingUpIcon,

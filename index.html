@@ -22,15 +22,9 @@
     <meta name="theme-color" content="#000000">
     <meta name="mobile-web-app-capable" content="yes">
     <script>
-      // Prevent flash of incorrect theme by applying theme before page loads
-      (function() {
-        const storedTheme = localStorage.getItem('theme');
-        const isDark = storedTheme ? storedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (isDark) {
-          document.documentElement.classList.add('dark');
-        }
-      })();
+      // Prevent flash of incorrect theme by applying dark theme by default
+      // Theme will be updated when budget is loaded
+      document.documentElement.classList.add('dark');
     </script>
     <style>
       /* Prevent white flash by setting dark background immediately */

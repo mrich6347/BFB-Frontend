@@ -57,6 +57,11 @@ export function useMainDataOperations() {
       // Budget data
       if (mainData?.budget) {
         budgetStore.setCurrentBudget(mainData.budget)
+
+        // Set theme from budget
+        const { useTheme } = await import('../common/useTheme')
+        const { setTheme } = useTheme()
+        setTheme(mainData.budget.theme)
       }
 
       // Account data

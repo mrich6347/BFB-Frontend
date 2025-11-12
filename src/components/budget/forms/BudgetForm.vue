@@ -132,7 +132,7 @@
 <script setup lang="ts">
 import type { CreateBudgetDto } from '@/types/DTO/budget.dto'
 import { commonCurrencies } from '@/utils/currencyUtil'
-import { NumberFormat, CurrencyPlacement, DateFormat } from '@/types/DTO/budget.dto'
+import { NumberFormat, CurrencyPlacement, DateFormat, Theme } from '@/types/DTO/budget.dto'
 import { useBudgetStore } from '@/stores/budget.store'
 import type { FormKitNode } from '@formkit/core'
 
@@ -160,18 +160,22 @@ const emit = defineEmits<{
 const uniqueBudgetNameRule = (node: FormKitNode): boolean => {
   const value = node.value as string
   if (!value) return true
-  
+
   // If we're in edit mode and the name hasn't changed, it's valid
   if (props.mode === 'edit' && value === props.initialValues?.name) {
     return true
   }
-  
+
   // Check if budget exists - if store has an error, treat as valid
   const existingBudget = budgetStore.budgetExistsByName(value)
   return !existingBudget
 }
 
 const handleSubmit = async (formData: CreateBudgetDto) => {
+  // If creating a new budget and theme is not set, default to DARK
+  if (props.mode === 'create' && !formData.theme) {
+    formData.theme = Theme.DARK
+  }
   emit('submit', formData)
 }
-</script> 
+</script>

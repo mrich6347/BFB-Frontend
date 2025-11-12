@@ -9,6 +9,7 @@ import BudgetPage from '../pages/BudgetPage.vue'
 import NetWorthPage from '../pages/NetWorthPage.vue'
 import AccountPage from '../pages/AccountPage.vue'
 import ProfileSettingsPage from '../pages/ProfileSettingsPage.vue'
+import ThemeSettingsPage from '../pages/ThemeSettingsPage.vue'
 import SharedGoalsPage from '../pages/SharedGoalsPage.vue'
 import RetirementPlanPage from '../pages/RetirementPlanPage.vue'
 import CalendarPage from '../pages/CalendarPage.vue'
@@ -69,6 +70,14 @@ const routes = [
     path: '/profile-settings',
     name: 'ProfileSettings',
     component: ProfileSettingsPage,
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/theme-settings',
+    name: 'ThemeSettings',
+    component: ThemeSettingsPage,
     meta: {
       requiresAuth: true
     }

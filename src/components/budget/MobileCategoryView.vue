@@ -8,9 +8,56 @@
             <h1 class="text-lg font-semibold text-foreground">{{ budgetStore.currentBudget?.name }}</h1>
             <p class="text-sm text-muted-foreground">{{ budgetStore.currentMonthName }}</p>
           </div>
+          <button
+            @click="showSettingsMenu = !showSettingsMenu"
+            class="p-2 hover:bg-muted rounded-lg transition-colors"
+          >
+            <SettingsIcon class="h-5 w-5 text-muted-foreground" />
+          </button>
         </div>
       </div>
     </div>
+
+    <!-- Settings Menu Dropdown -->
+    <Teleport to="body">
+      <div
+        v-if="showSettingsMenu"
+        class="fixed inset-0 z-50"
+        @click="showSettingsMenu = false"
+      >
+        <div class="absolute inset-0 bg-black/20"></div>
+        <div
+          class="absolute top-0 left-0 right-0 bg-background border-b border-border shadow-lg overflow-hidden"
+          style="margin-top: max(5rem, calc(5rem + env(safe-area-inset-top)));"
+          @click.stop
+        >
+          <button
+            @click="navigateToProfileSettings"
+            class="w-full px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors border-b border-border"
+          >
+            Profile Settings
+          </button>
+          <button
+            @click="navigateToThemeSettings"
+            class="w-full px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors border-b border-border"
+          >
+            Theme Settings
+          </button>
+          <button
+            @click="navigateToDashboard"
+            class="w-full px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted transition-colors border-b border-border"
+          >
+            View Budgets
+          </button>
+          <button
+            @click="handleLogout"
+            class="w-full px-4 py-3 text-left text-sm font-medium text-destructive hover:bg-muted transition-colors"
+          >
+            Log Out
+          </button>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- Sticky Ready to Assign Banner -->
     <div class="sticky top-[calc(3rem+3.5rem)] z-10 px-4 py-3" :class="getReadyToAssignBgClass()">
@@ -193,7 +240,8 @@ import MobileBottomNav from '@/components/mobile/MobileBottomNav.vue'
 import MobileCreateCategoryModal from '@/components/mobile/MobileCreateCategoryModal.vue'
 import MobileEditCategoryModal from '@/components/mobile/MobileEditCategoryModal.vue'
 import MobileCategoryBalanceToast from '@/components/mobile/MobileCategoryBalanceToast.vue'
-import { PlusIcon, ChevronDownIcon } from 'lucide-vue-next'
+import { PlusIcon, ChevronDownIcon, SettingsIcon } from 'lucide-vue-next'
+import { authService } from '@/services/common/auth.service'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 
@@ -218,6 +266,7 @@ const editingCategory = ref<CategoryResponse | null>(null)
 const showStandaloneTransaction = ref(false)
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
 const categoryBalanceToastRef = ref<InstanceType<typeof MobileCategoryBalanceToast> | null>(null)
+const showSettingsMenu = ref(false)
 
 // Group collapse state management with localStorage persistence
 const COLLAPSED_GROUPS_KEY = 'bfb-mobile-collapsed-category-groups'
@@ -657,6 +706,27 @@ const handleNavigate = (tab: 'budget' | 'accounts' | 'goals' | 'retirement' | 'n
     router.push('/calendar')
   }
   // Budget tab is already the current view, no action needed
+}
+
+// Settings menu navigation functions
+const navigateToProfileSettings = () => {
+  showSettingsMenu.value = false
+  router.push('/profile-settings')
+}
+
+const navigateToThemeSettings = () => {
+  showSettingsMenu.value = false
+  router.push('/theme-settings')
+}
+
+const navigateToDashboard = () => {
+  showSettingsMenu.value = false
+  router.push('/dashboard')
+}
+
+const handleLogout = () => {
+  showSettingsMenu.value = false
+  authService.logout()
 }
 </script>
 

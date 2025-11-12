@@ -5,6 +5,7 @@ export interface CreateBudgetDto {
     currency_placement: CurrencyPlacement
     number_format: NumberFormat
     date_format: DateFormat
+    theme?: Theme
 }
 
 export interface BudgetResponse {
@@ -14,6 +15,7 @@ export interface BudgetResponse {
     currency_placement: CurrencyPlacement
     date_format: DateFormat
     number_format: NumberFormat
+    theme: Theme
     updated_at: Date
 }
 
@@ -46,4 +48,9 @@ export enum NumberFormat {
     COMMA_SLASH = 'COMMA_SLASH',       // 123,456/78
     SPACE_NO_DECIMAL = 'SPACE_NO_DECIMAL', // 123 456
     COMMA_DOT_LEADING = 'COMMA_DOT_LEADING' // 1,23,456.78
+}
+
+export enum Theme {
+    LIGHT = 'LIGHT',
+    DARK = 'DARK'
 }
