@@ -152,7 +152,7 @@
             </div>
             <div class="flex justify-between items-center text-sm">
               <span class="text-muted-foreground">Interest Earned</span>
-              <span class="font-medium text-green-600 dark:text-green-400">{{ formatCurrency(totalInterest) }}</span>
+              <span :class="interestEarnedTextClass">{{ formatCurrency(totalInterest) }}</span>
             </div>
             <div class="pt-2 border-t border-border flex justify-between items-center">
               <span class="text-sm font-semibold text-foreground">Total</span>
@@ -169,27 +169,27 @@
           <div class="space-y-2">
             <div class="h-12 flex rounded-lg overflow-hidden">
               <div
-                class="bg-blue-500 flex items-center justify-center text-white text-xs font-medium"
+                :class="contributionBarClass"
                 :style="{ width: `${contributionPercentage}%` }"
               >
                 <span v-if="contributionPercentage > 15">{{ contributionPercentage.toFixed(0) }}%</span>
               </div>
               <div
-                class="bg-green-500 flex items-center justify-center text-white text-xs font-medium"
+                :class="interestBarClass"
                 :style="{ width: `${interestPercentage}%` }"
               >
                 <span v-if="interestPercentage > 15">{{ interestPercentage.toFixed(0) }}%</span>
               </div>
             </div>
-            
+
             <!-- Legend -->
             <div class="flex items-center justify-center gap-4 text-xs">
               <div class="flex items-center gap-1.5">
-                <div class="w-3 h-3 bg-blue-500 rounded"></div>
+                <div :class="contributionLegendClass"></div>
                 <span class="text-muted-foreground">Contributions</span>
               </div>
               <div class="flex items-center gap-1.5">
-                <div class="w-3 h-3 bg-green-500 rounded"></div>
+                <div :class="interestLegendClass"></div>
                 <span class="text-muted-foreground">Interest</span>
               </div>
             </div>
@@ -243,6 +243,7 @@ import { useMakeCreditCardPayment } from '@/composables/accounts/account-write/u
 import { TrackingAccountService } from '@/services/tracking-account.service'
 import { AccountService } from '@/services/account.service'
 import { AccountType } from '../../types/DTO/account.dto'
+import { Theme } from '../../types/DTO/budget.dto'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import { formatCurrency } from '../../utils/currencyUtil'
 import MobileBottomNav from './MobileBottomNav.vue'
@@ -357,6 +358,57 @@ const contributionPercentage = computed(() => {
 const interestPercentage = computed(() => {
   if (!isValidInput.value || finalBalance.value === 0) return 0
   return (totalInterest.value / finalBalance.value) * 100
+})
+
+// Theme-aware classes
+const interestEarnedTextClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'font-medium text-[#d5b9b2]' // pale-dogwood
+  }
+
+  return 'font-medium text-green-600 dark:text-green-400'
+})
+
+const contributionBarClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'bg-[#a26769] flex items-center justify-center text-white text-xs font-medium' // rose-taupe
+  }
+
+  return 'bg-blue-500 flex items-center justify-center text-white text-xs font-medium'
+})
+
+const interestBarClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'bg-[#d5b9b2] flex items-center justify-center text-white text-xs font-medium' // pale-dogwood
+  }
+
+  return 'bg-green-500 flex items-center justify-center text-white text-xs font-medium'
+})
+
+const contributionLegendClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'w-3 h-3 bg-[#a26769] rounded' // rose-taupe
+  }
+
+  return 'w-3 h-3 bg-blue-500 rounded'
+})
+
+const interestLegendClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'w-3 h-3 bg-[#d5b9b2] rounded' // pale-dogwood
+  }
+
+  return 'w-3 h-3 bg-green-500 rounded'
 })
 
 // Methods

@@ -120,6 +120,43 @@
   --sidebar-ring: oklch(0.55 0.15 230);
 }
 
+/* --- Amber Theme --- */
+.amber {
+  --background: #cebebeff; /* silver */
+  --foreground: #6d2e46ff; /* wine */
+  --card: #ece2d0ff; /* bone */
+  --card-foreground: #6d2e46ff; /* wine */
+  --popover: #ece2d0ff; /* bone */
+  --popover-foreground: #6d2e46ff; /* wine */
+  --primary: #a26769ff; /* rose-taupe */
+  --primary-foreground: #ece2d0ff; /* bone */
+  --secondary: #d5b9b2ff; /* pale-dogwood */
+  --secondary-foreground: #6d2e46ff; /* wine */
+  --muted: #d5b9b2ff; /* pale-dogwood */
+  --muted-foreground: #6d2e46ff; /* wine */
+  --accent: #a26769ff; /* rose-taupe */
+  --accent-foreground: #ece2d0ff; /* bone */
+  --destructive: oklch(0.65 0.2 15);
+  --success: oklch(0.55 0.12 150);
+  --success-foreground: #ece2d0ff; /* bone */
+  --border: #a26769ff; /* rose-taupe */
+  --input: #d5b9b2ff; /* pale-dogwood */
+  --ring: #a26769ff; /* rose-taupe */
+  --chart-1: #a26769ff; /* rose-taupe */
+  --chart-2: #6d2e46ff; /* wine */
+  --chart-3: #d5b9b2ff; /* pale-dogwood */
+  --chart-4: #cebebeff; /* silver */
+  --chart-5: oklch(0.65 0.2 15);
+  --sidebar: #6d2e46ff; /* wine - dark sidebar */
+  --sidebar-foreground: #ece2d0ff; /* bone */
+  --sidebar-primary: #a26769ff; /* rose-taupe */
+  --sidebar-primary-foreground: #ece2d0ff; /* bone */
+  --sidebar-accent: #a26769ff; /* rose-taupe */
+  --sidebar-accent-foreground: #ece2d0ff; /* bone */
+  --sidebar-border: #a26769ff; /* rose-taupe */
+  --sidebar-ring: #a26769ff; /* rose-taupe */
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

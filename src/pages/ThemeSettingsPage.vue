@@ -26,7 +26,7 @@
       </div>
 
       <!-- Theme Selection Grid -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
         <!-- Light Theme -->
         <div
           @click="selectTheme(Theme.LIGHT)"
@@ -39,15 +39,15 @@
         >
           <div class="aspect-video bg-muted flex items-center justify-center">
             <!-- Placeholder for theme preview image -->
-            <div class="text-center p-8">
-              <div class="text-6xl mb-4">☀️</div>
-              <h3 class="text-xl font-semibold text-foreground">Light Theme</h3>
-              <p class="text-sm text-muted-foreground mt-2">Clean and bright interface</p>
+            <div class="text-center p-3 md:p-8">
+              <div class="text-4xl md:text-6xl mb-2 md:mb-4">☀️</div>
+              <h3 class="text-base md:text-xl font-semibold text-foreground">Light Theme</h3>
+              <p class="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2">Clean and bright interface</p>
             </div>
           </div>
-          <div v-if="currentTheme === Theme.LIGHT" class="absolute top-4 right-4">
-            <div class="bg-primary text-primary-foreground rounded-full p-2">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <div v-if="currentTheme === Theme.LIGHT" class="absolute top-2 right-2 md:top-4 md:right-4">
+            <div class="bg-primary text-primary-foreground rounded-full p-1.5 md:p-2">
+              <svg class="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
             </div>
@@ -66,15 +66,42 @@
         >
           <div class="aspect-video bg-muted flex items-center justify-center">
             <!-- Placeholder for theme preview image -->
-            <div class="text-center p-8">
-              <div class="text-6xl mb-4">🌙</div>
-              <h3 class="text-xl font-semibold text-foreground">Dark Theme</h3>
-              <p class="text-sm text-muted-foreground mt-2">Easy on the eyes</p>
+            <div class="text-center p-3 md:p-8">
+              <div class="text-4xl md:text-6xl mb-2 md:mb-4">🌙</div>
+              <h3 class="text-base md:text-xl font-semibold text-foreground">Dark Theme</h3>
+              <p class="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2">Easy on the eyes</p>
             </div>
           </div>
-          <div v-if="currentTheme === Theme.DARK" class="absolute top-4 right-4">
-            <div class="bg-primary text-primary-foreground rounded-full p-2">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <div v-if="currentTheme === Theme.DARK" class="absolute top-2 right-2 md:top-4 md:right-4">
+            <div class="bg-primary text-primary-foreground rounded-full p-1.5 md:p-2">
+              <svg class="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Amber Theme -->
+        <div
+          @click="selectTheme(Theme.AMBER)"
+          :class="[
+            'relative cursor-pointer rounded-lg border-2 overflow-hidden transition-all',
+            currentTheme === Theme.AMBER
+              ? 'border-primary ring-2 ring-primary ring-offset-2'
+              : 'border-border hover:border-primary/50'
+          ]"
+        >
+          <div class="aspect-video bg-muted flex items-center justify-center">
+            <!-- Placeholder for theme preview image -->
+            <div class="text-center p-3 md:p-8">
+              <div class="text-4xl md:text-6xl mb-2 md:mb-4">👧🏿</div>
+              <h3 class="text-base md:text-xl font-semibold text-foreground">Amber Theme</h3>
+              <p class="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2">Warm and cozy tones</p>
+            </div>
+          </div>
+          <div v-if="currentTheme === Theme.AMBER" class="absolute top-2 right-2 md:top-4 md:right-4">
+            <div class="bg-primary text-primary-foreground rounded-full p-1.5 md:p-2">
+              <svg class="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
               </svg>
             </div>

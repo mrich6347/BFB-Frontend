@@ -17,8 +17,8 @@
             'flex flex-col justify-center px-4 py-1.5',
             readyToAssignColorClass
           ]">
-            <div class="text-xs font-medium text-white">Ready to Assign</div>
-            <div class="text-base font-bold text-white whitespace-nowrap">{{ formatCurrency(budgetStore.readyToAssign) }}</div>
+            <div :class="['text-xs font-medium', readyToAssignTextClass]">Ready to Assign</div>
+            <div :class="['text-base font-bold whitespace-nowrap', readyToAssignTextClass]">{{ formatCurrency(budgetStore.readyToAssign) }}</div>
           </div>
           <template v-if="!isReadyToAssignZero">
             <div :class="['w-px', readyToAssignColorClass]"></div>
@@ -26,8 +26,9 @@
               @click="handleAssignClick"
               :disabled="budgetStore.readyToAssign <= 0"
               :class="[
-                'flex items-center px-4 cursor-pointer text-white font-medium transition-colors whitespace-nowrap',
+                'flex items-center px-4 cursor-pointer font-medium transition-colors whitespace-nowrap',
                 readyToAssignColorClass,
+                readyToAssignTextClass,
                 budgetStore.readyToAssign <= 0 ? 'opacity-50 cursor-not-allowed' : ''
               ]">
               Assign
@@ -83,6 +84,7 @@ import { useCategoryStore } from '@/stores/category.store'
 import { useUpdateCategoryBalance } from '@/composables/categories/category-write/useUpdateCategoryBalance'
 import AssignMoneyModal from './AssignMoneyModal.vue'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
+import { Theme } from '@/types/DTO/budget.dto'
 
 // Define emits
 const emit = defineEmits<{
@@ -124,14 +126,31 @@ const isReadyToAssignZero = computed(() => Math.abs(budgetStore.readyToAssign) <
 
 const readyToAssignColorClass = computed(() => {
   const amount = budgetStore.readyToAssign
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
   // Use a small epsilon to handle floating point precision issues
   if (Math.abs(amount) < 0.01) {
     return 'bg-muted-foreground/70' // Greyed out for zero
   } else if (amount < 0) {
+    if (theme === Theme.AMBER) {
+      return 'bg-[#c9a5a0] dark:bg-[#c9a5a0]' // Neutral red for Amber theme
+    }
     return 'bg-red-600 dark:bg-red-600' // Red for negative
   } else {
+    if (theme === Theme.AMBER) {
+      return 'bg-[#b8c9ad] dark:bg-[#b8c9ad]' // Sage green for Amber theme
+    }
     return 'bg-emerald-600 dark:bg-emerald-600' // Emerald for positive (matches app style)
   }
+})
+
+const readyToAssignTextClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'text-black' // Black text for Amber theme
+  }
+
+  return 'text-white' // White text for other themes
 })
 
 // Event handlers

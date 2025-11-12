@@ -191,7 +191,7 @@
                 </span>
               </div>
               <div class="flex items-center justify-between mb-3">
-                <span class="text-2xl font-bold text-green-600">
+                <span :class="goalAmountClass">
                   {{ formatCurrency(goal.current_amount || 0) }}
                 </span>
                 <span class="text-sm text-muted-foreground">
@@ -245,7 +245,7 @@
                     </span>
                   </span>
                   <div class="flex items-center gap-2 flex-shrink-0">
-                    <span class="font-semibold text-green-600">
+                    <span :class="contributionAmountClass">
                       {{ formatCurrency(participant.current_contribution || 0) }}
                     </span>
                     <span class="text-xs text-muted-foreground">
@@ -347,12 +347,12 @@
                 <div class="mt-4 cursor-pointer" @click="handleGoalClick(goal)">
                   <div class="flex items-center justify-between text-sm mb-2">
                     <span class="text-muted-foreground font-medium">Progress</span>
-                    <span class="text-lg font-bold text-green-600">
+                    <span :class="completedProgressClass">
                       100%
                     </span>
                   </div>
                   <div class="flex items-center justify-between text-xs mb-3">
-                    <span class="text-2xl font-bold text-green-600">
+                    <span :class="goalAmountClass">
                       {{ formatCurrency(goal.current_amount || 0) }}
                     </span>
                     <span class="text-muted-foreground">
@@ -483,6 +483,7 @@ import UserProfileSetup from '../components/shared-goals/UserProfileSetup.vue'
 import GoalOnboardingModal from '../components/shared-goals/GoalOnboardingModal.vue'
 import GoalActivityTimeline from '../components/shared-goals/GoalActivityTimeline.vue'
 import type { SharedGoalResponse, GoalStatus, InvitationResponse, GoalParticipantResponse } from '../types/DTO/shared-goal.dto'
+import { Theme } from '../types/DTO/budget.dto'
 
 const router = useRouter()
 const { isLoading, error, deleteGoal } = useSharedGoalOperations()
@@ -719,4 +720,35 @@ const handleRefreshData = async () => {
     }
   }
 }
+
+// Theme-aware classes
+const goalAmountClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'text-3xl font-bold text-[#6d2e46]' // wine - darker purple, bigger
+  }
+
+  return 'text-2xl font-bold text-green-600'
+})
+
+const contributionAmountClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'font-semibold text-[#a26769]' // rose-taupe
+  }
+
+  return 'font-semibold text-green-600'
+})
+
+const completedProgressClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'text-lg font-bold text-[#6d2e46]' // wine
+  }
+
+  return 'text-lg font-bold text-green-600'
+})
 </script>

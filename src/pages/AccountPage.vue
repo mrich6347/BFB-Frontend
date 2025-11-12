@@ -8,7 +8,7 @@
     <!-- Render regular account page for other account types -->
     <div v-else class="flex h-screen">
       <Sidebar :budgetId="budgetId" />
-      <div class="flex-1 overflow-auto">
+      <div class="flex-1 overflow-auto bg-card">
         <AccountHeader :account="account" />
         <div class="p-4">
           <TransactionTable

@@ -27,6 +27,8 @@ import {
 } from 'chart.js'
 import { Line } from 'vue-chartjs'
 import { formatCurrency } from '@/utils/currencyUtil'
+import { useBudgetStore } from '@/stores/budget.store'
+import { Theme } from '@/types/DTO/budget.dto'
 
 // Register Chart.js components
 ChartJS.register(
@@ -52,8 +54,40 @@ const props = withDefaults(defineProps<Props>(), {
   annualReturn: 0.08 // 8% default
 })
 
+const budgetStore = useBudgetStore()
+
 const hasData = computed(() => {
   return props.currentAge > 0 && props.retirementAge > props.currentAge && props.monthlyContribution >= 0
+})
+
+// Get theme-aware colors
+const chartColors = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return {
+      contributions: {
+        border: 'rgb(162, 103, 105)', // rose-taupe
+        background: 'rgba(162, 103, 105, 0.5)'
+      },
+      interest: {
+        border: 'rgb(213, 185, 178)', // pale-dogwood
+        background: 'rgba(213, 185, 178, 0.5)'
+      }
+    }
+  }
+
+  // Default colors for LIGHT and DARK themes
+  return {
+    contributions: {
+      border: 'rgb(59, 130, 246)', // blue
+      background: 'rgba(59, 130, 246, 0.5)'
+    },
+    interest: {
+      border: 'rgb(34, 197, 94)', // green
+      background: 'rgba(34, 197, 94, 0.5)'
+    }
+  }
 })
 
 // Calculate year-by-year projections using annual compounding
@@ -116,8 +150,8 @@ const chartData = computed(() => {
       {
         label: 'Contributions',
         data: contributionsData,
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+        borderColor: chartColors.value.contributions.border,
+        backgroundColor: chartColors.value.contributions.background,
         borderWidth: 2,
         fill: true,
         tension: 0.1,
@@ -127,8 +161,8 @@ const chartData = computed(() => {
       {
         label: 'Interest Earned',
         data: interestData,
-        borderColor: 'rgb(34, 197, 94)',
-        backgroundColor: 'rgba(34, 197, 94, 0.5)',
+        borderColor: chartColors.value.interest.border,
+        backgroundColor: chartColors.value.interest.background,
         borderWidth: 2,
         fill: true,
         tension: 0.1,

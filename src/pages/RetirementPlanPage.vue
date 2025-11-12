@@ -143,9 +143,9 @@
 
 
               <!-- Final Balance -->
-              <div class="bg-green-500/10 rounded-lg p-4">
+              <div :class="projectedBalanceCardClass">
                 <div class="text-sm text-muted-foreground mb-1">Projected Balance at Age {{ retirementAge }}</div>
-                <div class="text-3xl font-bold text-green-600 dark:text-green-400">
+                <div :class="projectedBalanceTextClass">
                   {{ formatCurrency(finalBalance) }}
                 </div>
               </div>
@@ -171,7 +171,7 @@
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-muted-foreground">Interest Earned</span>
-                  <span class="text-sm font-medium text-green-600 dark:text-green-400">{{ formatCurrency(totalInterest) }}</span>
+                  <span :class="interestEarnedTextClass">{{ formatCurrency(totalInterest) }}</span>
                 </div>
                 <div class="flex justify-between items-center pt-3 border-t border-border">
                   <span class="text-base font-semibold text-foreground">Total</span>
@@ -218,7 +218,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { AlertCircleIcon, PiggyBankIcon } from 'lucide-vue-next'
+import { PiggyBankIcon } from 'lucide-vue-next'
 import Sidebar from '../components/Sidebar.vue'
 import MobileRetirementPlanView from '../components/mobile/MobileRetirementPlanView.vue'
 import RetirementChart from '../components/retirement/RetirementChart.vue'
@@ -226,6 +226,7 @@ import { useAccountStore } from '../stores/account.store'
 import { useBudgetStore } from '../stores/budget.store'
 import { useUserProfileStore } from '../stores/user-profile.store'
 import { AccountType } from '../types/DTO/account.dto'
+import { Theme } from '../types/DTO/budget.dto'
 import { formatCurrency } from '../utils/currencyUtil'
 import { safeToFixed } from '../utils/numberFormatUtil'
 
@@ -354,6 +355,37 @@ const interestPercentage = computed(() => {
   if (!isValidInput.value || finalBalance.value === 0) return '0.0'
   const percentage = (totalInterest.value / finalBalance.value) * 100
   return safeToFixed(percentage, 1)
+})
+
+// Theme-aware classes for projected balance card
+const projectedBalanceCardClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'bg-[#d5b9b2]/20 rounded-lg p-4' // pale-dogwood with low opacity
+  }
+
+  return 'bg-green-500/10 rounded-lg p-4'
+})
+
+const projectedBalanceTextClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'text-3xl font-bold text-[#a26769]' // rose-taupe
+  }
+
+  return 'text-3xl font-bold text-green-600 dark:text-green-400'
+})
+
+const interestEarnedTextClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'text-sm font-medium text-[#d5b9b2]' // pale-dogwood
+  }
+
+  return 'text-sm font-medium text-green-600 dark:text-green-400'
 })
 
 // Handler to ensure starting balance defaults to 0 when empty

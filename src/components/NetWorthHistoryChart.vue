@@ -163,6 +163,7 @@ import type { NetWorthChartResponse, NetWorthChartDataPoint } from '@/types/DTO/
 import { useBudgetStore } from '@/stores/budget.store'
 import { useAccountStore } from '@/stores/account.store'
 import { useUserProfileStore } from '@/stores/user-profile.store'
+import { Theme } from '@/types/DTO/budget.dto'
 import { useToast } from 'vue-toast-notification'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { AccountType } from '@/types/DTO/account.dto'
@@ -420,6 +421,48 @@ const currentNetWorth = computed(() => {
 
 const hasData = computed(() => chartResponse.value?.has_data ?? false)
 
+// Get theme-aware colors
+const chartColors = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return {
+      assets: {
+        background: 'rgba(162, 103, 105, 0.8)', // rose-taupe with opacity
+        border: 'rgb(162, 103, 105)' // rose-taupe
+      },
+      liabilities: {
+        background: 'rgba(109, 46, 70, 0.8)', // wine with opacity
+        border: 'rgb(109, 46, 70)' // wine
+      },
+      netWorth: {
+        line: 'rgb(213, 185, 178)', // pale-dogwood
+        background: 'rgba(213, 185, 178, 0.1)', // pale-dogwood with low opacity
+        point: 'rgb(213, 185, 178)', // pale-dogwood
+        pointWithNote: 'rgb(236, 226, 208)' // bone for notes
+      }
+    }
+  }
+
+  // Default colors for LIGHT and DARK themes
+  return {
+    assets: {
+      background: 'rgba(59, 130, 246, 0.8)', // blue
+      border: 'rgb(59, 130, 246)'
+    },
+    liabilities: {
+      background: 'rgba(239, 68, 68, 0.8)', // red
+      border: 'rgb(239, 68, 68)'
+    },
+    netWorth: {
+      line: 'rgb(16, 185, 129)', // emerald
+      background: 'rgba(16, 185, 129, 0.1)',
+      point: 'rgb(16, 185, 129)',
+      pointWithNote: 'rgb(234, 179, 8)' // yellow
+    }
+  }
+})
+
 const chartData = computed(() => {
   if (!chartResponse.value?.data_points) {
     return { labels: [], datasets: [] }
@@ -455,39 +498,39 @@ const chartData = computed(() => {
   return {
     labels: dataPoints.map(point => formatDate(point.month_date)),
     datasets: [
-      // Assets - Blue bars
+      // Assets bars
       {
         type: 'bar' as const,
         label: 'Assets',
         data: dataPoints.map(point => point.total_assets),
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: chartColors.value.assets.background,
+        borderColor: chartColors.value.assets.border,
         borderWidth: 0,
         order: 2
       },
-      // Liabilities - Red bars
+      // Liabilities bars
       {
         type: 'bar' as const,
         label: 'Debts',
         data: dataPoints.map(point => Math.abs(point.total_liabilities)),
-        backgroundColor: 'rgba(239, 68, 68, 0.8)',
-        borderColor: 'rgb(239, 68, 68)',
+        backgroundColor: chartColors.value.liabilities.background,
+        borderColor: chartColors.value.liabilities.border,
         borderWidth: 0,
         order: 2
       },
-      // Net Worth - Emerald line with dots (matches app color scheme)
+      // Net Worth line with dots
       {
         type: 'line' as const,
         label: 'Net Worth',
         data: dataPoints.map(point => point.net_worth),
-        borderColor: 'rgb(16, 185, 129)', // Emerald-500
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderColor: chartColors.value.netWorth.line,
+        backgroundColor: chartColors.value.netWorth.background,
         borderWidth: 3,
         fill: false,
         tension: 0.4,
         pointRadius: dataPoints.map(point => point.note ? 6 : 5),
         pointHoverRadius: dataPoints.map(point => point.note ? 8 : 7),
-        pointBackgroundColor: dataPoints.map(point => point.note ? 'rgb(234, 179, 8)' : 'rgb(16, 185, 129)'), // Yellow for notes, emerald otherwise
+        pointBackgroundColor: dataPoints.map(point => point.note ? chartColors.value.netWorth.pointWithNote : chartColors.value.netWorth.point),
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         order: 1
@@ -584,7 +627,7 @@ const chartOptions = computed<ChartOptions<'bar'>>(() => ({
         size: 13,
         weight: 'bold'
       },
-      footerColor: 'rgb(234, 179, 8)' // Yellow to match the point color
+      footerColor: chartColors.value.netWorth.pointWithNote
     }
   },
   scales: {

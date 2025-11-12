@@ -244,6 +244,7 @@ import { PlusIcon, ChevronDownIcon, SettingsIcon } from 'lucide-vue-next'
 import { authService } from '@/services/common/auth.service'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
+import { Theme } from '@/types/DTO/budget.dto'
 
 const router = useRouter()
 const budgetStore = useBudgetStore()
@@ -445,9 +446,17 @@ const isGroupCollapsed = (groupId: string) => {
 
 // Get badge class based on available amount (YNAB-style)
 const getAvailableBadgeClass = (amount: number) => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
   if (amount > 0) {
+    if (theme === Theme.AMBER) {
+      return 'bg-[#b8c9ad] dark:bg-[#b8c9ad] text-black dark:text-black font-semibold shadow-md' // brighter sage green that complements purple
+    }
     return 'bg-emerald-400 dark:bg-emerald-400 text-black dark:text-black font-semibold shadow-md'
   } else if (amount < 0) {
+    if (theme === Theme.AMBER) {
+      return 'bg-[#c9a5a0] dark:bg-[#c9a5a0] text-black dark:text-black font-semibold shadow-sm' // neutral red that complements purple
+    }
     return 'bg-red-500 dark:bg-red-600 text-white font-semibold shadow-sm'
   }
   return 'bg-muted text-muted-foreground'
@@ -456,11 +465,18 @@ const getAvailableBadgeClass = (amount: number) => {
 // Get background class for Ready to Assign banner
 const getReadyToAssignBgClass = () => {
   const amount = budgetStore.readyToAssign
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
   // Round to 2 decimal places to avoid floating point issues
   const rounded = Math.round(amount * 100) / 100
   if (rounded > 0) {
+    if (theme === Theme.AMBER) {
+      return 'bg-[#b8c9ad]/20 dark:bg-[#b8c9ad]/20' // sage green background
+    }
     return 'bg-emerald-500/20 dark:bg-emerald-500/10'
   } else if (rounded < 0) {
+    if (theme === Theme.AMBER) {
+      return 'bg-[#c9a5a0]/20 dark:bg-[#c9a5a0]/20' // neutral red background
+    }
     return 'bg-red-500/20 dark:bg-red-500/10'
   }
   return 'bg-muted/50'
@@ -469,11 +485,18 @@ const getReadyToAssignBgClass = () => {
 // Get text color class for Ready to Assign
 const getReadyToAssignTextClass = () => {
   const amount = budgetStore.readyToAssign
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
   // Round to 2 decimal places to avoid floating point issues
   const rounded = Math.round(amount * 100) / 100
   if (rounded > 0) {
+    if (theme === Theme.AMBER) {
+      return 'text-[#6d7a63]' // darker sage green text
+    }
     return 'text-emerald-700 dark:text-emerald-300'
   } else if (rounded < 0) {
+    if (theme === Theme.AMBER) {
+      return 'text-[#8b5f5a]' // darker neutral red text
+    }
     return 'text-red-700 dark:text-red-300'
   }
   return 'text-gray-400 dark:text-gray-500'

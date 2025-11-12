@@ -15,7 +15,7 @@
         <BudgetHeader @filter-changed="handleFilterChanged" />
       </div>
       <!-- Scrollable Category List -->
-      <div class="flex-1 overflow-auto p-4">
+      <div class="flex-1 overflow-auto p-4 bg-card">
         <BudgetCategoryList ref="categoryListRef" :active-filter="activeFilter" />
       </div>
     </div>

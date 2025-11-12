@@ -7,11 +7,16 @@ const currentTheme = ref<Theme>(Theme.DARK)
 export function useTheme() {
     // Apply theme to document
     const applyTheme = (theme: Theme) => {
+        // Remove all theme classes first
+        document.documentElement.classList.remove('dark', 'amber')
+
+        // Add the appropriate theme class
         if (theme === Theme.DARK) {
             document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
+        } else if (theme === Theme.AMBER) {
+            document.documentElement.classList.add('amber')
         }
+        // LIGHT theme has no class (uses :root styles)
     }
 
     // Set theme (called when budget is loaded or theme is changed)

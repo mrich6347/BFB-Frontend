@@ -4,6 +4,10 @@ import { cn } from '@/lib/utils'
 import { Primitive } from 'reka-ui'
 import { computed, type HTMLAttributes } from 'vue'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { useBudgetStore } from '@/stores/budget.store'
+import { Theme } from '@/types/DTO/budget.dto'
+
+const budgetStore = useBudgetStore()
 
 const badgeVariants = cva(
   'inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden',
@@ -32,12 +36,27 @@ const delegatedProps = computed(() => {
   const { class: _, ...delegated } = props
   return delegated
 })
+
+// Theme-aware class for positive and negative variants
+const themeAwareClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    if (props.variant === 'positive') {
+      return 'border-[#a0b594] bg-[#b8c9ad] text-black'
+    } else if (props.variant === 'negative') {
+      return 'border-[#b88f8a] bg-[#c9a5a0] text-black'
+    }
+  }
+
+  return ''
+})
 </script>
 
 <template>
   <Primitive
     data-slot="badge"
-    :class="cn(badgeVariants({ variant }), props.class)"
+    :class="cn(badgeVariants({ variant }), themeAwareClass, props.class)"
     v-bind="delegatedProps"
   >
     <slot />

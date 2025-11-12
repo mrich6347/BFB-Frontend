@@ -203,7 +203,7 @@
             <div class="flex items-center justify-between mb-3">
               <div>
                 <p class="text-xs text-muted-foreground mb-1">Current</p>
-                <p class="text-2xl font-bold text-green-600 dark:text-green-400">
+                <p :class="goalAmountClass">
                   {{ formatCurrency(goal.current_amount || 0) }}
                 </p>
               </div>
@@ -363,6 +363,7 @@ import GoalActivityTimeline from '../shared-goals/GoalActivityTimeline.vue'
 import MobileTransactionFlow from './MobileTransactionFlow.vue'
 import type { SharedGoalResponse, InvitationResponse, InvitationStatus, GoalParticipantResponse } from '../../types/DTO/shared-goal.dto'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
+import { Theme } from '../../types/DTO/budget.dto'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import { useMakeCreditCardPayment } from '@/composables/accounts/account-write/useMakeCreditCardPayment'
 import { useToast } from 'vue-toast-notification'
@@ -402,6 +403,17 @@ const invitations = computed(() => sharedGoalsStore.invitations)
 const pendingInvitations = computed(() =>
   invitations.value.filter(inv => inv.status === 'PENDING' as InvitationStatus)
 )
+
+// Theme-aware classes
+const goalAmountClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'text-3xl font-bold text-[#6d2e46]' // wine - darker purple, bigger
+  }
+
+  return 'text-2xl font-bold text-green-600 dark:text-green-400'
+})
 
 // Swipe functions
 const setGoalRef = (id: string, el: any) => {

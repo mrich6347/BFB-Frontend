@@ -86,7 +86,7 @@
                   <div
                     class="flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all"
                     :class="transaction.is_active
-                      ? 'bg-emerald-500 border-emerald-500'
+                      ? activeIconBgClass
                       : 'bg-muted border-muted-foreground/30'"
                   >
                     <CalendarClockIcon
@@ -170,6 +170,7 @@ import { useBudgetStore } from '@/stores/budget.store'
 import { useScheduledTransactionStore } from '@/stores/scheduled-transaction.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { useAccountStore } from '@/stores/account.store'
+import { Theme } from '@/types/DTO/budget.dto'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { ScheduledTransactionResponse, UpdateScheduledTransactionDto } from '@/types/DTO/scheduled-transaction.dto'
 import { useSwipeToReveal } from '@/composables/mobile/useSwipeToReveal'
@@ -274,6 +275,17 @@ const groupedTransactions = computed(() => {
   })
 
   return Array.from(groups.values()).sort((a, b) => a.date.getTime() - b.date.getTime())
+})
+
+// Theme-aware icon background class
+const activeIconBgClass = computed(() => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+
+  if (theme === Theme.AMBER) {
+    return 'bg-[#6d2e46] border-[#6d2e46]' // wine - dark purple
+  }
+
+  return 'bg-emerald-500 border-emerald-500'
 })
 
 // Group by weeks

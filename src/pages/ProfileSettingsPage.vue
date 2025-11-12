@@ -156,43 +156,6 @@
           </div>
         </form>
       </div>
-
-      <!-- Profile Info (if exists) -->
-      <div v-if="currentProfile && !isLoading" class="mt-8 bg-card shadow rounded-lg border border-border">
-        <div class="px-6 py-4 border-b border-border">
-          <h2 class="text-lg font-medium text-card-foreground">Current Profile</h2>
-        </div>
-        <div class="px-6 py-4">
-          <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-            <div>
-              <dt class="text-sm font-medium text-muted-foreground">Username</dt>
-              <dd class="mt-1 text-sm text-card-foreground">@{{ currentProfile?.username }}</dd>
-            </div>
-            <div>
-              <dt class="text-sm font-medium text-muted-foreground">Display Name</dt>
-              <dd class="mt-1 text-sm text-card-foreground">{{ currentProfile?.display_name }}</dd>
-            </div>
-            <div>
-              <dt class="text-sm font-medium text-muted-foreground">Birthdate</dt>
-              <dd class="mt-1 text-sm text-card-foreground">
-                {{ currentProfile?.birthdate ? new Date(currentProfile.birthdate).toLocaleDateString() : 'Not set' }}
-              </dd>
-            </div>
-            <div>
-              <dt class="text-sm font-medium text-muted-foreground">Created</dt>
-              <dd class="mt-1 text-sm text-card-foreground">
-                {{ currentProfile?.created_at ? new Date(currentProfile.created_at).toLocaleDateString() : '' }}
-              </dd>
-            </div>
-            <div>
-              <dt class="text-sm font-medium text-muted-foreground">Last Updated</dt>
-              <dd class="mt-1 text-sm text-card-foreground">
-                {{ currentProfile?.updated_at ? new Date(currentProfile.updated_at).toLocaleDateString() : '' }}
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </div>
     </div>
   </div>
 </template>

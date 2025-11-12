@@ -4,10 +4,10 @@
     isCollapsed ? 'w-16' : 'w-80'
   ]">
     <!-- Header -->
-    <div class="p-4 flex items-center justify-center border-b border-border dark:border-border">
+    <div class="p-4 flex items-center border-b border-border dark:border-border">
       <h1
         v-if="!isCollapsed"
-        class="text-lg font-semibold text-foreground transition-opacity duration-300 ease-in-out text-ellipsis overflow-hidden w-full text-nowrap text-center"
+        class="text-lg font-semibold text-foreground transition-opacity duration-300 ease-in-out text-ellipsis overflow-hidden w-full text-nowrap text-left"
         :class="{ 'opacity-0': isCollapsed, 'opacity-100': !isCollapsed }"
       >
        {{ budgetStore?.currentBudget?.name }}
