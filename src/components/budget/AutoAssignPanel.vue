@@ -4,7 +4,7 @@
     <div class="p-4 border-b border-border">
       <h3 class="text-lg font-semibold text-center">Auto-Assign</h3>
       <p class="text-xs text-muted-foreground text-center mt-1">
-        Save category presets to quickly assign money with one click
+        Save category presets to quickly assign money to one or multiple categories with one click
       </p>
     </div>
 
@@ -111,7 +111,7 @@
                     :disabled="budgetStore.readyToAssign < config.total_amount"
                   >
                     <Play class="h-3 w-3 mr-2" />
-                    Apply
+                    Assign
                   </Button>
                 </div>
               </div>

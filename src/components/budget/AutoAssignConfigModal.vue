@@ -75,14 +75,14 @@
         <div class="mb-6">
           <label class="block text-sm font-medium mb-3">Selected Categories</label>
 
-          <div v-if="selectedCategories.length === 0" class="text-center py-8 border border-dashed border-border rounded-lg text-muted-foreground">
+          <div v-if="visibleSelectedCategories.length === 0" class="text-center py-8 border border-dashed border-border rounded-lg text-muted-foreground">
             <p class="text-sm">No categories added yet</p>
             <p class="text-xs mt-1">Search and select categories above to get started</p>
           </div>
 
           <div v-else class="space-y-2">
             <div
-              v-for="(item, index) in selectedCategories"
+              v-for="(item, index) in visibleSelectedCategories"
               :key="item.category_id"
               class="flex items-center gap-3 p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors"
             >
@@ -107,7 +107,7 @@
                 <Button
                   variant="ghost"
                   size="icon"
-                  @click="removeCategory(index)"
+                  @click="removeCategoryByItem(item)"
                   class="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
                 >
                   <Trash2 class="h-3.5 w-3.5" />
@@ -117,7 +117,7 @@
           </div>
 
           <!-- Total Amount -->
-          <div v-if="selectedCategories.length > 0" class="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+          <div v-if="visibleSelectedCategories.length > 0" class="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
             <div class="flex justify-between items-center">
               <span class="font-medium text-sm">Total Amount:</span>
               <span class="font-semibold text-lg">{{ formatCurrency(totalAmount) }}</span>
@@ -173,14 +173,30 @@ const showCategoryDropdown = ref(false)
 const highlightedIndex = ref(0)
 const categorySearchInput = ref<HTMLInputElement | null>(null)
 
+// Helper to check if a category is hidden
+const isCategoryHidden = (categoryId: string): boolean => {
+  const hiddenGroup = categoryStore.categoryGroups.find(group =>
+    group.name === 'Hidden Categories' && group.is_system_group
+  )
+  if (!hiddenGroup) return false
+
+  const category = categoryStore.categories.find(c => c.id === categoryId)
+  return category?.category_group_id === hiddenGroup.id
+}
+
+// Filter out hidden categories from selected categories
+const visibleSelectedCategories = computed(() => {
+  return selectedCategories.value.filter(item => !isCategoryHidden(item.category_id))
+})
+
 const totalAmount = computed(() => {
-  return selectedCategories.value.reduce((sum, item) => sum + (item.amount || 0), 0)
+  return visibleSelectedCategories.value.reduce((sum, item) => sum + (item.amount || 0), 0)
 })
 
 const canSave = computed(() => {
   return configName.value.trim() !== '' &&
-         selectedCategories.value.length > 0 &&
-         selectedCategories.value.every(item => item.amount > 0) &&
+         visibleSelectedCategories.value.length > 0 &&
+         visibleSelectedCategories.value.every(item => item.amount > 0) &&
          !nameError.value
 })
 
@@ -224,7 +240,8 @@ const getCategoryGroupName = (categoryId: string) => {
 }
 
 const selectCategory = (category: CategoryResponse) => {
-  selectedCategories.value.push({
+  // Add to the beginning of the list so it's immediately visible
+  selectedCategories.value.unshift({
     category_id: category.id,
     amount: 0
   })
@@ -269,6 +286,13 @@ const removeCategory = (index: number) => {
   selectedCategories.value.splice(index, 1)
 }
 
+const removeCategoryByItem = (item: AutoAssignConfigurationItem) => {
+  const index = selectedCategories.value.findIndex(cat => cat.category_id === item.category_id)
+  if (index !== -1) {
+    selectedCategories.value.splice(index, 1)
+  }
+}
+
 // Reset highlighted index when search query changes
 watch(categorySearchQuery, () => {
   highlightedIndex.value = 0
@@ -306,9 +330,12 @@ const close = () => {
 const save = () => {
   if (!validateName()) return
 
+  // Filter out hidden categories and only include items with amounts > 0
+  const itemsToSave = visibleSelectedCategories.value.filter(item => item.amount > 0)
+
   emit('save', {
     name: configName.value.trim(),
-    items: selectedCategories.value.filter(item => item.amount > 0)
+    items: itemsToSave
   })
 }
 
