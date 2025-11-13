@@ -4,28 +4,9 @@
       <DialogHeader>
         <DialogTitle>Unhide Category</DialogTitle>
         <DialogDescription>
-          Choose which category group to move "{{ categoryName }}" to.
+          Are you sure you want to unhide "{{ categoryName }}"? It will be restored to its original category group.
         </DialogDescription>
       </DialogHeader>
-
-      <div class="space-y-4 mt-4">
-        <div class="space-y-2">
-          <label class="text-sm font-medium">Select Category Group</label>
-          <select
-            v-model="selectedGroupId"
-            class="w-full px-3 py-2 border rounded-md bg-background border-input focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="">Select a group...</option>
-            <option
-              v-for="group in availableGroups"
-              :key="group.id"
-              :value="group.id"
-            >
-              {{ group.name }}
-            </option>
-          </select>
-        </div>
-      </div>
 
       <div class="flex justify-end gap-3 mt-6">
         <button
@@ -36,10 +17,10 @@
         </button>
         <button
           @click="handleUnhide"
-          :disabled="!selectedGroupId || isLoading"
+          :disabled="isLoading"
           class="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50"
         >
-          {{ isLoading ? 'Moving...' : 'Unhide Category' }}
+          {{ isLoading ? 'Unhiding...' : 'Unhide Category' }}
         </button>
       </div>
     </DialogContent>
@@ -47,10 +28,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useCategoryStore } from '@/stores/category.store'
+import { ref } from 'vue'
 import { useUnhideCategory } from '@/composables/categories/category-write/useUnhideCategory'
-import type { CategoryGroupResponse } from '@/types/DTO/category-group.dto'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/shadcn-ui'
 
 interface Props {
@@ -66,30 +45,18 @@ const emit = defineEmits<{
   (e: 'unhidden', categoryId: string): void
 }>()
 
-const categoryStore = useCategoryStore()
 const { unhideCategory } = useUnhideCategory()
-const selectedGroupId = ref('')
 const isLoading = ref(false)
 
-// Get available category groups (exclude system groups)
-const availableGroups = computed(() => {
-  return categoryStore.categoryGroups.filter(group =>
-    !group.is_system_group
-  )
-})
-
 const close = () => {
-  selectedGroupId.value = ''
   emit('close')
 }
 
 const handleUnhide = async () => {
-  if (!selectedGroupId.value) return
-
   isLoading.value = true
 
   try {
-    await unhideCategory(props.categoryId, selectedGroupId.value)
+    await unhideCategory(props.categoryId)
     emit('unhidden', props.categoryId)
     close()
   } catch (error) {

@@ -125,20 +125,29 @@ export const useCategoryStore = defineStore('categoryStore', () => {
     }
   }
 
-  const hideCategoryGroup = (id: string, movedCategories?: CategoryResponse[]) => {
-    // Remove the hidden group
+  const hideCategoryGroup = (id: string, hiddenCategories?: CategoryResponse[]) => {
+    // Remove the deleted group
     categoryGroups.value = categoryGroups.value.filter(group => group.id !== id)
 
-    // Update categories with the moved categories from the response
-    if (movedCategories && movedCategories.length > 0) {
-      // Remove the old categories and add the updated ones
-      categories.value = categories.value.filter(category =>
-        !movedCategories.some(moved => moved.id === category.id)
-      )
-      categories.value.push(...movedCategories)
+    // Update categories with the hidden categories from the response
+    if (hiddenCategories && hiddenCategories.length > 0) {
+      // Update the categories to set active=false
+      hiddenCategories.forEach(hiddenCat => {
+        const categoryIndex = categories.value.findIndex(cat => cat.id === hiddenCat.id)
+        if (categoryIndex !== -1) {
+          categories.value[categoryIndex] = {
+            ...categories.value[categoryIndex],
+            active: false
+          }
+        }
+      })
     } else {
-      // Fallback: remove all categories in this group if no moved categories returned
-      categories.value = categories.value.filter(category => category.category_group_id !== id)
+      // Fallback: set all categories in this group as inactive
+      categories.value = categories.value.map(category =>
+        category.category_group_id === id
+          ? { ...category, active: false }
+          : category
+      )
     }
   }
 
@@ -166,31 +175,23 @@ export const useCategoryStore = defineStore('categoryStore', () => {
   }
 
   const hideCategory = (id: string) => {
-    // Find the Hidden Categories group
-    const hiddenGroup = categoryGroups.value.find(group =>
-      group.name === 'Hidden Categories' && group.is_system_group
-    )
-    if (!hiddenGroup) {
-      throw new Error('Hidden Categories group not found')
-    }
-
-    // Move category to Hidden Categories group
+    // Set category as inactive (hidden) - keeps original category_group_id
     const categoryIndex = categories.value.findIndex(cat => cat.id === id)
     if (categoryIndex !== -1) {
       categories.value[categoryIndex] = {
         ...categories.value[categoryIndex],
-        category_group_id: hiddenGroup.id
+        active: false
       }
     }
   }
 
-  const unhideCategory = (id: string, targetGroupId: string) => {
-    // Move category to target group
+  const unhideCategory = (id: string) => {
+    // Set category as active (unhidden) - keeps original category_group_id
     const categoryIndex = categories.value.findIndex(cat => cat.id === id)
     if (categoryIndex !== -1) {
       categories.value[categoryIndex] = {
         ...categories.value[categoryIndex],
-        category_group_id: targetGroupId
+        active: true
       }
     }
   }

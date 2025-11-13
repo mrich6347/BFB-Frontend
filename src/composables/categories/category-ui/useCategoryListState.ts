@@ -32,11 +32,6 @@ export function useCategoryListState(activeFilter?: Ref<string | undefined> | st
   // Also filters out groups that have no visible categories when a filter is applied
   const regularCategoryGroups = computed(() => {
     return sortedCategoryGroups.value.filter(group => {
-      // Always exclude Hidden Categories system group
-      if (group.name === 'Hidden Categories' && group.is_system_group) {
-        return false
-      }
-
       // If no filter is applied, show all groups
       if (!filterRef.value || filterRef.value === 'all') {
         return true
@@ -48,17 +43,31 @@ export function useCategoryListState(activeFilter?: Ref<string | undefined> | st
     })
   })
 
+  // Create a virtual "Hidden Categories" group for inactive categories
   const hiddenCategoriesGroup = computed(() => {
-    return sortedCategoryGroups.value.find(group =>
-      group.name === 'Hidden Categories' && group.is_system_group
-    )
+    const budgetId = budgetStore.currentBudget?.id
+    if (!budgetId) return null
+
+    // Create a virtual group for hidden categories
+    return {
+      id: 'hidden-categories-virtual',
+      name: 'Hidden Categories',
+      budget_id: budgetId,
+      user_id: '',
+      is_system_group: true,
+      display_order: 9999,
+      created_at: new Date(),
+      updated_at: new Date()
+    } as CategoryGroupResponse
   })
 
-  // Check if hidden categories group has any categories
+  // Check if there are any inactive categories
   const hasHiddenCategories = computed(() => {
-    if (!hiddenCategoriesGroup.value) return false
-    const hiddenCategories = getCategoriesForGroup(hiddenCategoriesGroup.value.id)
-    return hiddenCategories.length > 0
+    const allCategories = categoryStore.getCategoriesWithBalances
+    const inactiveCategories = allCategories.filter(cat => !cat.active)
+    // Filter out credit card payment categories
+    const visibleInactiveCategories = inactiveCategories.filter(cat => !isCreditCardPaymentCategory(cat))
+    return visibleInactiveCategories.length > 0
   })
 
   // Helper function to check if a category is a credit card payment category
@@ -69,12 +78,17 @@ export function useCategoryListState(activeFilter?: Ref<string | undefined> | st
 
   // Get categories for a specific group with filtering applied
   const getCategoriesForGroup = (groupId: string) => {
-    let categories = categoryStore.getCategoriesByGroupWithBalances(groupId)
+    let categories: CategoryResponse[]
 
-    // For Hidden Categories group, filter out credit card payment categories
-    const group = categoryStore.getCategoryGroupById(groupId)
-    if (group?.name === 'Hidden Categories' && group?.is_system_group) {
+    // For the virtual Hidden Categories group, get all inactive categories
+    if (groupId === 'hidden-categories-virtual') {
+      const allCategories = categoryStore.getCategoriesWithBalances
+      categories = allCategories.filter(cat => !cat.active)
+      // Filter out credit card payment categories
       categories = categories.filter(category => !isCreditCardPaymentCategory(category))
+    } else {
+      // For regular groups, get active categories only
+      categories = categoryStore.getCategoriesByGroupWithBalances(groupId).filter(cat => cat.active)
     }
 
     // Apply filter if specified
@@ -95,6 +109,15 @@ export function useCategoryListState(activeFilter?: Ref<string | undefined> | st
 
   // Get totals for a specific group
   const getGroupTotals = (groupId: string) => {
+    // For the virtual Hidden Categories group, calculate totals from inactive categories
+    if (groupId === 'hidden-categories-virtual') {
+      const inactiveCategories = getCategoriesForGroup(groupId)
+      return {
+        assigned: inactiveCategories.reduce((sum, cat) => sum + cat.assigned, 0),
+        activity: inactiveCategories.reduce((sum, cat) => sum + cat.activity, 0),
+        available: inactiveCategories.reduce((sum, cat) => sum + cat.available, 0)
+      }
+    }
     return categoryStore.getGroupTotalsWithBalances(groupId)
   }
 
@@ -111,6 +134,16 @@ export function useCategoryListState(activeFilter?: Ref<string | undefined> | st
         categoryLists[group.id] = [...newCategoriesForGroup]
       }
     })
+
+    // Also initialize the virtual hidden categories group
+    if (hiddenCategoriesGroup.value) {
+      const hiddenCategories = getCategoriesForGroup(hiddenCategoriesGroup.value.id)
+      if (categoryLists[hiddenCategoriesGroup.value.id]) {
+        categoryLists[hiddenCategoriesGroup.value.id].splice(0, categoryLists[hiddenCategoriesGroup.value.id].length, ...hiddenCategories)
+      } else {
+        categoryLists[hiddenCategoriesGroup.value.id] = [...hiddenCategories]
+      }
+    }
   }
 
   // Helper function to load expanded groups for a budget
@@ -167,6 +200,16 @@ export function useCategoryListState(activeFilter?: Ref<string | undefined> | st
         categoryLists[group.id] = [...newCategoriesForGroup]
       }
     })
+
+    // Also update the virtual hidden categories group
+    if (hiddenCategoriesGroup.value) {
+      const hiddenCategories = getCategoriesForGroup(hiddenCategoriesGroup.value.id)
+      if (categoryLists[hiddenCategoriesGroup.value.id]) {
+        categoryLists[hiddenCategoriesGroup.value.id].splice(0, categoryLists[hiddenCategoriesGroup.value.id].length, ...hiddenCategories)
+      } else {
+        categoryLists[hiddenCategoriesGroup.value.id] = [...hiddenCategories]
+      }
+    }
   }, { deep: true })
 
   // Watch for changes in budget month and update the categoryLists
@@ -183,6 +226,16 @@ export function useCategoryListState(activeFilter?: Ref<string | undefined> | st
         categoryLists[group.id] = [...newCategoriesForGroup]
       }
     })
+
+    // Also update the virtual hidden categories group
+    if (hiddenCategoriesGroup.value) {
+      const hiddenCategories = getCategoriesForGroup(hiddenCategoriesGroup.value.id)
+      if (categoryLists[hiddenCategoriesGroup.value.id]) {
+        categoryLists[hiddenCategoriesGroup.value.id].splice(0, categoryLists[hiddenCategoriesGroup.value.id].length, ...hiddenCategories)
+      } else {
+        categoryLists[hiddenCategoriesGroup.value.id] = [...hiddenCategories]
+      }
+    }
   }, { deep: true })
 
   // Watch for changes in filter and update the categoryLists
@@ -199,6 +252,16 @@ export function useCategoryListState(activeFilter?: Ref<string | undefined> | st
         categoryLists[group.id] = [...newCategoriesForGroup]
       }
     })
+
+    // Also update the virtual hidden categories group
+    if (hiddenCategoriesGroup.value) {
+      const hiddenCategories = getCategoriesForGroup(hiddenCategoriesGroup.value.id)
+      if (categoryLists[hiddenCategoriesGroup.value.id]) {
+        categoryLists[hiddenCategoriesGroup.value.id].splice(0, categoryLists[hiddenCategoriesGroup.value.id].length, ...hiddenCategories)
+      } else {
+        categoryLists[hiddenCategoriesGroup.value.id] = [...hiddenCategories]
+      }
+    }
   })
 
   // Watch for changes in category groups and update the categoryLists

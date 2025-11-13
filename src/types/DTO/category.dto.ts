@@ -8,6 +8,7 @@ export interface CategoryDto {
   activity: number;
   available: number;
   display_order: number;
+  active: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -40,6 +41,7 @@ export interface CategoryResponse {
   activity: number;
   available: number;
   display_order: number;
+  active: boolean;
   created_at: Date;
   updated_at: Date;
 }

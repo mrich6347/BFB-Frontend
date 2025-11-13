@@ -292,7 +292,8 @@ const currentBudget = computed(() => budgetStore.currentBudget)
 
 const trackingAccountsTotal = computed(() => {
   const trackingAccounts = accountStore.getAccountsByType(AccountType.TRACKING)
-  return trackingAccounts.reduce((sum, account) => sum + (account.working_balance || 0), 0)
+  const total = trackingAccounts.reduce((sum, account) => sum + (account.working_balance || 0), 0)
+  return Math.round(total * 100) / 100 // Round to 2 decimal places
 })
 
 const annualReturnRate = computed(() => annualReturnPercent.value / 100)
