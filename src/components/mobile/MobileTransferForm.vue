@@ -2,7 +2,7 @@
   <div class="h-full flex flex-col">
     <!-- Header -->
     <div class="sticky top-0 bg-background border-b border-border px-4 flex items-center justify-between" style="padding-top: max(3rem, env(safe-area-inset-top)); padding-bottom: 0.75rem;">
-      <button @click="$emit('close')" class="p-2">
+      <button @click="handleClose" class="p-2">
         <XIcon class="h-5 w-5" />
       </button>
       <h2 class="text-lg font-semibold">Transfer Money</h2>
@@ -16,16 +16,12 @@
       <div class="px-4 pt-4 pb-6">
         <!-- Large Amount Display -->
         <div class="text-center py-2">
-          <input
-            ref="amountInputRef"
-            v-model="displayAmount"
-            @input="handleAmountInput"
-            @focus="handleAmountFocus"
-            type="text"
-            inputmode="decimal"
-            placeholder="$0.00"
+          <button
+            @click="showKeyboard = true"
             class="w-full text-center text-5xl font-bold bg-transparent border-none outline-none text-blue-500"
-          />
+          >
+            {{ displayAmount }}
+          </button>
         </div>
       </div>
 
@@ -35,7 +31,7 @@
         <div class="space-y-2">
           <label class="text-sm font-medium">To Account</label>
           <button
-            @click="showAccountPicker = true"
+            @click="showAccountPicker = true; showKeyboard = false"
             class="w-full px-4 py-3 border border-input rounded-md bg-background text-left flex items-center justify-between"
           >
             <span :class="selectedToAccount ? 'text-foreground' : 'text-muted-foreground'">
@@ -49,7 +45,7 @@
         <div v-if="isTargetTracking" class="space-y-2">
           <label class="text-sm font-medium">Category</label>
           <button
-            @click="showCategoryPicker = true"
+            @click="showCategoryPicker = true; showKeyboard = false"
             class="w-full px-4 py-3 border border-input rounded-md bg-background text-left flex items-center justify-between"
           >
             <span :class="selectedCategory ? 'text-foreground' : 'text-muted-foreground'">
@@ -67,6 +63,7 @@
             type="text"
             placeholder="Enter memo..."
             class="w-full px-4 py-3 border border-input rounded-md bg-background"
+            @focus="showKeyboard = false"
           />
         </div>
 
@@ -178,11 +175,20 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Custom Number Keyboard -->
+    <MobileNumberKeyboard
+      v-model="internalAmountValue"
+      :show="showKeyboard"
+      color="blue"
+      @done="showKeyboard = false"
+      @cancel="showKeyboard = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { XIcon, ChevronRightIcon, ChevronLeftIcon } from 'lucide-vue-next'
 import { useCategoryStore } from '@/stores/category.store'
 import { useGetTransferOptions } from '@/composables/accounts/account-read/useGetTransferOptions'
@@ -190,6 +196,7 @@ import { TransferService } from '@/services/transfer.service'
 import { formatCurrency } from '@/utils/currencyUtil'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { AccountResponse } from '@/types/DTO/account.dto'
+import MobileNumberKeyboard from './MobileNumberKeyboard.vue'
 
 const props = defineProps<{
   accountId: string
@@ -215,8 +222,14 @@ const categorySearchQuery = ref('')
 const isLoading = ref(false)
 
 // Amount input handling
-const amountInputRef = ref<HTMLInputElement | null>(null)
+const showKeyboard = ref(false)
 const internalAmountValue = ref('000') // Store as cents (e.g., "000" = $0.00, "1234" = $12.34)
+
+// Watch internal amount value and update the amount ref
+watch(internalAmountValue, (newValue) => {
+  const cents = parseInt(newValue, 10)
+  amount.value = cents / 100
+})
 
 // Format the internal value (cents) as a currency display string
 const formatAmountAsCurrency = (centsString: string): string => {
@@ -227,43 +240,7 @@ const formatAmountAsCurrency = (centsString: string): string => {
   return `$${dollarsFormatted}.${cents}`
 }
 
-const displayAmount = computed({
-  get: () => formatAmountAsCurrency(internalAmountValue.value),
-  set: () => {} // Handled by handleAmountInput
-})
-
-const handleAmountInput = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const digits = input.value.replace(/\D/g, '')
-
-  if (digits.length === 0) {
-    internalAmountValue.value = '000'
-  } else {
-    const limitedDigits = digits.slice(-10)
-    internalAmountValue.value = limitedDigits.padStart(3, '0')
-  }
-
-  // Update the display
-  input.value = formatAmountAsCurrency(internalAmountValue.value)
-
-  // Update the amount ref
-  const cents = parseInt(internalAmountValue.value, 10)
-  amount.value = cents / 100
-
-  // Move cursor to end
-  setTimeout(() => {
-    input.setSelectionRange(input.value.length, input.value.length)
-  }, 0)
-}
-
-const handleAmountFocus = () => {
-  setTimeout(() => {
-    if (amountInputRef.value) {
-      const length = amountInputRef.value.value.length
-      amountInputRef.value.setSelectionRange(length, length)
-    }
-  }, 0)
-}
+const displayAmount = computed(() => formatAmountAsCurrency(internalAmountValue.value))
 
 const isTargetTracking = computed(() => selectedToAccount.value?.account_type === 'TRACKING')
 
@@ -367,12 +344,21 @@ onMounted(async () => {
     console.error('Failed to load transfer options:', error)
   }
 
-  // Auto-focus amount input
+  // Auto-open keyboard
   setTimeout(() => {
-    if (amountInputRef.value) {
-      amountInputRef.value.focus()
-    }
+    showKeyboard.value = true
   }, 100)
 })
+
+// Close keyboard when component unmounts
+onBeforeUnmount(() => {
+  showKeyboard.value = false
+})
+
+// Close keyboard when user clicks close button
+const handleClose = () => {
+  showKeyboard.value = false
+  emit('close')
+}
 </script>
 

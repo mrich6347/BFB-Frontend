@@ -7,7 +7,7 @@
     >
       <!-- Header -->
       <div class="sticky top-0 bg-background border-b border-border px-4 flex items-center justify-between" style="padding-top: max(3rem, env(safe-area-inset-top)); padding-bottom: 0.75rem;">
-        <button @click="$emit('close')" class="p-2">
+        <button @click="handleClose" class="p-2">
           <XIcon class="h-5 w-5" />
         </button>
         <h2 class="text-lg font-semibold">Add Transaction</h2>
@@ -82,19 +82,15 @@
 
           <!-- Large Amount Display -->
           <div class="text-center py-2">
-            <input
-              ref="amountInputRef"
-              v-model="displayAmount"
-              @input="handleAmountInput"
-              @focus="handleAmountFocus"
-              type="text"
-              inputmode="decimal"
-              placeholder="$0.00"
+            <button
+              @click="showKeyboard = true"
               :class="[
                 'w-full text-center text-5xl font-bold bg-transparent border-none outline-none',
                 amountType === 'outflow' ? 'text-red-500' : 'text-emerald-500'
               ]"
-            />
+            >
+              {{ displayAmount }}
+            </button>
           </div>
         </div>
 
@@ -104,7 +100,7 @@
           <div class="space-y-2">
             <label class="text-sm font-medium">Account</label>
             <button
-              @click="showAccountPicker = true"
+              @click="showAccountPicker = true; showKeyboard = false"
               class="w-full px-4 py-3 border border-input rounded-md bg-background text-left flex items-center justify-between"
             >
               <span :class="selectedAccount ? 'text-foreground' : 'text-muted-foreground'">
@@ -118,7 +114,7 @@
           <div class="space-y-2">
             <label class="text-sm font-medium">Payee</label>
             <button
-              @click="showPayeePicker = true"
+              @click="showPayeePicker = true; showKeyboard = false"
               class="w-full px-4 py-3 border border-input rounded-md bg-background text-left flex items-center justify-between"
             >
               <span :class="selectedPayeeName ? 'text-foreground' : 'text-muted-foreground'">
@@ -132,7 +128,7 @@
           <div class="space-y-2">
             <label class="text-sm font-medium">Category</label>
             <button
-              @click="showCategoryPicker = true"
+              @click="showCategoryPicker = true; showKeyboard = false"
               class="w-full px-4 py-3 border border-input rounded-md bg-background text-left flex items-center justify-between"
             >
               <span :class="selectedCategory ? 'text-foreground' : 'text-muted-foreground'">
@@ -150,6 +146,7 @@
               type="text"
               placeholder="Enter memo..."
               class="w-full px-4 py-3 border border-input rounded-md bg-background"
+              @focus="showKeyboard = false"
             />
           </div>
 
@@ -161,6 +158,7 @@
             <select
               v-model="scheduledFrequency"
               class="w-full px-4 py-3 border border-input rounded-md bg-background"
+              @focus="showKeyboard = false"
             >
               <option value="ONCE">Once</option>
               <option value="MONTHLY">Monthly</option>
@@ -177,6 +175,7 @@
               v-model="specificDate"
               type="date"
               class="w-full px-4 py-3 border border-input rounded-md bg-background"
+              @focus="showKeyboard = false"
             />
           </div>
 
@@ -190,6 +189,7 @@
               max="31"
               placeholder="1-31"
               class="w-full px-4 py-3 border border-input rounded-md bg-background"
+              @focus="showKeyboard = false"
             />
           </div>
 
@@ -199,6 +199,7 @@
             <select
               v-model.number="dayOfWeek"
               class="w-full px-4 py-3 border border-input rounded-md bg-background"
+              @focus="showKeyboard = false"
             >
               <option :value="0">Sunday</option>
               <option :value="1">Monday</option>
@@ -216,6 +217,7 @@
             <select
               v-model.number="monthOfYear"
               class="w-full px-4 py-3 border border-input rounded-md bg-background"
+              @focus="showKeyboard = false"
             >
               <option :value="1">January</option>
               <option :value="2">February</option>
@@ -464,11 +466,20 @@
         </div>
       </Teleport>
     </div>
+
+    <!-- Custom Number Keyboard -->
+    <MobileNumberKeyboard
+      v-model="internalAmountValue"
+      :show="showKeyboard"
+      :color="amountType === 'outflow' ? 'red' : 'green'"
+      @done="showKeyboard = false"
+      @cancel="showKeyboard = false"
+    />
   </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { XIcon, ChevronRightIcon, ChevronLeftIcon } from 'lucide-vue-next'
 import { useAccountStore } from '@/stores/account.store'
 import { useCategoryStore } from '@/stores/category.store'
@@ -480,6 +491,7 @@ import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { CreateScheduledTransactionDto } from '@/types/DTO/scheduled-transaction.dto'
 import type { AccountResponse } from '@/types/DTO/account.dto'
 import { useToast } from 'vue-toast-notification'
+import MobileNumberKeyboard from './MobileNumberKeyboard.vue'
 
 const props = defineProps<{
   show: boolean
@@ -519,8 +531,14 @@ const dayOfWeek = ref(1)
 const monthOfYear = ref(1)
 
 // Amount input handling
-const amountInputRef = ref<HTMLInputElement | null>(null)
+const showKeyboard = ref(false)
 const internalAmountValue = ref('000') // Store as cents (e.g., "000" = $0.00, "1234" = $12.34)
+
+// Watch internal amount value and update the amount ref
+watch(internalAmountValue, (newValue) => {
+  const cents = parseInt(newValue, 10)
+  amount.value = cents / 100
+})
 
 // Format the internal value (cents) as a currency display string
 const formatAmountAsCurrency = (centsString: string): string => {
@@ -531,43 +549,7 @@ const formatAmountAsCurrency = (centsString: string): string => {
   return `$${dollarsFormatted}.${cents}`
 }
 
-const displayAmount = computed({
-  get: () => formatAmountAsCurrency(internalAmountValue.value),
-  set: () => {} // Handled by handleAmountInput
-})
-
-const handleAmountInput = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const digits = input.value.replace(/\D/g, '')
-
-  if (digits.length === 0) {
-    internalAmountValue.value = '000'
-  } else {
-    const limitedDigits = digits.slice(-10)
-    internalAmountValue.value = limitedDigits.padStart(3, '0')
-  }
-
-  // Update the display
-  input.value = formatAmountAsCurrency(internalAmountValue.value)
-
-  // Update the amount ref
-  const cents = parseInt(internalAmountValue.value, 10)
-  amount.value = cents / 100
-
-  // Move cursor to end
-  setTimeout(() => {
-    input.setSelectionRange(input.value.length, input.value.length)
-  }, 0)
-}
-
-const handleAmountFocus = () => {
-  setTimeout(() => {
-    if (amountInputRef.value) {
-      const length = amountInputRef.value.value.length
-      amountInputRef.value.setSelectionRange(length, length)
-    }
-  }, 0)
-}
+const displayAmount = computed(() => formatAmountAsCurrency(internalAmountValue.value))
 
 // Watch transaction mode and force outflow for scheduled
 watch(transactionMode, (newMode) => {
@@ -778,15 +760,27 @@ const handleSubmit = async () => {
   }
 }
 
-// Auto-focus amount input when component mounts and is shown
+// Auto-open keyboard when component is shown
 watch(() => props.show, (isShown) => {
   if (isShown) {
     setTimeout(() => {
-      if (amountInputRef.value) {
-        amountInputRef.value.focus()
-      }
+      showKeyboard.value = true
     }, 100)
+  } else {
+    // Close keyboard when modal is hidden
+    showKeyboard.value = false
   }
 })
+
+// Close keyboard when component unmounts
+onBeforeUnmount(() => {
+  showKeyboard.value = false
+})
+
+// Close keyboard when user clicks close button
+const handleClose = () => {
+  showKeyboard.value = false
+  emit('close')
+}
 </script>
 
