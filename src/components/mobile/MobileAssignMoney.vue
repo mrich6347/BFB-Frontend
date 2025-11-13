@@ -8,9 +8,10 @@
       <!-- Main Modal that slides up from bottom -->
       <div
         v-if="!showCoverOverspending && !showMoveMoney"
-        class="absolute left-0 right-0 bg-background rounded-t-2xl shadow-lg"
-        :style="{ bottom: !isOverspent ? 'calc(380px + env(safe-area-inset-bottom))' : '0', paddingBottom: 'max(2rem, calc(2rem + env(safe-area-inset-bottom)))' }"
+        class="absolute bottom-0 left-0 right-0 bg-background rounded-t-2xl shadow-lg transition-transform duration-300"
+        :class="isClosing ? 'translate-y-full' : 'translate-y-0'"
         @click.stop
+        style="padding-bottom: max(2rem, calc(2rem + env(safe-area-inset-bottom)));"
       >
         <!-- Header -->
         <div class="px-4 py-4 border-b border-border">
@@ -81,30 +82,24 @@
               </button>
             </div>
 
-            <!-- Amount Display -->
-            <div class="text-center py-2">
-              <div class="text-sm text-muted-foreground mb-1">{{ mode === 'add' ? 'Amount to Add' : 'Amount to Subtract' }}</div>
-              <div
-                class="w-full text-center text-5xl font-bold"
-                :class="mode === 'add' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'"
-              >
-                {{ displayAmount }}
-              </div>
-            </div>
+            <!-- Amount Input -->
+            <MobileCurrencyInput
+              v-model="amount"
+              :label="mode === 'add' ? 'Amount to Add' : 'Amount to Subtract'"
+            />
+
+            <!-- Save Button -->
+            <button
+              @click="handleSave"
+              :disabled="!amount || amount <= 0 || isLoading"
+              class="w-full py-3 bg-primary text-primary-foreground rounded-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
+              <span v-else>Save Changes</span>
+            </button>
           </template>
         </div>
       </div>
-
-      <!-- Custom Number Keyboard (outside the modal, at bottom of screen) -->
-      <MobileNumberKeyboard
-        v-if="!showCoverOverspending && !showMoveMoney && !isOverspent"
-        v-model="internalAmountValue"
-        :show="showKeyboard"
-        :color="mode === 'add' ? 'green' : 'red'"
-        done-button-text="Save"
-        @done="handleKeyboardSave"
-        @cancel="handleClose"
-      />
 
       <!-- Cover Overspending Screen -->
       <div
@@ -377,7 +372,6 @@ import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 import MobileCurrencyInput from './MobileCurrencyInput.vue'
-import MobileNumberKeyboard from './MobileNumberKeyboard.vue'
 
 const props = defineProps<{
   show: boolean
@@ -397,32 +391,12 @@ const categoryStore = useCategoryStore()
 const mode = ref<'add' | 'subtract'>('add')
 const amount = ref<number | null>(null)
 const isLoading = ref(false)
+const isClosing = ref(false)
 const showCoverOverspending = ref(false)
 const showMoveMoney = ref(false)
 const moveAmount = ref<number | null>(null)
 const selectedMoveDestination = ref<string | null>(null)
 const categorySearchQuery = ref('')
-
-// Amount input handling for main modal
-const showKeyboard = ref(false)
-const internalAmountValue = ref('000') // Store as cents (e.g., "000" = $0.00, "1234" = $12.34)
-
-// Watch internal amount value and update the amount ref
-watch(internalAmountValue, (newValue) => {
-  const cents = parseInt(newValue, 10)
-  amount.value = cents / 100
-})
-
-// Format the internal value (cents) as a currency display string
-const formatAmountAsCurrency = (centsString: string): string => {
-  const padded = centsString.padStart(3, '0')
-  const dollars = padded.slice(0, -2)
-  const cents = padded.slice(-2)
-  const dollarsFormatted = dollars.replace(/^0+/, '') || '0'
-  return `$${dollarsFormatted}.${cents}`
-}
-
-const displayAmount = computed(() => formatAmountAsCurrency(internalAmountValue.value))
 
 // Computed properties
 const isOverspent = computed(() => (props.category?.available || 0) < 0)
@@ -618,8 +592,10 @@ const selectCoverSource = async (sourceCategoryId: string) => {
   await handleClose()
 }
 
-const handleClose = () => {
-  showKeyboard.value = false
+const handleClose = async () => {
+  isClosing.value = true
+  await new Promise(resolve => setTimeout(resolve, 300))
+  isClosing.value = false
   showCoverOverspending.value = false
   showMoveMoney.value = false
   moveAmount.value = null
@@ -642,15 +618,11 @@ const handleSave = async () => {
     // Keep loading state briefly for feedback
     await new Promise(resolve => setTimeout(resolve, 300))
 
-    // Close immediately
-    handleClose()
+    // Animate close
+    await handleClose()
   } finally {
     isLoading.value = false
   }
-}
-
-const handleKeyboardSave = () => {
-  handleSave()
 }
 
 // Reset when category changes
@@ -658,25 +630,12 @@ watch(() => props.category, (newCategory) => {
   if (newCategory) {
     mode.value = 'add'
     amount.value = null
-    internalAmountValue.value = '000'
-    showKeyboard.value = false
+    isClosing.value = false
     showCoverOverspending.value = false
     showMoveMoney.value = false
     moveAmount.value = null
     selectedMoveDestination.value = null
   }
 }, { immediate: true })
-
-// Auto-open keyboard when modal is shown
-watch(() => props.show, (isShown) => {
-  if (isShown && !isOverspent.value) {
-    // Reset amount to zero when opening
-    internalAmountValue.value = '000'
-    // Show keyboard immediately with the modal
-    showKeyboard.value = true
-  } else {
-    showKeyboard.value = false
-  }
-})
 </script>
 
