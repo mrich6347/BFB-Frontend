@@ -260,7 +260,7 @@ export const useCategoryStore = defineStore('categoryStore', () => {
 
   const getCategoriesByGroupWithBalances = computed(() => (groupId: string) => {
     return getCategoriesWithBalances.value
-      .filter(category => category.category_group_id === groupId)
+      .filter(category => category.category_group_id === groupId && category.active)
       .sort((a, b) => a.display_order - b.display_order)
   })
 
