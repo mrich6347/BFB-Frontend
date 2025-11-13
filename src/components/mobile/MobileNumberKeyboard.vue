@@ -52,7 +52,7 @@
           @click="handleDone"
           class="py-3 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors"
         >
-          Done
+          {{ doneButtonText }}
         </button>
       </div>
     </div>
@@ -66,8 +66,10 @@ const props = withDefaults(defineProps<{
   show: boolean
   modelValue: string // The cents value as a string (e.g., "000", "1234")
   color?: 'red' | 'green' | 'blue'
+  doneButtonText?: string
 }>(), {
-  color: 'blue'
+  color: 'blue',
+  doneButtonText: 'Done'
 })
 
 const emit = defineEmits<{
