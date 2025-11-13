@@ -636,6 +636,8 @@ const handleSubmit = async () => {
 
 // Auto-open keyboard when component mounts
 onMounted(() => {
+  // Reset amount to zero when opening
+  internalAmountValue.value = '000'
   setTimeout(() => {
     showKeyboard.value = true
   }, 100)

@@ -344,6 +344,9 @@ onMounted(async () => {
     console.error('Failed to load transfer options:', error)
   }
 
+  // Reset amount to zero when opening
+  internalAmountValue.value = '000'
+
   // Auto-open keyboard
   setTimeout(() => {
     showKeyboard.value = true

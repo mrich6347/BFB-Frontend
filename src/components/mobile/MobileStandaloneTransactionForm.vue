@@ -763,6 +763,8 @@ const handleSubmit = async () => {
 // Auto-open keyboard when component is shown
 watch(() => props.show, (isShown) => {
   if (isShown) {
+    // Reset amount to zero when opening
+    internalAmountValue.value = '000'
     setTimeout(() => {
       showKeyboard.value = true
     }, 100)
