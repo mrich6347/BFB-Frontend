@@ -70,7 +70,6 @@
         </div>
         <!-- Auto-Assign Action Button -->
         <button
-          v-if="hasAutoAssignConfigurations"
           @click="showAutoAssignSheet = true"
           class="p-2.5 rounded-full transition-all active:scale-95"
           :class="getAutoAssignButtonClass()"
