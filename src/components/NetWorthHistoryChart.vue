@@ -300,6 +300,81 @@ const notesPlugin = {
   }
 }
 
+// Custom plugin to display all-time high tooltip
+const allTimeHighPlugin = {
+  id: 'allTimeHighPlugin',
+  afterDatasetsDraw(chart: any) {
+    const ctx = chart.ctx
+    const dataPoints = chart.config.options.plugins?.allTimeHighPlugin?.dataPoints
+    if (!dataPoints || dataPoints.length === 0) return
+
+    // Get the Net Worth dataset (index 2)
+    const meta = chart.getDatasetMeta(2)
+    if (!meta) return
+
+    // Find the all-time high net worth value and its index
+    let maxNetWorth = -Infinity
+    let maxIndex = -1
+    dataPoints.forEach((point: any, index: number) => {
+      if (point.net_worth > maxNetWorth) {
+        maxNetWorth = point.net_worth
+        maxIndex = index
+      }
+    })
+
+    if (maxIndex === -1) return
+
+    const dataPoint = meta.data[maxIndex]
+    if (!dataPoint) return
+
+    ctx.save()
+    ctx.font = 'bold 12px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'bottom'
+
+    const x = dataPoint.x
+    const y = dataPoint.y
+
+    // Format the currency value
+    const formattedValue = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(maxNetWorth)
+
+    const text = `ATH: ${formattedValue}`
+    const textMetrics = ctx.measureText(text)
+    const padding = 8
+    const boxWidth = textMetrics.width + padding * 2
+    const boxHeight = 24
+
+    // Position the tooltip above the point
+    const boxX = x - boxWidth / 2
+    const boxY = y - boxHeight - 10
+
+    // Draw background box with gradient
+    const gradient = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxHeight)
+    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.95)') // emerald
+    gradient.addColorStop(1, 'rgba(5, 150, 105, 0.95)') // darker emerald
+
+    ctx.fillStyle = gradient
+    ctx.strokeStyle = 'rgba(16, 185, 129, 1)'
+    ctx.lineWidth = 2
+
+    ctx.beginPath()
+    ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 6)
+    ctx.fill()
+    ctx.stroke()
+
+    // Draw text
+    ctx.fillStyle = '#fff'
+    ctx.fillText(text, x, boxY + boxHeight - 6)
+
+    ctx.restore()
+  }
+}
+
 // Register Chart.js components
 ChartJS.register(
   CategoryScale,
@@ -313,7 +388,8 @@ ChartJS.register(
   Tooltip,
   Legend,
   Filler,
-  notesPlugin
+  notesPlugin,
+  allTimeHighPlugin
 )
 
 const budgetStore = useBudgetStore()
@@ -559,6 +635,9 @@ const chartOptions = computed<ChartOptions<'bar'>>(() => ({
   plugins: {
     notesPlugin: {
       showNotes: showNotesOnChart.value,
+      dataPoints: chartResponse.value?.data_points || []
+    },
+    allTimeHighPlugin: {
       dataPoints: chartResponse.value?.data_points || []
     },
     legend: {
