@@ -11,7 +11,6 @@
 
         <!-- Actions -->
         <div class="flex items-center gap-4">
-          <ThemeToggle size="sm" />
           <template v-if="!user">
             <Button variant="ghost" size="sm" @click="handleLogin">Login</Button>
             <Button size="sm" @click="handleSignUp">Sign&nbsp;Up</Button>
@@ -422,11 +421,10 @@
 </template>
 
 <script setup lang="ts">
-import ThemeToggle from '@/components/common/ThemeToggle.vue'
 import { WalletIcon } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import type { User } from '@supabase/supabase-js'
 import { animate } from 'motion'
 
@@ -439,10 +437,25 @@ import FinanceIllustration from '@/components/landing/FinanceIllustration.vue'
 const router = useRouter()
 const user = ref<User | null>(null)
 const heroGlow = ref<HTMLElement | null>(null)
+let previousThemeClass: string | null = null
 
 onMounted(async () => {
   const { data: { user: authUser } } = await supabase.auth.getUser()
   user.value = authUser
+
+  // Force dark mode for landing page
+  // Save the current theme class to restore later
+  if (document.documentElement.classList.contains('amber')) {
+    previousThemeClass = 'amber'
+  } else if (document.documentElement.classList.contains('dark')) {
+    previousThemeClass = 'dark'
+  } else {
+    previousThemeClass = null
+  }
+
+  // Remove all theme classes and apply dark mode
+  document.documentElement.classList.remove('dark', 'amber')
+  document.documentElement.classList.add('dark')
 
   // Animate the hero glow background
   if (heroGlow.value) {
@@ -451,6 +464,14 @@ onMounted(async () => {
       { scale: [1, 1.3, 1], rotate: [0, 45, 0] } as any,
       { duration: 20, easing: 'ease-in-out', repeat: Infinity } as any
     )
+  }
+})
+
+onUnmounted(() => {
+  // Restore the previous theme when leaving the landing page
+  if (previousThemeClass) {
+    document.documentElement.classList.remove('dark', 'amber')
+    document.documentElement.classList.add(previousThemeClass)
   }
 })
 
