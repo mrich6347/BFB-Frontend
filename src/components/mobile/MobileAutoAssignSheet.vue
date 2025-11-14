@@ -116,19 +116,6 @@
           </div>
         </div>
 
-        <!-- Success Toast -->
-        <Teleport to="body">
-          <div
-            v-if="showSuccessToast"
-            class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] transition-all duration-300"
-            :class="showSuccessToast ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'"
-          >
-            <div class="bg-emerald-600 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2">
-              <CheckCircleIcon class="h-5 w-5" />
-              <span class="font-medium">Configuration Applied!</span>
-            </div>
-          </div>
-        </Teleport>
       </div>
     </div>
 
@@ -152,12 +139,24 @@
       @confirm="handleConfirmDelete"
       @cancel="handleCancelDelete"
     />
+
+    <!-- Apply Confirmation Dialog -->
+    <MobileConfirmDialog
+      :show="showApplyConfirm"
+      title="Apply Configuration?"
+      :message="`Apply &quot;${configToApply?.name}&quot; and assign ${formatCurrency(configToApply?.total_amount || 0)} to ${configToApply?.item_count || 0} ${configToApply?.item_count === 1 ? 'category' : 'categories'}?`"
+      confirm-text="Apply"
+      cancel-text="Cancel"
+      variant="info"
+      @confirm="handleConfirmApply"
+      @cancel="handleCancelApply"
+    />
   </Teleport>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { XIcon, ZapIcon, CheckCircleIcon, PlusIcon } from 'lucide-vue-next'
+import { XIcon, ZapIcon, PlusIcon } from 'lucide-vue-next'
 import MobileAutoAssignConfigModal from './MobileAutoAssignConfigModal.vue'
 import MobileConfirmDialog from './MobileConfirmDialog.vue'
 import { formatCurrency } from '@/utils/currencyUtil'
@@ -190,11 +189,12 @@ const { updateConfiguration } = useUpdateAutoAssignConfiguration()
 const isClosing = ref(false)
 const isApplying = ref(false)
 const applyingMessage = ref('')
-const showSuccessToast = ref(false)
 const editingConfig = ref<AutoAssignConfigurationSummary | null>(null)
 const showEditModal = ref(false)
 const showDeleteConfirm = ref(false)
 const configToDelete = ref<AutoAssignConfigurationSummary | null>(null)
+const showApplyConfirm = ref(false)
+const configToApply = ref<AutoAssignConfigurationSummary | null>(null)
 
 // Computed properties
 const configurations = computed(() => autoAssignStore.configurations)
@@ -292,8 +292,14 @@ const handleConfigClick = (config: AutoAssignConfigurationSummary) => {
     return
   }
 
-  // Otherwise, apply the configuration
-  handleApplyConfiguration(config)
+  // Check if disabled
+  if (isApplying.value || readyToAssign.value < config.total_amount) {
+    return
+  }
+
+  // Show confirmation dialog
+  configToApply.value = config
+  showApplyConfirm.value = true
 }
 
 const handleEdit = (config: AutoAssignConfigurationSummary) => {
@@ -375,7 +381,6 @@ watch(() => props.show, (newValue) => {
   if (newValue) {
     isClosing.value = false
     isApplying.value = false
-    showSuccessToast.value = false
   }
 })
 
@@ -388,15 +393,21 @@ const handleClose = () => {
   }, 300)
 }
 
-const handleApplyConfiguration = async (config: AutoAssignConfigurationSummary) => {
-  if (isApplying.value || readyToAssign.value < config.total_amount) return
+const handleConfirmApply = async () => {
+  if (!configToApply.value) return
+
+  const configName = configToApply.value.name
+
+  // Close the confirmation dialog immediately
+  showApplyConfirm.value = false
+  configToApply.value = null
 
   try {
     isApplying.value = true
-    applyingMessage.value = `Applying ${config.name}...`
+    applyingMessage.value = `Applying ${configName}...`
 
     const result = await applyConfiguration({
-      name: config.name,
+      name: configName,
       budget_id: budgetStore.currentBudget!.id
     })
 
@@ -404,7 +415,7 @@ const handleApplyConfiguration = async (config: AutoAssignConfigurationSummary) 
     if (result.appliedCategories && result.appliedCategories.length > 0) {
       // Refresh category balances to show updated values
       const categoryIds = result.appliedCategories.map(c => c.category_id)
-      
+
       // Update each category balance optimistically
       result.appliedCategories.forEach(({ category_id, amount }) => {
         const currentBalance = categoryStore.categoryBalances.find(b => b.category_id === category_id)
@@ -421,16 +432,11 @@ const handleApplyConfiguration = async (config: AutoAssignConfigurationSummary) 
       emit('applied', categoryIds)
     }
 
-    // Show success toast
-    showSuccessToast.value = true
-    setTimeout(() => {
-      showSuccessToast.value = false
-    }, 2000)
+    // Reset state
+    isApplying.value = false
 
-    // Close modal after a brief delay
-    setTimeout(() => {
-      handleClose()
-    }, 1500)
+    // Close the sheet
+    handleClose()
 
   } catch (error) {
     console.error('Failed to apply configuration:', error)
@@ -438,6 +444,11 @@ const handleApplyConfiguration = async (config: AutoAssignConfigurationSummary) 
     await new Promise(resolve => setTimeout(resolve, 1500))
     isApplying.value = false
   }
+}
+
+const handleCancelApply = () => {
+  showApplyConfirm.value = false
+  configToApply.value = null
 }
 </script>
 
