@@ -206,6 +206,10 @@
                 <p :class="goalAmountClass">
                   {{ formatCurrency(goal.current_amount || 0) }}
                 </p>
+                <!-- House Down Payment Note -->
+                <p v-if="isHouseDownPaymentGoal(goal.name)" class="text-xs text-muted-foreground/70 mt-1">
+                  You can now afford a {{ formatCurrency((goal.current_amount || 0) * 5) }} home
+                </p>
               </div>
               <div class="text-right">
                 <p class="text-xs text-muted-foreground mb-1">Target</p>
@@ -294,7 +298,11 @@
                   </h3>
                 </div>
                 <p class="text-xs text-muted-foreground">
-                  {{ formatCurrency(goal.target_amount) }}
+                  {{ formatCurrency(goal.current_amount || 0) }} of {{ formatCurrency(goal.target_amount) }}
+                </p>
+                <!-- House Down Payment Note -->
+                <p v-if="isHouseDownPaymentGoal(goal.name)" class="text-xs text-muted-foreground/70 mt-1">
+                  You can now afford a {{ formatCurrency((goal.current_amount || 0) * 5) }} home
                 </p>
               </div>
             </div>
@@ -542,6 +550,11 @@ const formatDate = (date: Date | null): string => {
     year: 'numeric'
   })
 }
+
+const isHouseDownPaymentGoal = (goalName: string): boolean => {
+  return goalName.toLowerCase().includes('house down payment')
+}
+
 const handleNavigate = (tab: 'budget' | 'accounts' | 'networth' | 'goals' | 'retirement' | 'calendar') => {
   if (tab === 'budget') {
     const budgetId = currentBudget.value?.id
