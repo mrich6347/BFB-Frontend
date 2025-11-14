@@ -42,7 +42,6 @@ onMounted(() => {
 const handleSaveTransaction = async (data: CreateTransactionDto) => {
   try {
     await createTransaction(data)
-    $toast.success('Transaction created successfully')
   } catch (error) {
     console.error('Failed to create transaction:', error)
     $toast.error('Failed to create transaction')
@@ -52,7 +51,6 @@ const handleSaveTransaction = async (data: CreateTransactionDto) => {
 const handleSaveTransfer = async (data: CreateTransactionDto) => {
   try {
     await createTransaction(data)
-    $toast.success('Transfer created successfully')
   } catch (error) {
     console.error('Failed to create transfer:', error)
     $toast.error('Failed to create transfer')
@@ -62,7 +60,6 @@ const handleSaveTransfer = async (data: CreateTransactionDto) => {
 const handleSavePayment = async (creditCardAccountId: string, amount: number, fromAccountId: string, memo?: string) => {
   try {
     await makeCreditCardPayment(creditCardAccountId, amount, fromAccountId, memo)
-    $toast.success('Payment created successfully')
   } catch (error) {
     console.error('Failed to create payment:', error)
     $toast.error('Failed to create payment')
@@ -75,7 +72,6 @@ const handleUpdateBalance = async (accountId: string, newBalance: number) => {
       new_balance: newBalance,
       memo: 'Balance update'
     })
-    $toast.success('Balance updated successfully')
   } catch (error) {
     console.error('Failed to update balance:', error)
     $toast.error('Failed to update balance')
