@@ -68,6 +68,15 @@
             {{ formatCurrency(budgetStore.readyToAssign) }}
           </p>
         </div>
+        <!-- Auto-Assign Action Button -->
+        <button
+          v-if="hasAutoAssignConfigurations"
+          @click="showAutoAssignSheet = true"
+          class="p-2.5 rounded-full transition-all active:scale-95"
+          :class="getAutoAssignButtonClass()"
+        >
+          <ZapIcon class="h-5 w-5" :class="getReadyToAssignTextClass()" />
+        </button>
       </div>
     </div>
 
@@ -215,6 +224,13 @@
       @updated="handleCategoryUpdated"
       @hidden="handleCategoryHidden"
     />
+
+    <!-- Auto-Assign Sheet -->
+    <MobileAutoAssignSheet
+      :show="showAutoAssignSheet"
+      @close="showAutoAssignSheet = false"
+      @applied="handleAutoAssignApplied"
+    />
   </div>
 </template>
 
@@ -240,16 +256,19 @@ import MobileBottomNav from '@/components/mobile/MobileBottomNav.vue'
 import MobileCreateCategoryModal from '@/components/mobile/MobileCreateCategoryModal.vue'
 import MobileEditCategoryModal from '@/components/mobile/MobileEditCategoryModal.vue'
 import MobileCategoryBalanceToast from '@/components/mobile/MobileCategoryBalanceToast.vue'
-import { PlusIcon, ChevronDownIcon, SettingsIcon } from 'lucide-vue-next'
+import MobileAutoAssignSheet from '@/components/mobile/MobileAutoAssignSheet.vue'
+import { PlusIcon, ChevronDownIcon, SettingsIcon, ZapIcon } from 'lucide-vue-next'
 import { authService } from '@/services/common/auth.service'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 import { Theme } from '@/types/DTO/budget.dto'
+import { useAutoAssignStore } from '@/stores/auto-assign.store'
 
 const router = useRouter()
 const budgetStore = useBudgetStore()
 const categoryStore = useCategoryStore()
 const accountStore = useAccountStore()
+const autoAssignStore = useAutoAssignStore()
 const { createTransaction } = useTransactionOperations()
 const { moveMoney } = useMoveMoneyBetweenCategories()
 const { pullFromReadyToAssign } = usePullFromReadyToAssign()
@@ -268,6 +287,7 @@ const showStandaloneTransaction = ref(false)
 const transactionFlowRef = ref<InstanceType<typeof MobileTransactionFlow> | null>(null)
 const categoryBalanceToastRef = ref<InstanceType<typeof MobileCategoryBalanceToast> | null>(null)
 const showSettingsMenu = ref(false)
+const showAutoAssignSheet = ref(false)
 
 // Group collapse state management with localStorage persistence
 const COLLAPSED_GROUPS_KEY = 'bfb-mobile-collapsed-category-groups'
@@ -500,6 +520,26 @@ const getReadyToAssignTextClass = () => {
     return 'text-red-700 dark:text-red-300'
   }
   return 'text-gray-400 dark:text-gray-500'
+}
+
+// Auto-assign computed properties
+const hasAutoAssignConfigurations = computed(() => {
+  console.log('Auto-assign configs:', autoAssignStore.configurations)
+  return autoAssignStore.hasConfigurations
+})
+
+const getAutoAssignButtonClass = () => {
+  const theme = budgetStore.currentBudget?.theme || Theme.DARK
+  if (theme === Theme.AMBER) {
+    return 'bg-[#6d7a63]/20 hover:bg-[#6d7a63]/30' // sage green for Amber theme
+  }
+  return 'bg-emerald-600/20 hover:bg-emerald-600/30'
+}
+
+// Auto-assign handler
+const handleAutoAssignApplied = (_categoryIds: string[]) => {
+  // Categories are already updated in the store by the auto-assign sheet
+  // No additional action needed for mobile (no flash animation)
 }
 
 // Transaction handlers
