@@ -20,9 +20,17 @@
               <h3 class="text-lg font-semibold">Auto-Assign</h3>
               <p class="text-xs text-muted-foreground mt-0.5">Apply saved configurations</p>
             </div>
-            <button @click="handleClose" class="p-2 hover:bg-accent rounded-md">
-              <XIcon class="h-5 w-5" />
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                @click="handleCreateNew"
+                class="p-2 hover:bg-accent rounded-md text-primary"
+              >
+                <PlusIcon class="h-5 w-5" />
+              </button>
+              <button @click="handleClose" class="p-2 hover:bg-accent rounded-md">
+                <XIcon class="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -46,33 +54,65 @@
           </div>
 
           <!-- Configuration List -->
-          <div v-else class="space-y-2">
-            <button
+          <div v-else class="space-y-2" @click="closeAllSwipes">
+            <div
               v-for="config in configurations"
               :key="config.name"
-              @click="handleApplyConfiguration(config)"
-              :disabled="isApplying || readyToAssign < config.total_amount"
-              class="w-full px-4 py-4 bg-card rounded-lg border border-border hover:bg-accent transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              class="relative overflow-hidden rounded-lg"
             >
-              <div class="flex items-start justify-between gap-3">
-                <div class="flex-1 min-w-0">
-                  <div class="font-medium text-foreground truncate">{{ config.name }}</div>
-                  <div class="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                    <span>{{ config.item_count }} {{ config.item_count === 1 ? 'category' : 'categories' }}</span>
-                    <span>•</span>
-                    <span>{{ formatCurrency(config.total_amount) }}</span>
+              <!-- Edit/Delete buttons (revealed on swipe) -->
+              <div class="absolute inset-y-0 right-0 flex items-center">
+                <button
+                  @click.stop="handleEdit(config)"
+                  class="h-full px-6 bg-blue-500 text-white font-medium flex items-center justify-center"
+                >
+                  Edit
+                </button>
+                <button
+                  @click.stop="handleDelete(config)"
+                  class="h-full px-6 bg-red-500 text-white font-medium flex items-center justify-center"
+                >
+                  Delete
+                </button>
+              </div>
+
+              <!-- Swipeable configuration content -->
+              <div
+                :ref="el => setConfigRef(config.name, el)"
+                class="w-full bg-card border border-border touch-pan-y"
+                :class="[
+                  { 'transition-transform duration-200 ease-out': !isSwiping(config.name) },
+                  (isApplying || readyToAssign < config.total_amount) ? 'cursor-not-allowed' : 'cursor-pointer'
+                ]"
+                :style="{ transform: `translateX(${getSwipeOffset(config.name)}px)` }"
+                @touchstart="handleTouchStart($event, config.name)"
+                @touchmove="handleTouchMove($event, config.name)"
+                @touchend="handleTouchEnd(config.name)"
+                @click="handleConfigClick(config)"
+              >
+                <div
+                  class="flex items-start justify-between gap-3 px-4 py-4"
+                  :class="(isApplying || readyToAssign < config.total_amount) ? 'opacity-50' : ''"
+                >
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium text-foreground truncate">{{ config.name }}</div>
+                    <div class="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                      <span>{{ config.item_count }} {{ config.item_count === 1 ? 'category' : 'categories' }}</span>
+                      <span>•</span>
+                      <span>{{ formatCurrency(config.total_amount) }}</span>
+                    </div>
+                    <div v-if="readyToAssign < config.total_amount" class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                      Insufficient funds
+                    </div>
                   </div>
-                  <div v-if="readyToAssign < config.total_amount" class="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                    Insufficient funds
-                  </div>
-                </div>
-                <div class="flex-shrink-0">
-                  <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                    <ZapIcon class="h-5 w-5 text-primary" />
+                  <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                      <ZapIcon class="h-5 w-5 text-primary" />
+                    </div>
                   </div>
                 </div>
               </div>
-            </button>
+            </div>
           </div>
         </div>
 
@@ -91,18 +131,44 @@
         </Teleport>
       </div>
     </div>
+
+    <!-- Edit/Create Modal -->
+    <MobileAutoAssignConfigModal
+      :show="showEditModal"
+      :configuration="editingConfig"
+      :is-edit-mode="!!editingConfig"
+      @close="handleCloseEditModal"
+      @save="handleSaveConfiguration"
+    />
+
+    <!-- Delete Confirmation Dialog -->
+    <MobileConfirmDialog
+      :show="showDeleteConfirm"
+      title="Delete Configuration?"
+      :message="`Are you sure you want to delete &quot;${configToDelete?.name}&quot;? This action cannot be undone.`"
+      confirm-text="Delete"
+      cancel-text="Cancel"
+      variant="danger"
+      @confirm="handleConfirmDelete"
+      @cancel="handleCancelDelete"
+    />
   </Teleport>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { XIcon, ZapIcon, CheckCircleIcon } from 'lucide-vue-next'
+import { XIcon, ZapIcon, CheckCircleIcon, PlusIcon } from 'lucide-vue-next'
+import MobileAutoAssignConfigModal from './MobileAutoAssignConfigModal.vue'
+import MobileConfirmDialog from './MobileConfirmDialog.vue'
 import { formatCurrency } from '@/utils/currencyUtil'
 import { useBudgetStore } from '@/stores/budget.store'
 import { useAutoAssignStore } from '@/stores/auto-assign.store'
 import { useCategoryStore } from '@/stores/category.store'
 import { useApplyAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-write/useApplyAutoAssignConfiguration'
-import type { AutoAssignConfigurationSummary } from '@/services/auto-assign.service'
+import { useDeleteAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-write/useDeleteAutoAssignConfiguration'
+import { useCreateAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-write/useCreateAutoAssignConfiguration'
+import { useUpdateAutoAssignConfiguration } from '@/composables/auto-assign/auto-assign-write/useUpdateAutoAssignConfiguration'
+import type { AutoAssignConfigurationSummary, AutoAssignConfigurationItem } from '@/services/auto-assign.service'
 
 const props = defineProps<{
   show: boolean
@@ -117,15 +183,192 @@ const budgetStore = useBudgetStore()
 const autoAssignStore = useAutoAssignStore()
 const categoryStore = useCategoryStore()
 const { applyConfiguration } = useApplyAutoAssignConfiguration()
+const { deleteConfiguration: deleteConfigurationOp } = useDeleteAutoAssignConfiguration()
+const { createConfiguration } = useCreateAutoAssignConfiguration()
+const { updateConfiguration } = useUpdateAutoAssignConfiguration()
 
 const isClosing = ref(false)
 const isApplying = ref(false)
 const applyingMessage = ref('')
 const showSuccessToast = ref(false)
+const editingConfig = ref<AutoAssignConfigurationSummary | null>(null)
+const showEditModal = ref(false)
+const showDeleteConfirm = ref(false)
+const configToDelete = ref<AutoAssignConfigurationSummary | null>(null)
 
 // Computed properties
 const configurations = computed(() => autoAssignStore.configurations)
 const readyToAssign = computed(() => budgetStore.readyToAssign)
+
+// Swipe state management
+const swipeStates = ref<Record<string, { offset: number, startX: number, startTime: number, isSwiping: boolean }>>({})
+const configRefs = ref<Record<string, HTMLElement>>({})
+const SWIPE_THRESHOLD = -180 // Wider to show both edit and delete buttons fully
+const SWIPE_VELOCITY_THRESHOLD = 0.3
+
+const setConfigRef = (id: string, el: any) => {
+  if (el) {
+    configRefs.value[id] = el
+  }
+}
+
+const getSwipeOffset = (id: string) => {
+  return swipeStates.value[id]?.offset || 0
+}
+
+const isSwiping = (id: string) => {
+  return swipeStates.value[id]?.isSwiping || false
+}
+
+const closeOtherSwipes = (exceptId?: string) => {
+  Object.keys(swipeStates.value).forEach(id => {
+    if (id !== exceptId) {
+      swipeStates.value[id] = { offset: 0, startX: 0, startTime: 0, isSwiping: false }
+    }
+  })
+}
+
+const closeAllSwipes = () => {
+  closeOtherSwipes()
+}
+
+const handleTouchStart = (event: TouchEvent, id: string) => {
+  closeOtherSwipes(id)
+
+  const touch = event.touches[0]
+  swipeStates.value[id] = {
+    offset: swipeStates.value[id]?.offset || 0,
+    startX: touch.clientX,
+    startTime: Date.now(),
+    isSwiping: true
+  }
+}
+
+const handleTouchMove = (event: TouchEvent, id: string) => {
+  const state = swipeStates.value[id]
+  if (!state) return
+
+  const touch = event.touches[0]
+  const deltaX = touch.clientX - state.startX
+  const currentOffset = state.offset || 0
+
+  // Only allow swiping left (negative direction)
+  const newOffset = Math.min(0, Math.max(SWIPE_THRESHOLD, currentOffset + deltaX))
+
+  swipeStates.value[id] = {
+    ...state,
+    offset: newOffset,
+    startX: touch.clientX,
+    isSwiping: true
+  }
+}
+
+const handleTouchEnd = (id: string) => {
+  const state = swipeStates.value[id]
+  if (!state) return
+
+  const duration = Date.now() - state.startTime
+  const distance = state.offset
+  const velocity = Math.abs(distance) / duration
+
+  // Snap to open or closed based on threshold or velocity
+  if (state.offset < SWIPE_THRESHOLD / 2 || velocity > SWIPE_VELOCITY_THRESHOLD) {
+    // Snap to open (reveal edit/delete buttons)
+    swipeStates.value[id] = { ...state, offset: SWIPE_THRESHOLD, isSwiping: false }
+  } else {
+    // Snap to closed
+    swipeStates.value[id] = { ...state, offset: 0, isSwiping: false }
+  }
+}
+
+const handleConfigClick = (config: AutoAssignConfigurationSummary) => {
+  // If the config is swiped open, close it instead of applying
+  if (swipeStates.value[config.name]?.offset !== 0) {
+    swipeStates.value[config.name] = {
+      ...swipeStates.value[config.name],
+      offset: 0,
+      isSwiping: false
+    }
+    return
+  }
+
+  // Otherwise, apply the configuration
+  handleApplyConfiguration(config)
+}
+
+const handleEdit = (config: AutoAssignConfigurationSummary) => {
+  // Close the swipe
+  swipeStates.value[config.name] = { offset: 0, startX: 0, startTime: 0, isSwiping: false }
+
+  // Set editing config and show modal
+  editingConfig.value = config
+  showEditModal.value = true
+}
+
+const handleDelete = (config: AutoAssignConfigurationSummary) => {
+  // Close the swipe
+  swipeStates.value[config.name] = { offset: 0, startX: 0, startTime: 0, isSwiping: false }
+
+  // Show confirm dialog
+  configToDelete.value = config
+  showDeleteConfirm.value = true
+}
+
+const handleConfirmDelete = async () => {
+  if (!configToDelete.value) return
+
+  try {
+    await deleteConfigurationOp(budgetStore.currentBudget!.id, configToDelete.value.name)
+    showDeleteConfirm.value = false
+    configToDelete.value = null
+  } catch (error) {
+    console.error('Failed to delete configuration:', error)
+    alert('Failed to delete configuration')
+  }
+}
+
+const handleCancelDelete = () => {
+  showDeleteConfirm.value = false
+  configToDelete.value = null
+}
+
+const handleCreateNew = () => {
+  editingConfig.value = null
+  showEditModal.value = true
+}
+
+const handleCloseEditModal = () => {
+  showEditModal.value = false
+  editingConfig.value = null
+}
+
+const handleSaveConfiguration = async (data: { name: string; items: AutoAssignConfigurationItem[] }) => {
+  try {
+    if (editingConfig.value) {
+      // Update existing configuration
+      await updateConfiguration(
+        budgetStore.currentBudget!.id,
+        editingConfig.value.name,
+        {
+          name: data.name,
+          items: data.items
+        }
+      )
+    } else {
+      // Create new configuration
+      await createConfiguration({
+        budget_id: budgetStore.currentBudget!.id,
+        name: data.name,
+        items: data.items
+      })
+    }
+
+    handleCloseEditModal()
+  } catch (error) {
+    console.error('Failed to save configuration:', error)
+    alert('Failed to save configuration')
+  }
+}
 
 // Reset state when modal opens
 watch(() => props.show, (newValue) => {

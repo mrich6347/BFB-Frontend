@@ -524,7 +524,6 @@ const getReadyToAssignTextClass = () => {
 
 // Auto-assign computed properties
 const hasAutoAssignConfigurations = computed(() => {
-  console.log('Auto-assign configs:', autoAssignStore.configurations)
   return autoAssignStore.hasConfigurations
 })
 
