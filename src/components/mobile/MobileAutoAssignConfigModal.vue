@@ -180,9 +180,11 @@ const categorySearchQuery = ref('')
 const showCategoryDropdown = ref(false)
 const categorySearchInput = ref<HTMLInputElement | null>(null)
 
-// Get all categories excluding hidden ones
+// Get all categories excluding hidden ones and CC Payment categories
 const availableCategories = computed(() => {
-  return categoryStore.categories.filter(cat => !cat.is_hidden)
+  return categoryStore.categories.filter(cat =>
+    !cat.is_hidden && !cat.name.endsWith('CC Payment')
+  )
 })
 
 // Filter categories based on search query and exclude already selected
