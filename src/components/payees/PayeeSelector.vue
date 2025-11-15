@@ -183,9 +183,25 @@ const handleInputBlur = (event: FocusEvent) => {
 
   // Delay to allow click events on dropdown items
   setTimeout(() => {
-    // Only close if we're not actively searching
-    if (!isSearching.value) {
+    // If user typed something and blurred, automatically select it as the payee
+    const trimmedQuery = searchQuery.value.trim()
+    if (trimmedQuery && isSearching.value) {
+      // Check if there's an exact match in the filtered payees
+      const exactMatchPayee = filteredPayees.value.find(
+        payee => payee.name.toLowerCase() === trimmedQuery.toLowerCase()
+      )
+
+      if (exactMatchPayee) {
+        // Select the existing payee
+        selectPayee(exactMatchPayee)
+      } else {
+        // Create new payee with the typed text
+        selectNewPayee()
+      }
+    } else {
+      // No text typed, just close and reset
       showDropdown.value = false
+      isSearching.value = false
       searchQuery.value = displayText.value
     }
   }, 150)
@@ -314,7 +330,25 @@ const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as HTMLElement
   const container = searchInput.value?.closest('.relative')
   if (container && !container.contains(target)) {
-    closeDropdown()
+    // If user typed something, automatically select it as the payee
+    const trimmedQuery = searchQuery.value.trim()
+    if (trimmedQuery && isSearching.value) {
+      // Check if there's an exact match in the filtered payees
+      const exactMatchPayee = filteredPayees.value.find(
+        payee => payee.name.toLowerCase() === trimmedQuery.toLowerCase()
+      )
+
+      if (exactMatchPayee) {
+        // Select the existing payee
+        selectPayee(exactMatchPayee)
+      } else {
+        // Create new payee with the typed text
+        selectNewPayee()
+      }
+    } else {
+      // No text typed, just close
+      closeDropdown()
+    }
   }
 }
 
