@@ -309,43 +309,43 @@
         </div>
 
         <!-- Content - Scrollable -->
-        <div class="flex-1 overflow-auto p-4 space-y-6">
-          <!-- Visual Flow -->
-          <div class="space-y-4">
+        <div class="flex-1 overflow-auto p-4 space-y-3">
+          <!-- Visual Flow - Compact -->
+          <div class="space-y-2">
             <!-- Source Category -->
-            <div class="p-4 bg-card rounded-lg border border-border">
-              <div class="text-xs text-muted-foreground mb-1">From</div>
-              <div class="font-semibold">{{ category?.name }}</div>
-              <div class="text-sm text-muted-foreground mt-1">
+            <div class="p-3 bg-card rounded-lg border border-border">
+              <div class="text-xs text-muted-foreground">From</div>
+              <div class="font-semibold text-sm">{{ category?.name }}</div>
+              <div class="text-xs text-muted-foreground">
                 Available: <span :class="(category?.available || 0) > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : ''">{{ formatCurrency(category?.available || 0) }}</span>
               </div>
             </div>
 
-            <!-- Arrow -->
-            <div class="flex justify-center">
-              <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Arrow - Compact -->
+            <div class="flex justify-center py-1">
+              <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
               </svg>
             </div>
 
             <!-- Destination Category -->
-            <div class="p-4 bg-card rounded-lg border border-border">
-              <div class="text-xs text-muted-foreground mb-1">To</div>
-              <div class="font-semibold">{{ getDestinationCategoryName() }}</div>
-              <div class="text-sm text-muted-foreground mt-1">
+            <div class="p-3 bg-card rounded-lg border border-border">
+              <div class="text-xs text-muted-foreground">To</div>
+              <div class="font-semibold text-sm">{{ getDestinationCategoryName() }}</div>
+              <div class="text-xs text-muted-foreground">
                 Available: <span :class="getDestinationCategoryAvailable() > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : ''">{{ formatCurrency(getDestinationCategoryAvailable()) }}</span>
               </div>
             </div>
           </div>
 
-          <!-- Amount Display -->
-          <div class="text-center py-4">
-            <div class="text-sm text-muted-foreground mb-1">Amount to Move</div>
-            <div class="text-4xl font-bold text-blue-600 dark:text-blue-400">
+          <!-- Amount Display - Compact -->
+          <div class="text-center py-3">
+            <div class="text-xs text-muted-foreground mb-1">Amount to Move</div>
+            <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">
               {{ formatCurrency(moveAmount || 0) }}
             </div>
-            <div class="text-xs text-muted-foreground mt-2">
-              Maximum: {{ formatCurrency(category?.available || 0) }}
+            <div class="text-xs text-muted-foreground mt-1">
+              Max: {{ formatCurrency(category?.available || 0) }}
             </div>
           </div>
         </div>
