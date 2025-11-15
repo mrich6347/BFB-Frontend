@@ -192,19 +192,17 @@
               </div>
               <div class="mb-3">
                 <div class="flex items-center justify-between">
-                  <div>
-                    <span :class="goalAmountClass">
-                      {{ formatCurrency(goal.current_amount || 0) }}
-                    </span>
-                    <!-- House Down Payment Note -->
-                    <p v-if="isHouseDownPaymentGoal(goal.name)" class="text-xs text-muted-foreground/70 mt-1">
-                      You can now afford a {{ formatCurrency((goal.current_amount || 0) * 5) }} home
-                    </p>
-                  </div>
+                  <span :class="goalAmountClass">
+                    {{ formatCurrency(goal.current_amount || 0) }}
+                  </span>
                   <span class="text-sm text-muted-foreground">
                     of {{ formatCurrency(goal.target_amount) }}
                   </span>
                 </div>
+                <!-- House Down Payment Note -->
+                <p v-if="isHouseDownPaymentGoal(goal.name)" class="text-xs text-muted-foreground/70 mt-2 text-center">
+                  🏠 You can now afford a {{ formatCurrency((goal.current_amount || 0) * 5) }} home
+                </p>
               </div>
               <div class="relative bg-secondary rounded-full h-3 overflow-hidden">
                 <div
@@ -361,19 +359,17 @@
                   </div>
                   <div class="mb-3">
                     <div class="flex items-center justify-between text-xs">
-                      <div>
-                        <span :class="goalAmountClass">
-                          {{ formatCurrency(goal.current_amount || 0) }}
-                        </span>
-                        <!-- House Down Payment Note -->
-                        <p v-if="isHouseDownPaymentGoal(goal.name)" class="text-xs text-muted-foreground/70 mt-1">
-                          You can now afford a {{ formatCurrency((goal.current_amount || 0) * 5) }} home
-                        </p>
-                      </div>
+                      <span :class="goalAmountClass">
+                        {{ formatCurrency(goal.current_amount || 0) }}
+                      </span>
                       <span class="text-muted-foreground">
                         of {{ formatCurrency(goal.target_amount) }}
                       </span>
                     </div>
+                    <!-- House Down Payment Note -->
+                    <p v-if="isHouseDownPaymentGoal(goal.name)" class="text-xs text-muted-foreground/70 mt-2 text-center">
+                      🏠 You can now afford a {{ formatCurrency((goal.current_amount || 0) * 5) }} home
+                    </p>
                   </div>
                   <div class="relative bg-green-100 dark:bg-green-900/20 rounded-full h-3 overflow-hidden">
                     <div

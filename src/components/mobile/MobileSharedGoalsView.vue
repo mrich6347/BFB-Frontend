@@ -200,23 +200,25 @@
             </div>
 
             <!-- Amounts -->
-            <div class="flex items-center justify-between mb-3">
-              <div>
-                <p class="text-xs text-muted-foreground mb-1">Current</p>
-                <p :class="goalAmountClass">
-                  {{ formatCurrency(goal.current_amount || 0) }}
-                </p>
-                <!-- House Down Payment Note -->
-                <p v-if="isHouseDownPaymentGoal(goal.name)" class="text-xs text-muted-foreground/70 mt-1">
-                  You can now afford a {{ formatCurrency((goal.current_amount || 0) * 5) }} home
-                </p>
+            <div class="mb-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs text-muted-foreground mb-1">Current</p>
+                  <p :class="goalAmountClass">
+                    {{ formatCurrency(goal.current_amount || 0) }}
+                  </p>
+                </div>
+                <div class="text-right">
+                  <p class="text-xs text-muted-foreground mb-1">Target</p>
+                  <p class="text-lg font-semibold text-foreground">
+                    {{ formatCurrency(goal.target_amount) }}
+                  </p>
+                </div>
               </div>
-              <div class="text-right">
-                <p class="text-xs text-muted-foreground mb-1">Target</p>
-                <p class="text-lg font-semibold text-foreground">
-                  {{ formatCurrency(goal.target_amount) }}
-                </p>
-              </div>
+              <!-- House Down Payment Note -->
+              <p v-if="isHouseDownPaymentGoal(goal.name)" class="text-xs text-muted-foreground/70 mt-2 text-center">
+                🏠 You can now afford a {{ formatCurrency((goal.current_amount || 0) * 5) }} home
+              </p>
             </div>
 
             <!-- Recent Activity -->
@@ -289,22 +291,20 @@
 
           <!-- Actual Completed Goal Content -->
           <div v-else class="p-4">
-            <div class="flex items-center justify-between gap-3">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <TrophyIcon class="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                  <h3 class="text-sm font-semibold text-foreground truncate">
-                    {{ goal.name }}
-                  </h3>
-                </div>
-                <p class="text-xs text-muted-foreground">
-                  {{ formatCurrency(goal.current_amount || 0) }} of {{ formatCurrency(goal.target_amount) }}
-                </p>
-                <!-- House Down Payment Note -->
-                <p v-if="isHouseDownPaymentGoal(goal.name)" class="text-xs text-muted-foreground/70 mt-1">
-                  You can now afford a {{ formatCurrency((goal.current_amount || 0) * 5) }} home
-                </p>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <TrophyIcon class="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                <h3 class="text-sm font-semibold text-foreground truncate">
+                  {{ goal.name }}
+                </h3>
               </div>
+              <p class="text-xs text-muted-foreground">
+                {{ formatCurrency(goal.current_amount || 0) }} of {{ formatCurrency(goal.target_amount) }}
+              </p>
+              <!-- House Down Payment Note -->
+              <p v-if="isHouseDownPaymentGoal(goal.name)" class="text-xs text-muted-foreground/70 mt-2 text-center">
+                🏠 You can now afford a {{ formatCurrency((goal.current_amount || 0) * 5) }} home
+              </p>
             </div>
           </div>
         </div>
