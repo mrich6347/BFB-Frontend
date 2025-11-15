@@ -294,73 +294,70 @@
       <!-- Move Money - Enter Amount Screen -->
       <div
         v-else-if="showMoveMoney && selectedMoveDestination"
-        class="fixed inset-0 bg-background z-[60]"
+        class="fixed inset-0 bg-background z-[60] flex flex-col"
         @click.stop
       >
-        <div class="h-full flex flex-col">
-          <!-- Header -->
-          <div class="sticky top-0 bg-background border-b border-border px-4 flex items-center justify-between" style="padding-top: max(3rem, env(safe-area-inset-top)); padding-bottom: 0.75rem;">
-            <button @click="selectedMoveDestination = null; moveAmount = null" class="p-2">
-              <ChevronLeftIcon class="h-5 w-5" />
-            </button>
-            <h2 class="text-lg font-semibold">Move Money</h2>
-            <button @click="handleClose" class="p-2">
-              <XIcon class="h-5 w-5" />
-            </button>
+        <!-- Header -->
+        <div class="sticky top-0 bg-background border-b border-border px-4 flex items-center justify-between" style="padding-top: max(3rem, env(safe-area-inset-top)); padding-bottom: 0.75rem;">
+          <button @click="selectedMoveDestination = null; moveAmount = null; internalMoveAmountValue = '000'" class="p-2">
+            <ChevronLeftIcon class="h-5 w-5" />
+          </button>
+          <h2 class="text-lg font-semibold">Move Money</h2>
+          <button @click="closeMoveMoney(); handleClose()" class="p-2">
+            <XIcon class="h-5 w-5" />
+          </button>
+        </div>
+
+        <!-- Content - Scrollable -->
+        <div class="flex-1 overflow-auto p-4 space-y-6">
+          <!-- Visual Flow -->
+          <div class="space-y-4">
+            <!-- Source Category -->
+            <div class="p-4 bg-card rounded-lg border border-border">
+              <div class="text-xs text-muted-foreground mb-1">From</div>
+              <div class="font-semibold">{{ category?.name }}</div>
+              <div class="text-sm text-muted-foreground mt-1">
+                Available: <span :class="(category?.available || 0) > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : ''">{{ formatCurrency(category?.available || 0) }}</span>
+              </div>
+            </div>
+
+            <!-- Arrow -->
+            <div class="flex justify-center">
+              <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </div>
+
+            <!-- Destination Category -->
+            <div class="p-4 bg-card rounded-lg border border-border">
+              <div class="text-xs text-muted-foreground mb-1">To</div>
+              <div class="font-semibold">{{ getDestinationCategoryName() }}</div>
+              <div class="text-sm text-muted-foreground mt-1">
+                Available: <span :class="getDestinationCategoryAvailable() > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : ''">{{ formatCurrency(getDestinationCategoryAvailable()) }}</span>
+              </div>
+            </div>
           </div>
 
-          <!-- Content -->
-          <div class="flex-1 overflow-auto p-4 space-y-6" style="padding-bottom: max(6rem, calc(6rem + env(safe-area-inset-bottom)));">
-            <!-- Visual Flow -->
-            <div class="space-y-4">
-              <!-- Source Category -->
-              <div class="p-4 bg-card rounded-lg border border-border">
-                <div class="text-xs text-muted-foreground mb-1">From</div>
-                <div class="font-semibold">{{ category?.name }}</div>
-                <div class="text-sm text-muted-foreground mt-1">
-                  Available: <span :class="(category?.available || 0) > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : ''">{{ formatCurrency(category?.available || 0) }}</span>
-                </div>
-              </div>
-
-              <!-- Arrow -->
-              <div class="flex justify-center">
-                <svg class="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-              </div>
-
-              <!-- Destination Category -->
-              <div class="p-4 bg-card rounded-lg border border-border">
-                <div class="text-xs text-muted-foreground mb-1">To</div>
-                <div class="font-semibold">{{ getDestinationCategoryName() }}</div>
-                <div class="text-sm text-muted-foreground mt-1">
-                  Available: <span :class="getDestinationCategoryAvailable() > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : ''">{{ formatCurrency(getDestinationCategoryAvailable()) }}</span>
-                </div>
-              </div>
+          <!-- Amount Display -->
+          <div class="text-center py-4">
+            <div class="text-sm text-muted-foreground mb-1">Amount to Move</div>
+            <div class="text-4xl font-bold text-blue-600 dark:text-blue-400">
+              {{ formatCurrency(moveAmount || 0) }}
             </div>
-
-            <!-- Amount Input -->
-            <div class="space-y-2">
-              <MobileCurrencyInput
-                v-model="moveAmount"
-                label="Amount to Move"
-                :autofocus="true"
-              />
-              <div class="text-xs text-muted-foreground">
-                Maximum: {{ formatCurrency(category?.available || 0) }}
-              </div>
+            <div class="text-xs text-muted-foreground mt-2">
+              Maximum: {{ formatCurrency(category?.available || 0) }}
             </div>
-
-            <!-- Save Button -->
-            <button
-              @click="confirmMoveMoney"
-              :disabled="!moveAmount || moveAmount <= 0 || moveAmount > (category?.available || 0)"
-              class="w-full py-3 bg-primary text-primary-foreground rounded-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Move Money
-            </button>
           </div>
         </div>
+
+        <!-- Keyboard Component -->
+        <MobileNumberKeyboard
+          v-model="internalMoveAmountValue"
+          :show="showMoveMoney && selectedMoveDestination !== null"
+          :done-button-text="'Move Money'"
+          @done="confirmMoveMoney"
+          @cancel="selectedMoveDestination = null; moveAmount = null; internalMoveAmountValue = '000'"
+        />
       </div>
     </div>
   </Teleport>
@@ -399,6 +396,7 @@ const isClosing = ref(false)
 const showCoverOverspending = ref(false)
 const showMoveMoney = ref(false)
 const moveAmount = ref<number | null>(null)
+const internalMoveAmountValue = ref('000') // Store move amount as cents
 const selectedMoveDestination = ref<string | null>(null)
 const categorySearchQuery = ref('')
 
@@ -406,6 +404,12 @@ const categorySearchQuery = ref('')
 watch(internalAmountValue, (newValue) => {
   const cents = parseInt(newValue, 10)
   amount.value = cents / 100
+})
+
+// Watch internal move amount value and update moveAmount
+watch(internalMoveAmountValue, (newValue) => {
+  const cents = parseInt(newValue, 10)
+  moveAmount.value = cents / 100
 })
 
 // Computed properties
@@ -501,18 +505,21 @@ const closeCoverOverspending = () => {
 const openMoveMoney = () => {
   showMoveMoney.value = true
   moveAmount.value = null
+  internalMoveAmountValue.value = '000'
   selectedMoveDestination.value = null
 }
 
 const closeMoveMoney = () => {
   showMoveMoney.value = false
   moveAmount.value = null
+  internalMoveAmountValue.value = '000'
   selectedMoveDestination.value = null
   categorySearchQuery.value = ''
 }
 
 const selectDestinationCategory = (destinationId: string) => {
   selectedMoveDestination.value = destinationId
+  internalMoveAmountValue.value = '000'
   categorySearchQuery.value = ''
 }
 
@@ -609,6 +616,7 @@ const handleClose = async () => {
   showCoverOverspending.value = false
   showMoveMoney.value = false
   moveAmount.value = null
+  internalMoveAmountValue.value = '000'
   selectedMoveDestination.value = null
   amount.value = null
   internalAmountValue.value = '000'
@@ -647,6 +655,7 @@ watch(() => props.category, (newCategory) => {
     showCoverOverspending.value = false
     showMoveMoney.value = false
     moveAmount.value = null
+    internalMoveAmountValue.value = '000'
     selectedMoveDestination.value = null
   }
 }, { immediate: true })
