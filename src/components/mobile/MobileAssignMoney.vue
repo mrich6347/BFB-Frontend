@@ -5,13 +5,11 @@
       class="fixed inset-0 z-50 bg-black/50"
       @click="handleClose"
     >
-      <!-- Main Modal that slides up from bottom -->
+      <!-- Main Modal - Full Screen for Keyboard -->
       <div
         v-if="!showCoverOverspending && !showMoveMoney"
-        class="absolute bottom-0 left-0 right-0 bg-background rounded-t-2xl shadow-lg transition-transform duration-300"
-        :class="isClosing ? 'translate-y-full' : 'translate-y-0'"
+        class="fixed inset-0 bg-background z-[60] flex flex-col"
         @click.stop
-        style="padding-bottom: max(2rem, calc(2rem + env(safe-area-inset-bottom)));"
       >
         <!-- Header -->
         <div class="px-4 py-4 border-b border-border">
@@ -23,8 +21,8 @@
           </div>
         </div>
 
-        <!-- Content -->
-        <div class="p-4 space-y-4">
+        <!-- Content - Scrollable -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
           <!-- Currently Available -->
           <div class="text-center">
             <div class="text-sm text-muted-foreground mb-1">Currently Available</div>
@@ -53,7 +51,7 @@
             Move Money
           </button>
 
-          <!-- Add/Subtract Toggle (only show if NOT overspent) -->
+          <!-- Add/Subtract Toggle and Amount Display (only show if NOT overspent) -->
           <template v-if="!isOverspent">
             <div class="grid grid-cols-2 gap-3">
               <button
@@ -82,23 +80,27 @@
               </button>
             </div>
 
-            <!-- Amount Input -->
-            <MobileCurrencyInput
-              v-model="amount"
-              :label="mode === 'add' ? 'Amount to Add' : 'Amount to Subtract'"
-            />
-
-            <!-- Save Button -->
-            <button
-              @click="handleSave"
-              :disabled="!amount || amount <= 0 || isLoading"
-              class="w-full py-3 bg-primary text-primary-foreground rounded-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span v-if="isLoading" class="inline-block animate-spin">⏳</span>
-              <span v-else>Save Changes</span>
-            </button>
+            <!-- Amount Display -->
+            <div class="text-center py-4">
+              <div class="text-sm text-muted-foreground mb-1">
+                {{ mode === 'add' ? 'Amount to Add' : 'Amount to Subtract' }}
+              </div>
+              <div class="text-4xl font-bold" :class="mode === 'add' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
+                {{ formatCurrency(amount || 0) }}
+              </div>
+            </div>
           </template>
         </div>
+
+        <!-- Keyboard Component (only show if NOT overspent) -->
+        <MobileNumberKeyboard
+          v-if="!isOverspent"
+          v-model="internalAmountValue"
+          :show="show && !showCoverOverspending && !showMoveMoney"
+          :done-button-text="'Save'"
+          @done="handleSave"
+          @cancel="handleClose"
+        />
       </div>
 
       <!-- Cover Overspending Screen -->
@@ -372,6 +374,7 @@ import { useBudgetStore } from '@/stores/budget.store'
 import { useCategoryStore } from '@/stores/category.store'
 import type { CategoryResponse } from '@/types/DTO/category.dto'
 import MobileCurrencyInput from './MobileCurrencyInput.vue'
+import MobileNumberKeyboard from './MobileNumberKeyboard.vue'
 
 const props = defineProps<{
   show: boolean
@@ -390,6 +393,7 @@ const categoryStore = useCategoryStore()
 
 const mode = ref<'add' | 'subtract'>('add')
 const amount = ref<number | null>(null)
+const internalAmountValue = ref('000') // Store as cents (e.g., "000" = $0.00, "1234" = $12.34)
 const isLoading = ref(false)
 const isClosing = ref(false)
 const showCoverOverspending = ref(false)
@@ -397,6 +401,12 @@ const showMoveMoney = ref(false)
 const moveAmount = ref<number | null>(null)
 const selectedMoveDestination = ref<string | null>(null)
 const categorySearchQuery = ref('')
+
+// Watch internal amount value and update amount
+watch(internalAmountValue, (newValue) => {
+  const cents = parseInt(newValue, 10)
+  amount.value = cents / 100
+})
 
 // Computed properties
 const isOverspent = computed(() => (props.category?.available || 0) < 0)
@@ -600,6 +610,8 @@ const handleClose = async () => {
   showMoveMoney.value = false
   moveAmount.value = null
   selectedMoveDestination.value = null
+  amount.value = null
+  internalAmountValue.value = '000'
   emit('close')
 }
 
@@ -630,6 +642,7 @@ watch(() => props.category, (newCategory) => {
   if (newCategory) {
     mode.value = 'add'
     amount.value = null
+    internalAmountValue.value = '000'
     isClosing.value = false
     showCoverOverspending.value = false
     showMoveMoney.value = false
