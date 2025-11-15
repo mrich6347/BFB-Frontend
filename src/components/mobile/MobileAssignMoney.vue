@@ -12,7 +12,7 @@
         @click.stop
       >
         <!-- Header -->
-        <div class="px-4 py-4 border-b border-border">
+        <div class="px-4 border-b border-border" style="padding-top: max(3rem, env(safe-area-inset-top)); padding-bottom: 0.75rem;">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold">{{ category?.name }}</h3>
             <button @click="handleClose" class="p-2 hover:bg-accent rounded-md">
