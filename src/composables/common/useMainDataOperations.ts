@@ -50,6 +50,11 @@ export function useMainDataOperations() {
     const { useScheduledTransactionStore } = await import('../../stores/scheduled-transaction.store')
     const scheduledTransactionStore = useScheduledTransactionStore()
     scheduledTransactionStore.reset()
+
+    // Reset retirement settings store (lazy loaded)
+    const { useRetirementSettingsStore } = await import('../../stores/retirement-settings.store')
+    const retirementSettingsStore = useRetirementSettingsStore()
+    retirementSettingsStore.reset()
   }
 
   const distributeMainDataToStores = async (mainData: MainDataResponse) => {
@@ -126,6 +131,13 @@ export function useMainDataOperations() {
         const { useScheduledTransactionStore } = await import('../../stores/scheduled-transaction.store')
         const scheduledTransactionStore = useScheduledTransactionStore()
         scheduledTransactionStore.setScheduledTransactions(mainData.scheduledTransactions)
+      }
+
+      // Retirement settings data
+      if (mainData?.retirementSettings) {
+        const { useRetirementSettingsStore } = await import('../../stores/retirement-settings.store')
+        const retirementSettingsStore = useRetirementSettingsStore()
+        retirementSettingsStore.setRetirementSettings(mainData.retirementSettings)
       }
 
       // All data distributed to stores successfully

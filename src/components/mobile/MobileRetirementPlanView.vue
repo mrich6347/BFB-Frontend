@@ -229,13 +229,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toast-notification'
 import { PiggyBankIcon } from 'lucide-vue-next'
 import { useAccountStore } from '../../stores/account.store'
 import { useBudgetStore } from '../../stores/budget.store'
 import { useUserProfileStore } from '../../stores/user-profile.store'
+import { useRetirementSettingsStore } from '../../stores/retirement-settings.store'
 import { useTransactionOperations } from '@/composables/transactions/useTransactionOperations'
 import { useMakeCreditCardPayment } from '@/composables/accounts/account-write/useMakeCreditCardPayment'
 import { TrackingAccountService } from '@/services/tracking-account.service'
@@ -244,6 +245,7 @@ import { AccountType } from '../../types/DTO/account.dto'
 import { Theme } from '../../types/DTO/budget.dto'
 import type { CreateTransactionDto } from '@/types/DTO/transaction.dto'
 import { formatCurrency } from '../../utils/currencyUtil'
+import { retirementSettingsService } from '../../services/retirement-settings.service'
 import MobileBottomNav from './MobileBottomNav.vue'
 import MobileTransactionFlow from './MobileTransactionFlow.vue'
 
@@ -251,6 +253,7 @@ const router = useRouter()
 const accountStore = useAccountStore()
 const budgetStore = useBudgetStore()
 const userProfileStore = useUserProfileStore()
+const retirementSettingsStore = useRetirementSettingsStore()
 const { createTransaction } = useTransactionOperations()
 const { makeCreditCardPayment } = useMakeCreditCardPayment()
 const $toast = useToast()
@@ -300,7 +303,9 @@ const annualReturnRate = computed(() => annualReturnPercent.value / 100)
 
 const isValidInput = computed(() => {
   return currentAge.value > 0 &&
+         retirementAge.value != null &&
          retirementAge.value > currentAge.value &&
+         retirementAge.value <= 100 &&
          monthlyContribution.value >= 0 &&
          startingBalance.value != null &&
          !isNaN(startingBalance.value) &&
@@ -503,6 +508,47 @@ onMounted(() => {
   if (ageFromProfile.value !== null) {
     currentAge.value = ageFromProfile.value
   }
+
+  // Load saved retirement settings from store
+  if (retirementSettingsStore.retirementSettings) {
+    monthlyContribution.value = retirementSettingsStore.retirementSettings.monthly_contribution
+    retirementAge.value = retirementSettingsStore.retirementSettings.retirement_age
+  }
 })
+
+// Save settings when they change (debounced)
+let saveTimeout: ReturnType<typeof setTimeout> | null = null
+const saveSettings = async () => {
+  const budgetId = currentBudget.value?.id
+  if (!budgetId) return
+
+  // Validate before saving
+  // Don't save if monthly contribution is null or negative
+  if (monthlyContribution.value == null || monthlyContribution.value < 0) return
+
+  // Don't save if retirement age is null, less than/equal to current age, or greater than 100
+  if (retirementAge.value == null || retirementAge.value <= currentAge.value || retirementAge.value > 100) return
+
+  try {
+    const settings = await retirementSettingsService.upsertRetirementSettings(budgetId, {
+      monthly_contribution: monthlyContribution.value,
+      retirement_age: retirementAge.value
+    })
+    retirementSettingsStore.setRetirementSettings(settings)
+  } catch (error) {
+    console.error('Failed to save retirement settings:', error)
+  }
+}
+
+const debouncedSaveSettings = () => {
+  if (saveTimeout) {
+    clearTimeout(saveTimeout)
+  }
+  saveTimeout = setTimeout(saveSettings, 500)
+}
+
+// Watch for changes to monthly contribution and retirement age
+watch(monthlyContribution, debouncedSaveSettings)
+watch(retirementAge, debouncedSaveSettings)
 </script>
 

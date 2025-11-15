@@ -215,7 +215,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { PiggyBankIcon } from 'lucide-vue-next'
 import Sidebar from '../components/Sidebar.vue'
 import MobileRetirementPlanView from '../components/mobile/MobileRetirementPlanView.vue'
@@ -223,14 +223,17 @@ import RetirementChart from '../components/retirement/RetirementChart.vue'
 import { useAccountStore } from '../stores/account.store'
 import { useBudgetStore } from '../stores/budget.store'
 import { useUserProfileStore } from '../stores/user-profile.store'
+import { useRetirementSettingsStore } from '../stores/retirement-settings.store'
 import { AccountType } from '../types/DTO/account.dto'
 import { Theme } from '../types/DTO/budget.dto'
 import { formatCurrency } from '../utils/currencyUtil'
 import { safeToFixed } from '../utils/numberFormatUtil'
+import { retirementSettingsService } from '../services/retirement-settings.service'
 
 const accountStore = useAccountStore()
 const budgetStore = useBudgetStore()
 const userProfileStore = useUserProfileStore()
+const retirementSettingsStore = useRetirementSettingsStore()
 
 // Mobile detection
 const isMobile = ref(false)
@@ -290,7 +293,47 @@ onMounted(() => {
   if (ageFromProfile.value !== null) {
     currentAge.value = ageFromProfile.value
   }
+
+  // Load saved retirement settings from store
+  if (retirementSettingsStore.retirementSettings) {
+    monthlyContribution.value = retirementSettingsStore.retirementSettings.monthly_contribution
+    retirementAge.value = retirementSettingsStore.retirementSettings.retirement_age
+  }
 })
+
+// Save settings when they change (debounced)
+let saveTimeout: ReturnType<typeof setTimeout> | null = null
+const saveSettings = async () => {
+  if (!currentBudgetId.value) return
+
+  // Validate before saving
+  // Don't save if monthly contribution is null or negative
+  if (monthlyContribution.value == null || monthlyContribution.value < 0) return
+
+  // Don't save if retirement age is null, less than/equal to current age, or greater than 100
+  if (retirementAge.value == null || retirementAge.value <= currentAge.value || retirementAge.value > 100) return
+
+  try {
+    const settings = await retirementSettingsService.upsertRetirementSettings(currentBudgetId.value, {
+      monthly_contribution: monthlyContribution.value,
+      retirement_age: retirementAge.value
+    })
+    retirementSettingsStore.setRetirementSettings(settings)
+  } catch (error) {
+    console.error('Failed to save retirement settings:', error)
+  }
+}
+
+const debouncedSaveSettings = () => {
+  if (saveTimeout) {
+    clearTimeout(saveTimeout)
+  }
+  saveTimeout = setTimeout(saveSettings, 500)
+}
+
+// Watch for changes to monthly contribution and retirement age
+watch(monthlyContribution, debouncedSaveSettings)
+watch(retirementAge, debouncedSaveSettings)
 
 // Clean up event listener
 onUnmounted(() => {
@@ -301,7 +344,9 @@ const annualReturnRate = computed(() => annualReturnPercent.value / 100)
 
 const isValidInput = computed(() => {
   return currentAge.value > 0 &&
+         retirementAge.value != null &&
          retirementAge.value > currentAge.value &&
+         retirementAge.value <= 100 &&
          monthlyContribution.value >= 0 &&
          startingBalance.value != null &&
          !isNaN(startingBalance.value) &&

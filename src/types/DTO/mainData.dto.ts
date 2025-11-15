@@ -9,6 +9,7 @@ import type { UserProfileResponse } from "./user-profile.dto";
 import type { SharedGoalResponse, InvitationResponse } from "./shared-goal.dto";
 import type { PayeeResponse } from "./payee.dto";
 import type { ScheduledTransactionResponse } from "./scheduled-transaction.dto";
+import type { RetirementSettingsResponse } from "./retirement-settings.dto";
 
 export interface MainDataResponse {
     budget?: BudgetResponse;
@@ -24,4 +25,5 @@ export interface MainDataResponse {
     invitations?: InvitationResponse[];
     payees?: PayeeResponse[];
     scheduledTransactions?: ScheduledTransactionResponse[];
+    retirementSettings?: RetirementSettingsResponse;
 }
