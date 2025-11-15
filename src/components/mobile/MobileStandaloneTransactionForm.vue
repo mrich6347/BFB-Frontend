@@ -47,37 +47,28 @@
 
           <!-- Amount Type Toggle -->
           <div class="flex gap-2">
-            <!-- For scheduled: show only Expense button (highlighted) -->
-            <template v-if="transactionMode === 'scheduled'">
-              <div class="flex-1 py-2.5 rounded-md text-sm font-medium bg-red-500/10 text-red-600 border-2 border-red-500 text-center">
-                − Outflow
-              </div>
-            </template>
-            <!-- For standard: show both buttons -->
-            <template v-else>
-              <button
-                @click="amountType = 'outflow'"
-                :class="[
-                  'flex-1 py-2.5 rounded-md text-sm font-medium transition-colors',
-                  amountType === 'outflow'
-                    ? 'bg-red-500/10 text-red-600 border-2 border-red-500'
-                    : 'bg-muted text-muted-foreground border-2 border-transparent'
-                ]"
-              >
-                − Outflow
-              </button>
-              <button
-                @click="amountType = 'inflow'"
-                :class="[
-                  'flex-1 py-2.5 rounded-md text-sm font-medium transition-colors',
-                  amountType === 'inflow'
-                    ? 'bg-emerald-500/10 text-emerald-600 border-2 border-emerald-500'
-                    : 'bg-muted text-muted-foreground border-2 border-transparent'
-                ]"
-              >
-                + Inflow
-              </button>
-            </template>
+            <button
+              @click="amountType = 'outflow'"
+              :class="[
+                'flex-1 py-2.5 rounded-md text-sm font-medium transition-colors',
+                amountType === 'outflow'
+                  ? 'bg-red-500/10 text-red-600 border-2 border-red-500'
+                  : 'bg-muted text-muted-foreground border-2 border-transparent'
+              ]"
+            >
+              − Outflow
+            </button>
+            <button
+              @click="amountType = 'inflow'"
+              :class="[
+                'flex-1 py-2.5 rounded-md text-sm font-medium transition-colors',
+                amountType === 'inflow'
+                  ? 'bg-emerald-500/10 text-emerald-600 border-2 border-emerald-500'
+                  : 'bg-muted text-muted-foreground border-2 border-transparent'
+              ]"
+            >
+              + Inflow
+            </button>
           </div>
 
           <!-- Large Amount Display -->
@@ -551,13 +542,6 @@ const formatAmountAsCurrency = (centsString: string): string => {
 
 const displayAmount = computed(() => formatAmountAsCurrency(internalAmountValue.value))
 
-// Watch transaction mode and force outflow for scheduled
-watch(transactionMode, (newMode) => {
-  if (newMode === 'scheduled') {
-    amountType.value = 'outflow'
-  }
-})
-
 const cashAccounts = computed(() => accountStore.getAccountsByType('CASH'))
 const creditAccounts = computed(() => accountStore.getAccountsByType('CREDIT'))
 
@@ -724,7 +708,7 @@ const handleSubmit = async () => {
         account_id: selectedAccount.value!.id,
         payee: selectedPayeeName.value || '',
         amount: finalAmount,
-        category_id: selectedCategory.value!.id === 'uncategorized' ? undefined : selectedCategory.value!.id,
+        category_id: (selectedCategory.value!.id === 'uncategorized' || selectedCategory.value!.id === 'ready-to-assign') ? undefined : selectedCategory.value!.id,
         memo: memo.value || undefined,
         frequency: scheduledFrequency.value,
         specific_date: scheduledFrequency.value === 'ONCE' ? specificDate.value : undefined,

@@ -6,16 +6,33 @@
       </DialogHeader>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
-        <!-- Outflow Toggle (always outflow for scheduled transactions) -->
+        <!-- Inflow/Outflow Toggle -->
         <div>
           <label class="text-sm font-medium text-foreground mb-2 block">Type</label>
           <div class="inline-flex rounded-md border border-input bg-background p-1">
             <button
               type="button"
-              disabled
-              class="px-4 py-2 text-sm font-medium rounded transition-colors bg-destructive text-destructive-foreground shadow-sm cursor-default"
+              @click="amountType = 'outflow'"
+              :class="[
+                'px-4 py-2 text-sm font-medium rounded transition-colors',
+                amountType === 'outflow'
+                  ? 'bg-destructive text-destructive-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              ]"
             >
               Outflow
+            </button>
+            <button
+              type="button"
+              @click="amountType = 'inflow'"
+              :class="[
+                'px-4 py-2 text-sm font-medium rounded transition-colors',
+                amountType === 'inflow'
+                  ? 'bg-emerald-500 text-white shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              ]"
+            >
+              Inflow
             </button>
           </div>
         </div>
@@ -38,7 +55,7 @@
             v-model="selectedCategoryId"
             label="Category"
             placeholder="Select category..."
-            :include-ready-to-assign="false"
+            :include-ready-to-assign="true"
             :include-uncategorized="true"
             :show-group-headers="false"
             @select="handleCategorySelect"
@@ -202,6 +219,7 @@ const selectedPayeeName = ref('')
 const selectedPayeeId = ref<string | null>(null)
 const selectedCategoryId = ref<string | null>(null)
 const amountValue = ref<number>(0)
+const amountType = ref<'inflow' | 'outflow'>('outflow')
 const categorySelectorRef = ref<InstanceType<typeof CategorySelector> | null>(null)
 const amountFieldRef = ref<HTMLDivElement | null>(null)
 
@@ -278,6 +296,7 @@ watch(() => props.isOpen, (isOpen) => {
     selectedPayeeId.value = null
     selectedCategoryId.value = null
     amountValue.value = 0
+    amountType.value = 'outflow'
     formData.value = {
       budget_id: props.budgetId,
       account_id: props.accountId,
@@ -305,13 +324,17 @@ watch(() => props.accountId, (newAccountId) => {
 })
 
 const handleSubmit = () => {
-  // Always outflow (negative amount) for scheduled transactions
-  const finalAmount = -Math.abs(amountValue.value)
+  // Set amount based on inflow/outflow type
+  const finalAmount = amountType.value === 'outflow'
+    ? -Math.abs(amountValue.value)
+    : Math.abs(amountValue.value)
 
   // Clean up the data based on frequency
   const data: CreateScheduledTransactionDto = {
     ...formData.value,
-    amount: finalAmount
+    amount: finalAmount,
+    // Handle ready-to-assign: set category_id to undefined
+    category_id: formData.value.category_id === 'ready-to-assign' ? undefined : formData.value.category_id
   }
 
   // Remove unnecessary fields based on frequency
